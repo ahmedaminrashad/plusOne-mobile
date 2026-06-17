@@ -1,25 +1,34 @@
-import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import React, { useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Provider } from 'react-redux';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { StyleSheet } from 'react-native';
+import { store } from './src/store';
+import RootNavigator from './src/navigation/RootNavigator';
 import SplashScreen from './src/screens/SplashScreen';
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
 
-  return (
-    <SafeAreaProvider>
-      {showSplash ? (
+  if (showSplash) {
+    return (
+      <SafeAreaProvider>
         <SplashScreen onFinish={() => setShowSplash(false)} />
-      ) : (
-        <View style={styles.placeholder} />
-      )}
-    </SafeAreaProvider>
+      </SafeAreaProvider>
+    );
+  }
+
+  return (
+    <GestureHandlerRootView style={styles.root}>
+      <SafeAreaProvider>
+        <Provider store={store}>
+          <RootNavigator />
+        </Provider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 
 const styles = StyleSheet.create({
-  placeholder: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-  },
+  root: { flex: 1 },
 });
