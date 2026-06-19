@@ -13,6 +13,7 @@ export type AppStackParamList = {
   CreateGroup: undefined;
   GroupDetail: { groupId: string; groupName: string };
   InviteMembers: { groupId: string };
+  Chat: { groupId: string; groupName: string };
 };
 
 export type AuthScreenProps<T extends keyof AuthStackParamList> =

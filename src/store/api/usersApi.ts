@@ -12,7 +12,11 @@ export const usersApi = baseApi.injectEndpoints({
       query: (body) => ({ url: '/users/me', method: 'PATCH', body }),
       invalidatesTags: ['User'],
     }),
+
+    saveFcmToken: builder.mutation<void, string>({
+      query: (fcmToken) => ({ url: '/users/me/fcm-token', method: 'PATCH', body: { fcmToken } }),
+    }),
   }),
 });
 
-export const { useGetMeQuery, useUpdateProfileMutation } = usersApi;
+export const { useGetMeQuery, useUpdateProfileMutation, useSaveFcmTokenMutation } = usersApi;

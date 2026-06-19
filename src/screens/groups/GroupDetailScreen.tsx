@@ -19,7 +19,7 @@ import { useAppSelector } from '../../hooks/useAppDispatch';
 import { useGetMeQuery } from '../../store/api/usersApi';
 
 type Props = AppScreenProps<'GroupDetail'>;
-type Tab = 'members' | 'bills';
+type Tab = 'members' | 'chat' | 'bills';
 
 function MemberRow({
   member,
@@ -106,13 +106,19 @@ function GroupDetailScreen({ route, navigation }: Props) {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.tabs}>
-        {(['members', 'bills'] as Tab[]).map((tab) => (
+        {(['members', 'chat', 'bills'] as Tab[]).map((tab) => (
           <TouchableOpacity
             key={tab}
             style={[styles.tab, activeTab === tab && styles.tabActive]}
-            onPress={() => setActiveTab(tab)}>
+            onPress={() => {
+              if (tab === 'chat') {
+                navigation.navigate('Chat', { groupId, groupName: route.params.groupName });
+              } else {
+                setActiveTab(tab);
+              }
+            }}>
             <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
-              {tab === 'members' ? 'الأعضاء' : 'الفواتير'}
+              {tab === 'members' ? 'الأعضاء' : tab === 'chat' ? '💬 المحادثة' : 'الفواتير'}
             </Text>
           </TouchableOpacity>
         ))}

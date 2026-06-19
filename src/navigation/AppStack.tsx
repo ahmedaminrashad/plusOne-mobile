@@ -6,6 +6,7 @@ import InvitationsScreen from '../screens/groups/InvitationsScreen';
 import CreateGroupScreen from '../screens/groups/CreateGroupScreen';
 import GroupDetailScreen from '../screens/groups/GroupDetailScreen';
 import InviteMembersScreen from '../screens/groups/InviteMembersScreen';
+import ChatScreen from '../screens/groups/ChatScreen';
 import { Colors } from '../constants/colors';
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
@@ -28,6 +29,11 @@ export default function AppStack() {
         options={({ route }) => ({ title: route.params.groupName })}
       />
       <Stack.Screen name="InviteMembers" component={InviteMembersScreen} options={{ title: 'دعوة أعضاء' }} />
+      <Stack.Screen
+        name="Chat"
+        component={ChatScreen}
+        options={({ route }) => ({ title: route.params.groupName })}
+      />
     </Stack.Navigator>
   );
 }
