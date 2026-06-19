@@ -19,6 +19,7 @@ import { isValidDisplayName, isValidInstaPayAlias } from '../../utils/validation
 import { useUpdateProfileMutation } from '../../store/api/usersApi';
 import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { setProfileComplete } from '../../store/slices/authSlice';
+import { SecureStorage } from '../../utils/storage';
 
 type Props = AuthScreenProps<'ProfileSetup'>;
 
@@ -47,6 +48,8 @@ function ProfileSetupScreen({ navigation }: Props) {
     if (!validate()) return;
     try {
       await updateProfile({ displayName, photoUrl, instaPayAlias: instaPayAlias || undefined }).unwrap();
+      const stored = await SecureStorage.getTokens();
+      if (stored) await SecureStorage.saveTokens(stored.accessToken, stored.refreshToken, true);
       dispatch(setProfileComplete(true));
     } catch {
       Alert.alert('خطأ', 'تعذر حفظ الملف الشخصي، حاول مرة أخرى لاحقاً');

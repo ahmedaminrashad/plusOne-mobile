@@ -9,6 +9,7 @@ export type AuthStackParamList = {
 
 export type AppStackParamList = {
   Home: undefined;
+  Invitations: undefined;
   CreateGroup: undefined;
   GroupDetail: { groupId: string; groupName: string };
   InviteMembers: { groupId: string };

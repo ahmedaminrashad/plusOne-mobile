@@ -14,7 +14,7 @@ import Button from '../../components/common/Button';
 import { Colors } from '../../constants/colors';
 import { useVerifyOtpMutation, useSendOtpMutation } from '../../store/api/authApi';
 import { useAppDispatch } from '../../hooks/useAppDispatch';
-import { setTokens } from '../../store/slices/authSlice';
+import { setTokens, setProfileComplete } from '../../store/slices/authSlice';
 import { SecureStorage } from '../../utils/storage';
 
 type Props = AuthScreenProps<'OTPVerification'>;
@@ -49,13 +49,11 @@ function OTPVerificationScreen({ route, navigation }: Props) {
     setError('');
     try {
       const result = await verifyOtp({ phone, code: otp }).unwrap();
-      await SecureStorage.saveTokens(result.accessToken, result.refreshToken);
+      await SecureStorage.saveTokens(result.accessToken, result.refreshToken, result.isProfileComplete);
       dispatch(setTokens({ accessToken: result.accessToken, refreshToken: result.refreshToken }));
+      dispatch(setProfileComplete(result.isProfileComplete));
 
-      if (result.isNewUser) {
-        navigation.navigate('ProfileSetup');
-      } else {
-        // existing user — will be routed to App by RootNavigator after setting profile complete
+      if (!result.isProfileComplete) {
         navigation.navigate('ProfileSetup');
       }
     } catch (err: any) {

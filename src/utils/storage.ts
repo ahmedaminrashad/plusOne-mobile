@@ -4,15 +4,16 @@ const ACCESS_TOKEN_KEY = 'plusone_access_token';
 const REFRESH_TOKEN_KEY = 'plusone_refresh_token';
 
 export const SecureStorage = {
-  async saveTokens(accessToken: string, refreshToken: string): Promise<void> {
-    await Keychain.setGenericPassword(ACCESS_TOKEN_KEY, JSON.stringify({ accessToken, refreshToken }));
+  async saveTokens(accessToken: string, refreshToken: string, isProfileComplete: boolean): Promise<void> {
+    await Keychain.setGenericPassword(ACCESS_TOKEN_KEY, JSON.stringify({ accessToken, refreshToken, isProfileComplete }));
   },
 
-  async getTokens(): Promise<{ accessToken: string; refreshToken: string } | null> {
+  async getTokens(): Promise<{ accessToken: string; refreshToken: string; isProfileComplete: boolean } | null> {
     const result = await Keychain.getGenericPassword();
     if (!result) return null;
     try {
-      return JSON.parse(result.password);
+      const parsed = JSON.parse(result.password);
+      return { ...parsed, isProfileComplete: parsed.isProfileComplete ?? false };
     } catch {
       return null;
     }

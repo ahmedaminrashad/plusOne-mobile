@@ -19,6 +19,7 @@ export default function RootNavigator() {
       const tokens = await SecureStorage.getTokens();
       if (tokens) {
         dispatch(setTokens(tokens));
+        dispatch(setProfileComplete(tokens.isProfileComplete));
       }
       setLoading(false);
     })();

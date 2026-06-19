@@ -21,6 +21,7 @@ export interface GroupMember {
   role: MemberRole;
   status: MemberStatus;
   user: User | null;
+  group?: Group;
   createdAt: string;
 }
 
@@ -38,6 +39,7 @@ export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
   isNewUser: boolean;
+  isProfileComplete: boolean;
 }
 
 export interface ApiError {
