@@ -21,19 +21,22 @@ function Avatar({ uri, name, size = 44, style, imageStyle }: Props) {
     : '?';
 
   const fontSize = size * 0.38;
-
-  if (uri) {
-    return (
-      <Image
-        source={{ uri }}
-        style={[styles.image, { width: size, height: size, borderRadius: size / 2 } as ImageStyle, imageStyle]}
-      />
-    );
-  }
+  const containerStyle = [
+    styles.placeholder,
+    { width: size, height: size, borderRadius: size / 2 },
+    style,
+  ];
 
   return (
-    <View style={[styles.placeholder, { width: size, height: size, borderRadius: size / 2 }, style]}>
-      <Text style={[styles.initials, { fontSize }]}>{initials}</Text>
+    <View style={containerStyle}>
+      {uri ? (
+        <Image
+          source={{ uri }}
+          style={[styles.image, { width: size, height: size, borderRadius: size / 2 } as ImageStyle, imageStyle]}
+        />
+      ) : (
+        <Text style={[styles.initials, { fontSize }]}>{initials}</Text>
+      )}
     </View>
   );
 }

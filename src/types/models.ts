@@ -42,6 +42,20 @@ export interface AuthTokens {
   isProfileComplete: boolean;
 }
 
+export interface Bill {
+  id: string;
+  groupId: string;
+  title: string;
+  amount: number;
+  currency: string;
+  paidByUserId: string;
+  paidBy: User | null;
+  notes: string | null;
+  receiptPhotoUrl: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ApiError {
   statusCode: number;
   message: string | { error: string };

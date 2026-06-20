@@ -14,6 +14,9 @@ export type AppStackParamList = {
   GroupDetail: { groupId: string; groupName: string };
   InviteMembers: { groupId: string };
   Chat: { groupId: string; groupName: string };
+  AddBill: { groupId: string; groupName: string; receiptPhotoUri?: string };
+  QRScanner: { groupId: string; groupName: string };
+  ReceiptSplit: { groupId: string; groupName: string; receiptJson: string };
 };
 
 export type AuthScreenProps<T extends keyof AuthStackParamList> =

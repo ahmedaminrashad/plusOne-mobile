@@ -7,6 +7,9 @@ import CreateGroupScreen from '../screens/groups/CreateGroupScreen';
 import GroupDetailScreen from '../screens/groups/GroupDetailScreen';
 import InviteMembersScreen from '../screens/groups/InviteMembersScreen';
 import ChatScreen from '../screens/groups/ChatScreen';
+import CreateBillScreen from '../screens/groups/CreateBillScreen';
+import QRScannerScreen from '../screens/groups/QRScannerScreen';
+import ReceiptSplitScreen from '../screens/groups/ReceiptSplitScreen';
 import { Colors } from '../constants/colors';
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
@@ -32,6 +35,21 @@ export default function AppStack() {
       <Stack.Screen
         name="Chat"
         component={ChatScreen}
+        options={({ route }) => ({ title: route.params.groupName })}
+      />
+      <Stack.Screen
+        name="AddBill"
+        component={CreateBillScreen}
+        options={{ title: 'إضافة إيصال' }}
+      />
+      <Stack.Screen
+        name="QRScanner"
+        component={QRScannerScreen}
+        options={{ title: 'مسح QR', headerTransparent: true, headerTintColor: '#fff' }}
+      />
+      <Stack.Screen
+        name="ReceiptSplit"
+        component={ReceiptSplitScreen}
         options={({ route }) => ({ title: route.params.groupName })}
       />
     </Stack.Navigator>

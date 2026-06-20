@@ -25,6 +25,7 @@ import InvitationPromptModal from '../../components/groups/InvitationPromptModal
 import { Colors } from '../../constants/colors';
 import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { clearAuth } from '../../store/slices/authSlice';
+import { baseApi } from '../../store/api/baseApi';
 import { SecureStorage } from '../../utils/storage';
 
 type Props = AppScreenProps<'Home'>;
@@ -88,6 +89,7 @@ function HomeScreen({ navigation }: Props) {
         style: 'destructive',
         onPress: async () => {
           await SecureStorage.clearTokens();
+          dispatch(baseApi.util.resetApiState());
           dispatch(clearAuth());
         },
       },
@@ -122,7 +124,7 @@ function HomeScreen({ navigation }: Props) {
             )}
           </TouchableOpacity>
           <TouchableOpacity style={styles.iconBtn} onPress={handleLogout} activeOpacity={0.7}>
-            <Text style={styles.iconBtnText}>⏻</Text>
+            <Text style={styles.iconBtnText}>🚪</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.createBtn} onPress={() => navigation.navigate('CreateGroup')}>
             <Text style={styles.createBtnText}>+</Text>

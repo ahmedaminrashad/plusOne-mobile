@@ -28,18 +28,30 @@ interface Message {
   createdAt: FirebaseFirestoreTypes.Timestamp | null;
 }
 
-function MessageBubble({ msg, isMine }: { msg: Message; isMine: boolean }) {
+function MessageBubble({ msg, isMine, showSender }: { msg: Message; isMine: boolean; showSender: boolean }) {
   const time = msg.createdAt
     ? new Date(msg.createdAt.toMillis()).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
     : '';
 
   return (
     <View style={[styles.bubbleRow, isMine && styles.bubbleRowMine]}>
-      {!isMine && <Avatar uri={msg.senderPhoto} name={msg.senderName} size={32} style={styles.bubbleAvatar} />}
-      <View style={[styles.bubble, isMine ? styles.bubbleMine : styles.bubbleTheirs]}>
-        {!isMine && <Text style={styles.senderName}>{msg.senderName}</Text>}
-        <Text style={[styles.bubbleText, isMine && styles.bubbleTextMine]}>{msg.text}</Text>
-        <Text style={[styles.bubbleTime, isMine && styles.bubbleTimeMine]}>{time}</Text>
+      {!isMine && (
+        <View style={styles.avatarCol}>
+          {showSender ? (
+            <Avatar uri={msg.senderPhoto} name={msg.senderName} size={34} />
+          ) : (
+            <View style={styles.avatarSpacer} />
+          )}
+        </View>
+      )}
+      <View style={styles.bubbleCol}>
+        {!isMine && showSender && (
+          <Text style={styles.senderName}>{msg.senderName}</Text>
+        )}
+        <View style={[styles.bubble, isMine ? styles.bubbleMine : styles.bubbleTheirs]}>
+          <Text style={[styles.bubbleText, isMine && styles.bubbleTextMine]}>{msg.text}</Text>
+          <Text style={[styles.bubbleTime, isMine && styles.bubbleTimeMine]}>{time}</Text>
+        </View>
       </View>
     </View>
   );
@@ -120,7 +132,13 @@ function ChatScreen({ route }: Props) {
             ref={listRef}
             data={messages}
             keyExtractor={(m) => m.id}
-            renderItem={({ item }) => <MessageBubble msg={item} isMine={item.senderId === me?.id} />}
+            renderItem={({ item, index }) => {
+              const isMine = item.senderId === me?.id;
+              // messages are inverted (newest first), so next item is the one above in the list
+              const nextMsg = messages[index + 1];
+              const showSender = !isMine && (!nextMsg || nextMsg.senderId !== item.senderId);
+              return <MessageBubble msg={item} isMine={isMine} showSender={showSender} />;
+            }}
             inverted
             contentContainerStyle={styles.messagesList}
           />
@@ -161,16 +179,21 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   messagesList: { padding: 12 },
-  bubbleRow: { flexDirection: 'row', alignItems: 'flex-end', marginBottom: 8 },
+  bubbleRow: { flexDirection: 'row', alignItems: 'flex-end', marginBottom: 4 },
   bubbleRowMine: { flexDirection: 'row-reverse' },
-  bubbleAvatar: { marginRight: 6 },
+  avatarCol: { width: 40, alignItems: 'center', justifyContent: 'flex-end', marginRight: 6 },
+  avatarSpacer: { width: 34, height: 34 },
+  bubbleCol: { flex: 1 },
+  senderName: { fontSize: 11, fontWeight: '700', color: Colors.primary, marginBottom: 3, marginLeft: 4 },
   bubble: {
-    maxWidth: '75%',
+    maxWidth: '80%',
+    alignSelf: 'flex-start',
     borderRadius: 16,
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
   bubbleMine: {
+    alignSelf: 'flex-end',
     backgroundColor: Colors.primary,
     borderBottomRightRadius: 4,
   },
@@ -183,7 +206,6 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 1,
   },
-  senderName: { fontSize: 11, fontWeight: '700', color: Colors.primary, marginBottom: 2 },
   bubbleText: { fontSize: 15, color: Colors.text, lineHeight: 20 },
   bubbleTextMine: { color: Colors.textOnPrimary },
   bubbleTime: { fontSize: 10, color: Colors.textMuted, marginTop: 4, textAlign: 'right' },
