@@ -107,11 +107,13 @@ function HomeScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
+      <StatusBar barStyle="light-content" backgroundColor={Colors.secondaryDark} />
 
       <View style={styles.header}>
+        <View style={styles.headerCircle} />
         <Text style={styles.headerTitle}>+one</Text>
-        <View style={styles.headerActions}>
+
+        <View style={styles.headerCenter}>
           <TouchableOpacity
             style={styles.iconBtn}
             onPress={() => navigation.navigate('Invitations')}
@@ -126,10 +128,11 @@ function HomeScreen({ navigation }: Props) {
           <TouchableOpacity style={styles.iconBtn} onPress={handleLogout} activeOpacity={0.7}>
             <Text style={styles.iconBtnText}>🚪</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.createBtn} onPress={() => navigation.navigate('CreateGroup')}>
-            <Text style={styles.createBtnText}>+</Text>
-          </TouchableOpacity>
         </View>
+
+        <TouchableOpacity style={styles.createBtn} onPress={() => navigation.navigate('CreateGroup')}>
+          <Text style={styles.createBtnText}>+</Text>
+        </TouchableOpacity>
       </View>
 
       {isError && (
@@ -174,18 +177,35 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 18,
+    backgroundColor: Colors.secondaryDark,
+    overflow: 'hidden',
   },
-  headerTitle: { fontSize: 26, fontWeight: '800', color: Colors.primary },
-  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  headerCircle: {
+    position: 'absolute',
+    top: -50,
+    right: -50,
+    width: 170,
+    height: 170,
+    borderRadius: 85,
+    backgroundColor: 'rgba(255,255,255,0.07)',
+  },
+  headerTitle: { fontSize: 22, fontWeight: '800', color: '#FFFFFF' },
+  headerCenter: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+  },
   iconBtn: {
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    backgroundColor: 'rgba(255,255,255,0.18)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -207,29 +227,29 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: Colors.primary,
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  createBtnText: { fontSize: 24, color: Colors.textOnPrimary, lineHeight: 28 },
-  list: { paddingHorizontal: 16, paddingBottom: 24 },
-  listEmpty: { flex: 1 },
+  createBtnText: { fontSize: 24, color: Colors.secondaryDark, lineHeight: 28 },
+  list: { paddingHorizontal: 14, paddingTop: 14, paddingBottom: 32 },
+  listEmpty: { flex: 1, paddingHorizontal: 14 },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.surface,
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 10,
+    borderRadius: 17,
+    padding: 13,
+    marginBottom: 9,
     shadowColor: '#000',
-    shadowOpacity: 0.04,
+    shadowOpacity: 0.07,
     shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 8,
+    shadowRadius: 6,
     elevation: 2,
   },
-  cardInfo: { flex: 1, marginLeft: 14 },
-  cardName: { fontSize: 16, fontWeight: '600', color: Colors.text },
-  cardMeta: { fontSize: 13, color: Colors.textSecondary, marginTop: 2 },
+  cardInfo: { flex: 1, marginLeft: 12 },
+  cardName: { fontSize: 13, fontWeight: '700', color: Colors.text },
+  cardMeta: { fontSize: 10, color: Colors.textMuted, marginTop: 2 },
   empty: {
     flex: 1,
     justifyContent: 'center',
@@ -248,10 +268,15 @@ const styles = StyleSheet.create({
   emptyCta: { marginTop: 8, width: '100%' },
   loader: { marginVertical: 24 },
   errorBanner: {
-    backgroundColor: Colors.dangerLight,
-    color: Colors.textOnPrimary,
+    backgroundColor: '#FEF2F2',
+    color: '#B91C1C',
     textAlign: 'center',
     padding: 10,
     fontSize: 13,
+    borderRadius: 12,
+    marginHorizontal: 16,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#FECACA',
   },
 });
