@@ -1,14 +1,24 @@
-import { StyleSheet } from 'react-native';
-import { Colors } from './colors';
+import { TextStyle } from 'react-native';
 
-export const Typography = StyleSheet.create({
-  h1: { fontSize: 28, fontWeight: '700', color: Colors.text },
-  h2: { fontSize: 22, fontWeight: '700', color: Colors.text },
-  h3: { fontSize: 18, fontWeight: '600', color: Colors.text },
-  h4: { fontSize: 16, fontWeight: '600', color: Colors.text },
-  body: { fontSize: 15, fontWeight: '400', color: Colors.text },
-  bodySmall: { fontSize: 13, fontWeight: '400', color: Colors.textSecondary },
-  caption: { fontSize: 12, fontWeight: '400', color: Colors.textMuted },
-  label: { fontSize: 14, fontWeight: '500', color: Colors.textSecondary },
-  button: { fontSize: 16, fontWeight: '600', color: Colors.textOnPrimary },
+type FontWeight = TextStyle['fontWeight'];
+
+const w = (fontWeight: FontWeight, fontSize: number, lineHeight: number): TextStyle => ({
+  fontWeight,
+  fontSize,
+  lineHeight,
 });
+
+export const Typography = {
+  displayLarge:  w('800', 32, 40),
+  displayMedium: w('800', 26, 34),
+  headingLarge:  w('700', 20, 28),
+  headingMedium: w('700', 17, 24),
+  headingSmall:  w('600', 15, 22),
+  bodyLarge:     w('400', 15, 24),
+  bodyMedium:    w('400', 13, 20),
+  bodySmall:     w('400', 11, 18),
+  labelLarge:    w('600', 14, 20),
+  labelMedium:   w('600', 12, 18),
+  labelSmall:    w('500', 10, 16),
+  caption:       w('400', 11, 16),
+} as const;

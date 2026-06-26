@@ -60,6 +60,14 @@ export const groupsApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['Invitation'],
     }),
+
+    sendChatNotification: builder.mutation<void, { groupId: string; senderName: string; messagePreview: string }>({
+      query: ({ groupId, senderName, messagePreview }) => ({
+        url: `/groups/${groupId}/chat-notification`,
+        method: 'POST',
+        body: { senderName, messagePreview },
+      }),
+    }),
   }),
 });
 
@@ -73,4 +81,5 @@ export const {
   useGetMyInvitationsQuery,
   useAcceptInvitationMutation,
   useDeclineInvitationMutation,
+  useSendChatNotificationMutation,
 } = groupsApi;

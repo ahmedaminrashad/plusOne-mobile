@@ -9,6 +9,7 @@ import InviteMembersScreen from '../screens/groups/InviteMembersScreen';
 import ChatScreen from '../screens/groups/ChatScreen';
 import CreateBillScreen from '../screens/groups/CreateBillScreen';
 import QRScannerScreen from '../screens/groups/QRScannerScreen';
+import OCRCaptureScreen from '../screens/groups/OCRCaptureScreen';
 import ReceiptSplitScreen from '../screens/groups/ReceiptSplitScreen';
 import { Colors } from '../constants/colors';
 
@@ -19,9 +20,10 @@ export default function AppStack() {
     <Stack.Navigator
       screenOptions={{
         headerStyle: { backgroundColor: Colors.surface },
-        headerTintColor: Colors.primary,
-        headerTitleStyle: { fontWeight: '600', color: Colors.text },
+        headerTintColor: Colors.accent,
+        headerTitleStyle: { fontWeight: '700', color: Colors.text },
         headerShadowVisible: false,
+        contentStyle: { backgroundColor: Colors.background },
       }}>
       <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Invitations" component={InvitationsScreen} options={{ title: 'الدعوات' }} />
@@ -46,6 +48,11 @@ export default function AppStack() {
         name="QRScanner"
         component={QRScannerScreen}
         options={{ title: 'مسح QR', headerTransparent: true, headerTintColor: '#fff' }}
+      />
+      <Stack.Screen
+        name="OCRCapture"
+        component={OCRCaptureScreen}
+        options={{ title: 'مسح إيصال ورقي' }}
       />
       <Stack.Screen
         name="ReceiptSplit"

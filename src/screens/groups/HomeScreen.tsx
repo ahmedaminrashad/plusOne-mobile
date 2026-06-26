@@ -27,24 +27,37 @@ import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { clearAuth } from '../../store/slices/authSlice';
 import { baseApi } from '../../store/api/baseApi';
 import { SecureStorage } from '../../utils/storage';
+import { useGetMeQuery } from '../../store/api/usersApi';
 
 type Props = AppScreenProps<'Home'>;
 
+const GROUP_ACCENT_PALETTE = Colors.groupAccents as readonly string[];
+
+function getGroupAccent(id: string): string {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = ((h << 5) - h + id.charCodeAt(i)) | 0;
+  return GROUP_ACCENT_PALETTE[Math.abs(h) % GROUP_ACCENT_PALETTE.length];
+}
+
 function GroupCard({ group, onPress }: { group: Group; onPress: () => void }) {
+  const accent = getGroupAccent(group.id);
   const activeMembers = group.members?.filter((m) => m.status === 'active').length ?? 0;
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.75}>
-      <Avatar uri={group.avatarUrl} name={group.name} size={50} />
+      <View style={[styles.cardAccent, { backgroundColor: accent }]} />
+      <Avatar uri={group.avatarUrl} name={group.name} size={46} />
       <View style={styles.cardInfo}>
         <Text style={styles.cardName} numberOfLines={1}>{group.name}</Text>
-        <Text style={styles.cardMeta}>{activeMembers} عضو</Text>
+        <Text style={styles.cardMeta}>{activeMembers} عضو نشط</Text>
       </View>
+      <Text style={styles.cardChevron}>›</Text>
     </TouchableOpacity>
   );
 }
 
 function HomeScreen({ navigation }: Props) {
   const dispatch = useAppDispatch();
+  const { data: me } = useGetMeQuery();
   const { data: groups, isLoading, isFetching, refetch, isError } = useGetGroupsQuery();
   const { data: invitations } = useGetMyInvitationsQuery();
   const [accept] = useAcceptInvitationMutation();
@@ -54,7 +67,6 @@ function HomeScreen({ navigation }: Props) {
   const [showModal, setShowModal] = useState(false);
   const shownRef = useRef(false);
 
-  // Show modal once when pending invitations are first detected
   useEffect(() => {
     if (!shownRef.current && invitations && invitations.length > 0) {
       shownRef.current = true;
@@ -63,16 +75,12 @@ function HomeScreen({ navigation }: Props) {
   }, [invitations]);
 
   const handleAccept = useCallback(
-    async (membershipId: string) => {
-      await accept(membershipId).unwrap();
-    },
+    async (membershipId: string) => { await accept(membershipId).unwrap(); },
     [accept],
   );
 
   const handleDecline = useCallback(
-    async (membershipId: string) => {
-      await decline(membershipId).unwrap();
-    },
+    async (membershipId: string) => { await decline(membershipId).unwrap(); },
     [decline],
   );
 
@@ -96,43 +104,62 @@ function HomeScreen({ navigation }: Props) {
     ]);
   }, [dispatch]);
 
+  const firstName = me?.displayName?.split(' ')[0];
+  const greeting = firstName ? `مرحباً، ${firstName}` : 'مرحباً';
+
   const renderEmpty = () => (
     <View style={styles.empty}>
-      <Text style={styles.emptyIcon}>👥</Text>
+      <View style={styles.emptyIconWrap}>
+        <Text style={styles.emptyIcon}>👥</Text>
+      </View>
       <Text style={styles.emptyTitle}>لا توجد مجموعات بعد</Text>
-      <Text style={styles.emptySubtitle}>أنشئ مجموعتك الأولى وابدأ في تتبع المصاريف مع أصدقائك</Text>
-      <Button title="إنشاء مجموعة" onPress={() => navigation.navigate('CreateGroup')} style={styles.emptyCta} />
+      <Text style={styles.emptySubtitle}>أنشئ مجموعتك الأولى وابدأ في تتبع المصاريف مع أصدقائك وعائلتك</Text>
+      <Button title="+ إنشاء مجموعة" onPress={() => navigation.navigate('CreateGroup')} style={styles.emptyCta} />
     </View>
   );
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={Colors.secondaryDark} />
+      <StatusBar barStyle="light-content" backgroundColor={Colors.primaryDark} />
 
+      {/* ── Header ── */}
       <View style={styles.header}>
-        <View style={styles.headerCircle} />
-        <Text style={styles.headerTitle}>+one</Text>
+        {/* decorative circles */}
+        <View style={styles.deco1} />
+        <View style={styles.deco2} />
+        <View style={styles.deco3} />
 
-        <View style={styles.headerCenter}>
-          <TouchableOpacity
-            style={styles.iconBtn}
-            onPress={() => navigation.navigate('Invitations')}
-            activeOpacity={0.7}>
-            <Text style={styles.iconBtnText}>🔔</Text>
-            {pendingCount > 0 && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{pendingCount > 9 ? '9+' : pendingCount}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconBtn} onPress={handleLogout} activeOpacity={0.7}>
-            <Text style={styles.iconBtnText}>🚪</Text>
-          </TouchableOpacity>
+        {/* top row */}
+        <View style={styles.headerRow}>
+          <Text style={styles.headerLogo}>+one</Text>
+          <View style={styles.headerActions}>
+            <TouchableOpacity
+              style={styles.headerIconBtn}
+              onPress={() => navigation.navigate('Invitations')}
+              activeOpacity={0.7}>
+              <Text style={styles.headerIconText}>🔔</Text>
+              {pendingCount > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{pendingCount > 9 ? '9+' : pendingCount}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.headerIconBtn} onPress={handleLogout} activeOpacity={0.7}>
+              <Text style={styles.headerIconText}>🚪</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
-        <TouchableOpacity style={styles.createBtn} onPress={() => navigation.navigate('CreateGroup')}>
-          <Text style={styles.createBtnText}>+</Text>
-        </TouchableOpacity>
+        {/* greeting + CTA */}
+        <View style={styles.headerBottom}>
+          <View>
+            <Text style={styles.headerGreeting}>{greeting}</Text>
+            <Text style={styles.headerSub}>مجموعاتك</Text>
+          </View>
+          <TouchableOpacity style={styles.createBtn} onPress={() => navigation.navigate('CreateGroup')} activeOpacity={0.85}>
+            <Text style={styles.createBtnText}>+ جديد</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {isError && (
@@ -150,10 +177,10 @@ function HomeScreen({ navigation }: Props) {
           (!groups || groups.length === 0) && !isLoading ? styles.listEmpty : styles.list
         }
         refreshControl={
-          <RefreshControl refreshing={isFetching} onRefresh={refetch} tintColor={Colors.primary} />
+          <RefreshControl refreshing={isFetching} onRefresh={refetch} tintColor={Colors.secondary} />
         }
         ListFooterComponent={
-          isLoading ? <ActivityIndicator color={Colors.primary} style={styles.loader} /> : null
+          isLoading ? <ActivityIndicator color={Colors.secondary} style={styles.loader} /> : null
         }
       />
 
@@ -173,110 +200,116 @@ export default memo(HomeScreen);
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
+
+  // ── Header ──
   header: {
+    backgroundColor: Colors.primaryDark,
+    paddingHorizontal: 20,
+    paddingTop: 14,
+    paddingBottom: 22,
+    overflow: 'hidden',
+  },
+  deco1: {
+    position: 'absolute', top: -60, right: -60,
+    width: 200, height: 200, borderRadius: 100,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+  },
+  deco2: {
+    position: 'absolute', top: 20, left: -80,
+    width: 180, height: 180, borderRadius: 90,
+    backgroundColor: 'rgba(124,58,237,0.18)',
+  },
+  deco3: {
+    position: 'absolute', bottom: -40, right: 60,
+    width: 120, height: 120, borderRadius: 60,
+    backgroundColor: 'rgba(6,182,212,0.12)',
+  },
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 18,
-    backgroundColor: Colors.secondaryDark,
-    overflow: 'hidden',
+    marginBottom: 18,
   },
-  headerCircle: {
-    position: 'absolute',
-    top: -50,
-    right: -50,
-    width: 170,
-    height: 170,
-    borderRadius: 85,
-    backgroundColor: 'rgba(255,255,255,0.07)',
+  headerLogo: { fontSize: 24, fontWeight: '800', color: '#FFFFFF', letterSpacing: -0.5 },
+  headerActions: { flexDirection: 'row', gap: 8 },
+  headerIconBtn: {
+    width: 40, height: 40, borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    justifyContent: 'center', alignItems: 'center',
   },
-  headerTitle: { fontSize: 22, fontWeight: '800', color: '#FFFFFF' },
-  headerCenter: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  iconBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  iconBtnText: { fontSize: 18, lineHeight: 22 },
+  headerIconText: { fontSize: 18, lineHeight: 22 },
   badge: {
-    position: 'absolute',
-    top: -4,
-    right: -4,
-    minWidth: 18,
-    height: 18,
-    borderRadius: 9,
+    position: 'absolute', top: -4, right: -4,
+    minWidth: 18, height: 18, borderRadius: 9,
     backgroundColor: Colors.danger,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'center', alignItems: 'center',
     paddingHorizontal: 3,
   },
-  badgeText: { color: Colors.textOnPrimary, fontSize: 10, fontWeight: '700' },
-  createBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: '#FFFFFF',
-    justifyContent: 'center',
-    alignItems: 'center',
+  badgeText: { color: '#fff', fontSize: 10, fontWeight: '700' },
+  headerBottom: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
   },
-  createBtnText: { fontSize: 24, color: Colors.secondaryDark, lineHeight: 28 },
+  headerGreeting: { fontSize: 15, color: 'rgba(255,255,255,0.7)', marginBottom: 2 },
+  headerSub: { fontSize: 22, fontWeight: '800', color: '#FFFFFF' },
+  createBtn: {
+    backgroundColor: Colors.secondary,
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  createBtnText: { color: '#fff', fontSize: 13, fontWeight: '700' },
+
+  // ── List ──
   list: { paddingHorizontal: 14, paddingTop: 14, paddingBottom: 32 },
   listEmpty: { flex: 1, paddingHorizontal: 14 },
+  loader: { marginVertical: 24 },
+
+  // ── Group Card ──
   card: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.surface,
-    borderRadius: 17,
-    padding: 13,
-    marginBottom: 9,
-    shadowColor: '#000',
-    shadowOpacity: 0.07,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 6,
-    elevation: 2,
+    borderRadius: 16,
+    marginBottom: 10,
+    overflow: 'hidden',
+    shadowColor: Colors.primaryDark,
+    shadowOpacity: 0.08,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 8,
+    elevation: 3,
   },
-  cardInfo: { flex: 1, marginLeft: 12 },
-  cardName: { fontSize: 13, fontWeight: '700', color: Colors.text },
-  cardMeta: { fontSize: 10, color: Colors.textMuted, marginTop: 2 },
+  cardAccent: { width: 5, alignSelf: 'stretch' },
+  cardInfo: { flex: 1, marginLeft: 12, paddingVertical: 14 },
+  cardName: { fontSize: 14, fontWeight: '700', color: Colors.text },
+  cardMeta: { fontSize: 11, color: Colors.textMuted, marginTop: 2 },
+  cardChevron: { fontSize: 22, color: Colors.textMuted, paddingHorizontal: 12 },
+
+  // ── Empty state ──
   empty: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 32,
-    gap: 12,
+    flex: 1, justifyContent: 'center', alignItems: 'center',
+    paddingHorizontal: 32, gap: 12,
   },
-  emptyIcon: { fontSize: 56 },
+  emptyIconWrap: {
+    width: 88, height: 88, borderRadius: 44,
+    backgroundColor: Colors.primaryDark + '14',
+    justifyContent: 'center', alignItems: 'center',
+    marginBottom: 4,
+  },
+  emptyIcon: { fontSize: 42 },
   emptyTitle: { fontSize: 20, fontWeight: '700', color: Colors.text, textAlign: 'center' },
   emptySubtitle: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 22,
+    fontSize: 14, color: Colors.textSecondary,
+    textAlign: 'center', lineHeight: 22,
   },
   emptyCta: { marginTop: 8, width: '100%' },
-  loader: { marginVertical: 24 },
+
+  // ── Error ──
   errorBanner: {
-    backgroundColor: '#FEF2F2',
-    color: '#B91C1C',
-    textAlign: 'center',
-    padding: 10,
-    fontSize: 13,
-    borderRadius: 12,
-    marginHorizontal: 16,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: '#FECACA',
+    backgroundColor: '#FEF2F2', color: '#B91C1C',
+    textAlign: 'center', padding: 10, fontSize: 13,
+    borderRadius: 12, marginHorizontal: 16, marginBottom: 8,
+    borderWidth: 1, borderColor: '#FECACA',
   },
 });

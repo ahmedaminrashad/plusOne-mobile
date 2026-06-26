@@ -1,11 +1,12 @@
 export const Colors = {
-  // Brand
-  primary: '#5B5BD6',
-  primaryDark: '#4338CA',
-  primaryLight: '#8B5CF6',
-  secondary: '#06B6D4',
-  secondaryDark: '#0284C7',
-  secondaryLight: '#22D3EE',
+  // Brand – Indigo-Violet system
+  primary: '#312E81',        // Indigo-800
+  primaryDark: '#1E1B4B',    // Indigo-950
+  primaryLight: '#4C1D95',   // Violet-800
+  secondary: '#06B6D4',      // Cyan-500
+  secondaryDark: '#0891B2',  // Cyan-600
+  secondaryLight: '#22D3EE', // Cyan-400
+  accent: '#7C3AED',         // Violet-600
 
   // Semantic
   success: '#16A34A',
@@ -15,14 +16,14 @@ export const Colors = {
   dangerLight: '#F87171',
   dangerDark: '#DC2626',
   pending: '#F59E0B',
-  accent: '#F59E0B',
 
   // Backgrounds
   background: '#F0F4FF',
   surface: '#FFFFFF',
+  surfaceElevated: '#FAFAFE',
   overlay: 'rgba(0,0,0,0.5)',
 
-  // Neutral scale
+  // Neutral scale (Slate)
   neutral50: '#F8FAFC',
   neutral100: '#F1F5F9',
   neutral200: '#E2E8F0',
@@ -43,4 +44,13 @@ export const Colors = {
   textSecondary: '#64748B',
   textMuted: '#94A3B8',
   textOnPrimary: '#FFFFFF',
+  textOnDark: '#FFFFFF',
+
+  // Bottom navigation
+  navBackground: '#1E293B',
+  navActive: '#06B6D4',
+  navInactive: '#64748B',
+
+  // Rotating group accent colours (deterministic per group ID)
+  groupAccents: ['#06B6D4', '#7C3AED', '#EF4444', '#F59E0B', '#16A34A', '#F97316'],
 } as const;

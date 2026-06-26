@@ -18,7 +18,7 @@ import Button from '../../components/common/Button';
 import { useGetGroupMembersQuery } from '../../store/api/groupsApi';
 import { useGetMeQuery } from '../../store/api/usersApi';
 import { useCreateBillMutation } from '../../store/api/billsApi';
-import { GroupMember } from '../../types/models';
+import { GroupMember, ParsedReceiptData } from '../../types/models';
 
 type Props = AppScreenProps<'ReceiptSplit'>;
 
@@ -27,12 +27,7 @@ interface ReceiptItem {
   name: string;
   price: number;
   qty: number;
-  claimedBy: string[]; // userId or member.id for pending
-}
-
-interface ParsedReceipt {
-  storeName?: string;
-  items: { id?: string; name: string; price: number; qty?: number }[];
+  claimedBy: string[];
 }
 
 const getMemberId = (m: GroupMember) => m.userId ?? m.id;
@@ -48,14 +43,15 @@ function MemberChip({
   onToggle: () => void;
 }) {
   const name = getMemberName(member);
-  const initial = name.charAt(0).toUpperCase();
   return (
     <TouchableOpacity
       style={[styles.chip, selected && styles.chipSelected]}
       onPress={onToggle}
       activeOpacity={0.7}>
       <View style={[styles.chipAvatar, selected && styles.chipAvatarSelected]}>
-        <Text style={[styles.chipInitial, selected && styles.chipInitialSelected]}>{initial}</Text>
+        <Text style={[styles.chipInitial, selected && styles.chipInitialSelected]}>
+          {name.charAt(0).toUpperCase()}
+        </Text>
       </View>
       <Text style={[styles.chipName, selected && styles.chipNameSelected]} numberOfLines={1}>
         {name.split(' ')[0]}
@@ -75,7 +71,6 @@ function ItemRow({
 }) {
   const subtotal = item.price * item.qty;
   const unclaimed = item.claimedBy.length === 0;
-
   return (
     <View style={[styles.itemCard, unclaimed && styles.itemCardUnclaimed]}>
       <View style={styles.itemHeader}>
@@ -87,11 +82,7 @@ function ItemRow({
           )}
         </View>
       </View>
-
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.chipsRow}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsRow}>
         {members.map((m) => (
           <MemberChip
             key={m.id}
@@ -101,7 +92,6 @@ function ItemRow({
           />
         ))}
       </ScrollView>
-
       {unclaimed && <Text style={styles.unclaimedNote}>لم يُختر لها أحد بعد</Text>}
       {item.claimedBy.length > 1 && (
         <Text style={styles.splitNote}>
@@ -120,7 +110,7 @@ function ReceiptSplitScreen({ route, navigation }: Props) {
   const [createBill, { isLoading: isSaving }] = useCreateBillMutation();
 
   const [items, setItems] = useState<ReceiptItem[]>([]);
-  const [receipt, setReceipt] = useState<ParsedReceipt>({ items: [] });
+  const [receipt, setReceipt] = useState<ParsedReceiptData>({ items: [] });
   const [paidByUserId, setPaidByUserId] = useState('');
   const [payerModalVisible, setPayerModalVisible] = useState(false);
 
@@ -129,10 +119,9 @@ function ReceiptSplitScreen({ route, navigation }: Props) {
     [members],
   );
 
-  // Parse receipt JSON on mount
   useEffect(() => {
     try {
-      const parsed: ParsedReceipt = JSON.parse(receiptJson);
+      const parsed: ParsedReceiptData = JSON.parse(receiptJson);
       setReceipt(parsed);
       setItems(
         parsed.items.map((it, idx) => ({
@@ -154,10 +143,29 @@ function ReceiptSplitScreen({ route, navigation }: Props) {
     if (me && !paidByUserId) setPaidByUserId(me.id);
   }, [me, paidByUserId]);
 
-  const total = useMemo(
+  const subtotal = useMemo(
     () => items.reduce((sum, it) => sum + it.price * it.qty, 0),
     [items],
   );
+
+  const taxAmt = useMemo(() => {
+    if (receipt.tax == null) return 0;
+    return receipt.taxType === 'percent' ? subtotal * receipt.tax / 100 : receipt.tax;
+  }, [receipt.tax, receipt.taxType, subtotal]);
+
+  const serviceAmt = useMemo(() => {
+    if (receipt.service == null) return 0;
+    return receipt.serviceType === 'percent' ? subtotal * receipt.service / 100 : receipt.service;
+  }, [receipt.service, receipt.serviceType, subtotal]);
+
+  const tipAmt = useMemo(() => {
+    if (receipt.tip == null) return 0;
+    return receipt.tipType === 'percent'
+      ? (subtotal + taxAmt + serviceAmt) * receipt.tip / 100
+      : receipt.tip;
+  }, [receipt.tip, receipt.tipType, subtotal, taxAmt, serviceAmt]);
+
+  const grandTotal = receipt.grandTotal ?? (subtotal + taxAmt + serviceAmt + tipAmt);
 
   const memberTotals = useMemo(() => {
     const totals: Record<string, number> = {};
@@ -168,8 +176,16 @@ function ReceiptSplitScreen({ route, navigation }: Props) {
         totals[id] = (totals[id] ?? 0) + share;
       }
     }
+    // Distribute tax+service+tip proportionally
+    const extras = taxAmt + serviceAmt + tipAmt;
+    if (extras > 0 && subtotal > 0) {
+      for (const id of Object.keys(totals)) {
+        const share = totals[id]! / subtotal;
+        totals[id] = totals[id]! + extras * share;
+      }
+    }
     return totals;
-  }, [items]);
+  }, [items, taxAmt, serviceAmt, tipAmt, subtotal]);
 
   const toggleClaim = useCallback((itemId: string, memberId: string) => {
     setItems((prev) =>
@@ -206,6 +222,7 @@ function ReceiptSplitScreen({ route, navigation }: Props) {
       return;
     }
     doSave();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paidByUserId, items]);
 
   const doSave = useCallback(async () => {
@@ -213,27 +230,37 @@ function ReceiptSplitScreen({ route, navigation }: Props) {
       .filter((m) => memberTotals[getMemberId(m)] !== undefined)
       .map((m) => `${getMemberName(m)}: ${memberTotals[getMemberId(m)]!.toFixed(2)} ج.م`);
 
-    const notes = [
-      receipt.storeName ? `من: ${receipt.storeName}` : null,
-      'التوزيع:',
-      ...breakdownLines,
-    ]
-      .filter(Boolean)
-      .join('\n');
+    const notesParts: string[] = [];
+    if (receipt.storeName ?? receipt.venueName) {
+      notesParts.push(`من: ${receipt.storeName ?? receipt.venueName}`);
+    }
+    if (breakdownLines.length) {
+      notesParts.push('التوزيع:', ...breakdownLines);
+    }
 
     try {
       await createBill({
         groupId,
-        title: receipt.storeName || 'إيصال QR',
-        amount: total,
+        venueName: receipt.venueName ?? receipt.storeName,
+        amount: grandTotal,
         paidByUserId,
-        notes,
+        notes: notesParts.join('\n') || undefined,
+        captureMethod: receipt.captureMethod ?? 'manual',
+        sourceRef: receipt.sourceRef,
+        lineItems: items.map((it) => ({ name: it.name, qty: it.qty, unitPrice: it.price })),
+        tax: receipt.tax,
+        taxType: receipt.taxType,
+        service: receipt.service,
+        serviceType: receipt.serviceType,
+        tip: receipt.tip,
+        tipType: receipt.tipType,
       }).unwrap();
       navigation.navigate('GroupDetail', { groupId, groupName });
     } catch {
       Alert.alert('خطأ', 'تعذر حفظ الإيصال، حاول مرة أخرى');
     }
-  }, [activeMembers, memberTotals, receipt, total, paidByUserId, groupId, groupName, createBill, navigation]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeMembers, memberTotals, receipt, grandTotal, paidByUserId, groupId, groupName, items, createBill, navigation]);
 
   const renderItem = useCallback(
     ({ item }: { item: ReceiptItem }) => (
@@ -245,16 +272,24 @@ function ReceiptSplitScreen({ route, navigation }: Props) {
   const ListHeader = useMemo(
     () => (
       <View style={styles.receiptHeader}>
-        {receipt.storeName ? <Text style={styles.storeName}>{receipt.storeName}</Text> : null}
+        {(receipt.storeName ?? receipt.venueName) ? (
+          <Text style={styles.storeName}>{receipt.venueName ?? receipt.storeName}</Text>
+        ) : null}
         <Text style={styles.totalLabel}>الإجمالي</Text>
-        <Text style={styles.totalAmount}>{total.toFixed(2)} ج.م</Text>
+        <Text style={styles.totalAmount}>{grandTotal.toFixed(2)} ج.م</Text>
+        {(taxAmt > 0 || serviceAmt > 0 || tipAmt > 0) && (
+          <View style={styles.extrasRow}>
+            {taxAmt > 0 && <Text style={styles.extrasText}>ضريبة: {taxAmt.toFixed(2)}</Text>}
+            {serviceAmt > 0 && <Text style={styles.extrasText}>خدمة: {serviceAmt.toFixed(2)}</Text>}
+            {tipAmt > 0 && <Text style={styles.extrasText}>إكرامية: {tipAmt.toFixed(2)}</Text>}
+          </View>
+        )}
         <Text style={styles.sectionTitle}>اختر من أخذ كل صنف</Text>
       </View>
     ),
-    [receipt.storeName, total],
+    [receipt, grandTotal, taxAmt, serviceAmt, tipAmt],
   );
 
-  // Per-member summary at bottom
   const summaryRows = activeMembers.filter((m) => memberTotals[getMemberId(m)] !== undefined);
 
   return (
@@ -268,7 +303,6 @@ function ReceiptSplitScreen({ route, navigation }: Props) {
         keyboardShouldPersistTaps="handled"
       />
 
-      {/* Sticky bottom panel */}
       <View style={styles.bottomPanel}>
         {summaryRows.length > 0 && (
           <View style={styles.summarySection}>
@@ -305,7 +339,6 @@ function ReceiptSplitScreen({ route, navigation }: Props) {
         />
       </View>
 
-      {/* Payer picker modal */}
       <Modal
         visible={payerModalVisible}
         transparent
@@ -350,6 +383,8 @@ const styles = StyleSheet.create({
   storeName: { fontSize: 18, fontWeight: '700', color: Colors.text, marginBottom: 4 },
   totalLabel: { fontSize: 12, color: Colors.textMuted, marginTop: 8 },
   totalAmount: { fontSize: 32, fontWeight: '800', color: Colors.primary },
+  extrasRow: { flexDirection: 'row', gap: 12, marginTop: 6, flexWrap: 'wrap', justifyContent: 'center' },
+  extrasText: { fontSize: 11, color: Colors.textSecondary, backgroundColor: Colors.background, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
   sectionTitle: { fontSize: 13, color: Colors.textSecondary, marginTop: 12, fontWeight: '600' },
 
   itemCard: {
@@ -401,7 +436,6 @@ const styles = StyleSheet.create({
   unclaimedNote: { fontSize: 11, color: Colors.warning, textAlign: 'right', marginTop: 6 },
   splitNote: { fontSize: 11, color: Colors.textMuted, textAlign: 'right', marginTop: 4 },
 
-  // Bottom panel
   bottomPanel: {
     backgroundColor: Colors.surface,
     borderTopWidth: 1,
@@ -437,7 +471,6 @@ const styles = StyleSheet.create({
 
   saveBtn: { marginHorizontal: 16, marginTop: 4 },
 
-  // Payer modal
   modalOverlay: { flex: 1, backgroundColor: Colors.overlay, justifyContent: 'flex-end' },
   modalSheet: {
     backgroundColor: Colors.surface,

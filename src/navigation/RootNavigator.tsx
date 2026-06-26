@@ -5,7 +5,7 @@ import { SecureStorage } from '../utils/storage';
 import { setTokens, setProfileComplete } from '../store/slices/authSlice';
 import { useAppDispatch } from '../hooks/useAppDispatch';
 import AuthStack from './AuthStack';
-import AppStack from './AppStack';
+import TabNavigator from './TabNavigator';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { Colors } from '../constants/colors';
 import { useSaveFcmTokenMutation } from '../store/api/usersApi';
@@ -15,14 +15,14 @@ import {
   onNotificationOpenedApp,
   getInitialNotification,
 } from '../services/notifications';
-import { AppStackParamList } from '../types/navigation';
+import { TabParamList } from '../types/navigation';
 
 export default function RootNavigator() {
   const dispatch = useAppDispatch();
   const { isAuthenticated, isProfileComplete } = useAppSelector((s) => s.auth);
   const [loading, setLoading] = useState(true);
   const [saveFcmToken] = useSaveFcmTokenMutation();
-  const navRef = useRef<NavigationContainerRef<AppStackParamList>>(null);
+  const navRef = useRef<NavigationContainerRef<TabParamList>>(null);
 
   useEffect(() => {
     (async () => {
@@ -48,14 +48,16 @@ export default function RootNavigator() {
 
   // Handle notification taps (app in background)
   useEffect(() => {
+    const nav = navRef.current as any;
     const unsub = onNotificationOpenedApp((data) => {
-      if (data.type === 'invitation') navRef.current?.navigate('Invitations');
+      if (data.type === 'invitation') nav?.navigate('Groups', { screen: 'Invitations' });
       if (data.type === 'member_joined' && data.groupId)
-        navRef.current?.navigate('GroupDetail', { groupId: data.groupId, groupName: '' });
+        nav?.navigate('Groups', { screen: 'GroupDetail', params: { groupId: data.groupId, groupName: '' } });
     });
     getInitialNotification().then((data) => {
       if (!data) return;
-      if (data.type === 'invitation') navRef.current?.navigate('Invitations');
+      const n = navRef.current as any;
+      if (data.type === 'invitation') n?.navigate('Groups', { screen: 'Invitations' });
     });
     return unsub;
   }, []);
@@ -72,7 +74,7 @@ export default function RootNavigator() {
 
   return (
     <NavigationContainer ref={navRef}>
-      {showApp ? <AppStack /> : <AuthStack />}
+      {showApp ? <TabNavigator /> : <AuthStack />}
     </NavigationContainer>
   );
 }

@@ -1,14 +1,47 @@
 import { baseApi } from './baseApi';
-import { Bill } from '../../types/models';
+import { Bill, BillLineItem, CaptureMethod, TaxServiceType } from '../../types/models';
 
 interface CreateBillPayload {
   groupId: string;
-  title: string;
+  title?: string;
   amount: number;
   currency?: string;
   paidByUserId: string;
   notes?: string;
   receiptPhotoUrl?: string;
+  captureMethod?: CaptureMethod;
+  sourceRef?: string;
+  venueName?: string;
+  lineItems?: BillLineItem[];
+  tax?: number;
+  taxType?: TaxServiceType;
+  service?: number;
+  serviceType?: TaxServiceType;
+  tip?: number;
+  tipType?: TaxServiceType;
+}
+
+interface ParseQrPayload {
+  groupId: string;
+  payload: string;
+}
+
+interface ParsedBillResult {
+  success: boolean;
+  bill?: {
+    venueName?: string;
+    lineItems: BillLineItem[];
+    subtotal?: number;
+    tax?: number;
+    taxType?: TaxServiceType;
+    service?: number;
+    serviceType?: TaxServiceType;
+    captureMethod: 'qr';
+    sourceRef: string;
+  };
+  fallback?: 'webview' | 'manual';
+  url?: string;
+  reason?: string;
 }
 
 export const billsApi = baseApi.injectEndpoints({
@@ -29,6 +62,13 @@ export const billsApi = baseApi.injectEndpoints({
       query: (billId) => ({ url: `/bills/${billId}`, method: 'DELETE' }),
       invalidatesTags: ['Bill'],
     }),
+    parseQrBill: builder.mutation<ParsedBillResult, ParseQrPayload>({
+      query: ({ groupId, payload }) => ({
+        url: `/bills/group/${groupId}/parse-qr`,
+        method: 'POST',
+        body: { payload },
+      }),
+    }),
   }),
 });
 
@@ -36,4 +76,5 @@ export const {
   useGetGroupBillsQuery,
   useCreateBillMutation,
   useDeleteBillMutation,
+  useParseQrBillMutation,
 } = billsApi;

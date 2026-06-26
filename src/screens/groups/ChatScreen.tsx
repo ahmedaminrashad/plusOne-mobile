@@ -16,6 +16,7 @@ import { AppScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
 import Avatar from '../../components/common/Avatar';
 import { useGetMeQuery } from '../../store/api/usersApi';
+import { useSendChatNotificationMutation } from '../../store/api/groupsApi';
 
 type Props = AppScreenProps<'Chat'>;
 
@@ -26,12 +27,47 @@ interface Message {
   senderPhoto: string | null;
   text: string;
   createdAt: FirebaseFirestoreTypes.Timestamp | null;
+  _failed?: boolean;
+  _pending?: boolean;
 }
 
-function MessageBubble({ msg, isMine, showSender }: { msg: Message; isMine: boolean; showSender: boolean }) {
-  const time = msg.createdAt
-    ? new Date(msg.createdAt.toMillis()).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
-    : '';
+const PAGE_SIZE = 30;
+
+function formatTimestamp(ts: FirebaseFirestoreTypes.Timestamp | null): string {
+  if (!ts) return '';
+  const date = ts.toDate();
+  const now = new Date();
+  const isToday =
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate();
+
+  if (isToday) {
+    const diffMs = now.getTime() - date.getTime();
+    const diffMin = Math.floor(diffMs / 60_000);
+    if (diffMin < 1) return 'الآن';
+    if (diffMin < 60) return `منذ ${diffMin} د`;
+    const diffHr = Math.floor(diffMin / 60);
+    return `منذ ${diffHr} س`;
+  }
+
+  return date.toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' }) +
+    ' ' +
+    date.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+}
+
+function MessageBubble({
+  msg,
+  isMine,
+  showSender,
+  onRetry,
+}: {
+  msg: Message;
+  isMine: boolean;
+  showSender: boolean;
+  onRetry?: (msg: Message) => void;
+}) {
+  const timeStr = msg._pending ? 'إرسال...' : msg._failed ? 'فشل الإرسال' : formatTimestamp(msg.createdAt);
 
   return (
     <View style={[styles.bubbleRow, isMine && styles.bubbleRowMine]}>
@@ -48,10 +84,24 @@ function MessageBubble({ msg, isMine, showSender }: { msg: Message; isMine: bool
         {!isMine && showSender && (
           <Text style={styles.senderName}>{msg.senderName}</Text>
         )}
-        <View style={[styles.bubble, isMine ? styles.bubbleMine : styles.bubbleTheirs]}>
-          <Text style={[styles.bubbleText, isMine && styles.bubbleTextMine]}>{msg.text}</Text>
-          <Text style={[styles.bubbleTime, isMine && styles.bubbleTimeMine]}>{time}</Text>
-        </View>
+        <TouchableOpacity
+          activeOpacity={msg._failed ? 0.6 : 1}
+          onPress={msg._failed && onRetry ? () => onRetry(msg) : undefined}>
+          <View style={[
+            styles.bubble,
+            isMine ? styles.bubbleMine : styles.bubbleTheirs,
+            msg._failed && styles.bubbleFailed,
+          ]}>
+            <Text style={[styles.bubbleText, isMine && styles.bubbleTextMine]}>{msg.text}</Text>
+            <Text style={[
+              styles.bubbleTime,
+              isMine && styles.bubbleTimeMine,
+              msg._failed && styles.bubbleTimeFailed,
+            ]}>
+              {msg._failed ? '⚠ ' : ''}{timeStr}
+            </Text>
+          </View>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -60,57 +110,142 @@ function MessageBubble({ msg, isMine, showSender }: { msg: Message; isMine: bool
 function ChatScreen({ route }: Props) {
   const { groupId } = route.params;
   const { data: me } = useGetMeQuery();
+  const [sendChatNotification] = useSendChatNotificationMutation();
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(true);
-  const [sending, setSending] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const lastDocRef = useRef<FirebaseFirestoreTypes.QueryDocumentSnapshot | null>(null);
   const listRef = useRef<FlatList>(null);
 
+  const messagesRef = firestore()
+    .collection('groupChats')
+    .doc(groupId)
+    .collection('messages');
+
   useEffect(() => {
-    const unsub = firestore()
-      .collection('groupChats')
-      .doc(groupId)
-      .collection('messages')
+    const unsub = messagesRef
       .orderBy('createdAt', 'desc')
-      .limit(100)
+      .limit(PAGE_SIZE)
       .onSnapshot(
         (snap) => {
-          const msgs: Message[] = snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Message, 'id'>) }));
-          setMessages(msgs);
+          const msgs: Message[] = snap.docs.map((d) => ({
+            id: d.id,
+            ...(d.data() as Omit<Message, 'id'>),
+          }));
+          setMessages((prev) => {
+            // Merge: replace real-version of any pending/failed msg, keep others
+            const realIds = new Set(snap.docs.map((d) => d.id));
+            const pending = prev.filter((m) => (m._pending || m._failed) && !realIds.has(m.id));
+            return [...pending, ...msgs];
+          });
+          if (snap.docs.length > 0) {
+            lastDocRef.current = snap.docs[snap.docs.length - 1];
+          }
+          setHasMore(snap.docs.length >= PAGE_SIZE);
           setLoading(false);
+          setLoadError(false);
         },
-        () => setLoading(false),
+        () => {
+          setLoading(false);
+          setLoadError(true);
+        },
       );
     return unsub;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [groupId]);
 
-  const handleSend = useCallback(async () => {
-    const trimmed = text.trim();
-    if (!trimmed || !me || sending) return;
-    setSending(true);
-    setText('');
+  const loadMore = useCallback(async () => {
+    if (loadingMore || !hasMore || !lastDocRef.current) return;
+    setLoadingMore(true);
     try {
-      await firestore()
-        .collection('groupChats')
-        .doc(groupId)
-        .collection('messages')
-        .add({
-          senderId: me.id,
-          senderName: me.displayName ?? 'مستخدم',
-          senderPhoto: me.photoUrl ?? null,
-          text: trimmed,
-          createdAt: firestore.FieldValue.serverTimestamp(),
-        });
+      const snap = await messagesRef
+        .orderBy('createdAt', 'desc')
+        .startAfter(lastDocRef.current)
+        .limit(PAGE_SIZE)
+        .get();
+      if (snap.docs.length === 0) {
+        setHasMore(false);
+        return;
+      }
+      lastDocRef.current = snap.docs[snap.docs.length - 1];
+      const older: Message[] = snap.docs.map((d) => ({
+        id: d.id,
+        ...(d.data() as Omit<Message, 'id'>),
+      }));
+      setMessages((prev) => [...prev, ...older]);
+      setHasMore(snap.docs.length >= PAGE_SIZE);
     } finally {
-      setSending(false);
+      setLoadingMore(false);
     }
-  }, [text, me, groupId, sending]);
+  }, [loadingMore, hasMore, groupId]);
+
+  const doSend = useCallback(async (trimmed: string) => {
+    if (!me) return;
+    const tempId = `pending-${Date.now()}`;
+    const optimistic: Message = {
+      id: tempId,
+      senderId: me.id,
+      senderName: me.displayName ?? 'مستخدم',
+      senderPhoto: me.photoUrl ?? null,
+      text: trimmed,
+      createdAt: null,
+      _pending: true,
+    };
+    setMessages((prev) => [optimistic, ...prev]);
+
+    try {
+      await messagesRef.add({
+        senderId: me.id,
+        senderName: me.displayName ?? 'مستخدم',
+        senderPhoto: me.photoUrl ?? null,
+        text: trimmed,
+        createdAt: firestore.FieldValue.serverTimestamp(),
+      });
+      // Remove optimistic after real message arrives via listener
+      setMessages((prev) => prev.filter((m) => m.id !== tempId));
+
+      // Fire-and-forget push notification
+      const preview = trimmed.length > 80 ? trimmed.slice(0, 80) + '…' : trimmed;
+      sendChatNotification({
+        groupId,
+        senderName: me.displayName ?? 'مستخدم',
+        messagePreview: preview,
+      }).catch(() => {});
+    } catch {
+      setMessages((prev) =>
+        prev.map((m) => (m.id === tempId ? { ...m, _pending: false, _failed: true } : m)),
+      );
+    }
+  }, [me, groupId, sendChatNotification]);
+
+  const handleSend = useCallback(() => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    setText('');
+    doSend(trimmed);
+  }, [text, doSend]);
+
+  const handleRetry = useCallback((msg: Message) => {
+    setMessages((prev) => prev.filter((m) => m.id !== msg.id));
+    doSend(msg.text);
+  }, [doSend]);
 
   if (loading) {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.errorText}>تعذر تحميل الرسائل، يرجى المحاولة لاحقاً.</Text>
       </View>
     );
   }
@@ -134,13 +269,26 @@ function ChatScreen({ route }: Props) {
             keyExtractor={(m) => m.id}
             renderItem={({ item, index }) => {
               const isMine = item.senderId === me?.id;
-              // messages are inverted (newest first), so next item is the one above in the list
               const nextMsg = messages[index + 1];
               const showSender = !isMine && (!nextMsg || nextMsg.senderId !== item.senderId);
-              return <MessageBubble msg={item} isMine={isMine} showSender={showSender} />;
+              return (
+                <MessageBubble
+                  msg={item}
+                  isMine={isMine}
+                  showSender={showSender}
+                  onRetry={handleRetry}
+                />
+              );
             }}
             inverted
             contentContainerStyle={styles.messagesList}
+            onEndReached={loadMore}
+            onEndReachedThreshold={0.3}
+            ListFooterComponent={
+              loadingMore
+                ? <ActivityIndicator color={Colors.primary} style={styles.loadMoreSpinner} />
+                : null
+            }
           />
         )}
 
@@ -156,15 +304,11 @@ function ChatScreen({ route }: Props) {
             textAlign="right"
           />
           <TouchableOpacity
-            style={[styles.sendBtn, (!text.trim() || sending) && styles.sendBtnDisabled]}
+            style={[styles.sendBtn, !text.trim() && styles.sendBtnDisabled]}
             onPress={handleSend}
-            disabled={!text.trim() || sending}
+            disabled={!text.trim()}
             activeOpacity={0.8}>
-            {sending ? (
-              <ActivityIndicator size="small" color={Colors.textOnPrimary} />
-            ) : (
-              <Text style={styles.sendIcon}>▶</Text>
-            )}
+            <Text style={styles.sendIcon}>▶</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -177,8 +321,11 @@ export default memo(ChatScreen);
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   flex: { flex: 1 },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12 },
+  errorText: { fontSize: 14, color: Colors.textSecondary, textAlign: 'center', paddingHorizontal: 32 },
   messagesList: { padding: 12 },
+  loadMoreSpinner: { paddingVertical: 16 },
+
   bubbleRow: { flexDirection: 'row', alignItems: 'flex-end', marginBottom: 4 },
   bubbleRowMine: { flexDirection: 'row-reverse' },
   avatarCol: { width: 40, alignItems: 'center', justifyContent: 'flex-end', marginRight: 6 },
@@ -206,10 +353,13 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 1,
   },
+  bubbleFailed: { opacity: 0.7, borderWidth: 1, borderColor: Colors.danger + '60' },
   bubbleText: { fontSize: 15, color: Colors.text, lineHeight: 20 },
   bubbleTextMine: { color: Colors.textOnPrimary },
   bubbleTime: { fontSize: 10, color: Colors.textMuted, marginTop: 4, textAlign: 'right' },
   bubbleTimeMine: { color: 'rgba(255,255,255,0.7)' },
+  bubbleTimeFailed: { color: Colors.danger },
+
   inputRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
@@ -241,6 +391,7 @@ const styles = StyleSheet.create({
   },
   sendBtnDisabled: { backgroundColor: Colors.border },
   sendIcon: { color: Colors.textOnPrimary, fontSize: 14 },
+
   emptyChat: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12 },
   emptyChatIcon: { fontSize: 52 },
   emptyChatText: { fontSize: 15, color: Colors.textSecondary, textAlign: 'center' },
