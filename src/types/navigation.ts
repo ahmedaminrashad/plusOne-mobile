@@ -20,6 +20,7 @@ export type AppStackParamList = {
   QRScanner: { groupId: string; groupName: string };
   OCRCapture: { groupId: string; groupName: string };
   ReceiptSplit: { groupId: string; groupName: string; receiptJson: string };
+  ViewReceipt: { groupId: string; groupName: string; billId: string };
 };
 
 export type SettingsStackParamList = {

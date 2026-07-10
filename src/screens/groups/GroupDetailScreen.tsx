@@ -110,10 +110,12 @@ function MemberRow({
 
 function BillCard({
   bill,
+  onPress,
   onDelete,
   canDelete,
 }: {
   bill: Bill;
+  onPress: () => void;
   onDelete: () => void;
   canDelete: boolean;
 }) {
@@ -121,7 +123,7 @@ function BillCard({
   const date = new Date(bill.createdAt).toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' });
   const displayName = bill.venueName ?? bill.title ?? 'فاتورة';
   return (
-    <View style={styles.billCard}>
+    <TouchableOpacity style={styles.billCard} onPress={onPress} activeOpacity={0.7}>
       <View style={styles.billIcon}>
         <Text style={styles.billIconText}>🧾</Text>
       </View>
@@ -138,7 +140,7 @@ function BillCard({
           </TouchableOpacity>
         )}
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -527,6 +529,7 @@ function GroupDetailScreen({ route, navigation }: Props) {
                   <BillCard
                     bill={item}
                     canDelete={item.paidByUserId === me?.id || isAdmin}
+                    onPress={() => navigation.navigate('ViewReceipt', { groupId, groupName, billId: item.id })}
                     onDelete={() => handleDeleteBill(item)}
                   />
                 )}

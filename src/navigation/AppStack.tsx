@@ -11,6 +11,7 @@ import CreateBillScreen from '../screens/groups/CreateBillScreen';
 import QRScannerScreen from '../screens/groups/QRScannerScreen';
 import OCRCaptureScreen from '../screens/groups/OCRCaptureScreen';
 import ReceiptSplitScreen from '../screens/groups/ReceiptSplitScreen';
+import ViewReceiptScreen from '../screens/groups/ViewReceiptScreen';
 import { Colors } from '../constants/colors';
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
@@ -58,6 +59,11 @@ export default function AppStack() {
         name="ReceiptSplit"
         component={ReceiptSplitScreen}
         options={({ route }) => ({ title: route.params.groupName })}
+      />
+      <Stack.Screen
+        name="ViewReceipt"
+        component={ViewReceiptScreen}
+        options={{ title: 'الإيصال' }}
       />
     </Stack.Navigator>
   );
