@@ -9,7 +9,6 @@ import {
   StatusBar,
   ActivityIndicator,
   RefreshControl,
-  Alert,
 } from 'react-native';
 import { AppScreenProps } from '../../types/navigation';
 import {
@@ -23,10 +22,6 @@ import Avatar from '../../components/common/Avatar';
 import Button from '../../components/common/Button';
 import InvitationPromptModal from '../../components/groups/InvitationPromptModal';
 import { Colors } from '../../constants/colors';
-import { useAppDispatch } from '../../hooks/useAppDispatch';
-import { clearAuth } from '../../store/slices/authSlice';
-import { baseApi } from '../../store/api/baseApi';
-import { SecureStorage } from '../../utils/storage';
 import { useGetMeQuery } from '../../store/api/usersApi';
 
 type Props = AppScreenProps<'Home'>;
@@ -56,7 +51,6 @@ function GroupCard({ group, onPress }: { group: Group; onPress: () => void }) {
 }
 
 function HomeScreen({ navigation }: Props) {
-  const dispatch = useAppDispatch();
   const { data: me } = useGetMeQuery();
   const { data: groups, isLoading, isFetching, refetch, isError } = useGetGroupsQuery();
   const { data: invitations } = useGetMyInvitationsQuery();
@@ -88,21 +82,6 @@ function HomeScreen({ navigation }: Props) {
     (group: Group) => navigation.navigate('GroupDetail', { groupId: group.id, groupName: group.name }),
     [navigation],
   );
-
-  const handleLogout = useCallback(() => {
-    Alert.alert('تسجيل الخروج', 'هل تريد تسجيل الخروج؟', [
-      { text: 'إلغاء', style: 'cancel' },
-      {
-        text: 'خروج',
-        style: 'destructive',
-        onPress: async () => {
-          await SecureStorage.clearTokens();
-          dispatch(baseApi.util.resetApiState());
-          dispatch(clearAuth());
-        },
-      },
-    ]);
-  }, [dispatch]);
 
   const firstName = me?.displayName?.split(' ')[0];
   const greeting = firstName ? `مرحباً، ${firstName}` : 'مرحباً';
@@ -144,9 +123,6 @@ function HomeScreen({ navigation }: Props) {
                 </View>
               )}
             </TouchableOpacity>
-            <TouchableOpacity style={styles.headerIconBtn} onPress={handleLogout} activeOpacity={0.7}>
-              <Text style={styles.headerIconText}>🚪</Text>
-            </TouchableOpacity>
           </View>
         </View>
 
@@ -156,9 +132,6 @@ function HomeScreen({ navigation }: Props) {
             <Text style={styles.headerGreeting}>{greeting}</Text>
             <Text style={styles.headerSub}>مجموعاتك</Text>
           </View>
-          <TouchableOpacity style={styles.createBtn} onPress={() => navigation.navigate('CreateGroup')} activeOpacity={0.85}>
-            <Text style={styles.createBtnText}>+ جديد</Text>
-          </TouchableOpacity>
         </View>
       </View>
 

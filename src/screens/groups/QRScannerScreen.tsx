@@ -57,13 +57,11 @@ function QRScannerScreen({ route, navigation }: Props) {
     );
   }, [navigation, groupId, groupName]);
 
-  const handleReadCode = useCallback(
-    async (event: any) => {
+  const handlePayload = useCallback(
+    async (payload: string) => {
       if (scannedRef.current || parsing) return;
       scannedRef.current = true;
       setParsing(true);
-
-      const payload: string = event.nativeEvent.codeStringValue;
 
       try {
         const result = await parseQr({ groupId, payload }).unwrap();
@@ -116,6 +114,18 @@ function QRScannerScreen({ route, navigation }: Props) {
       }
     },
     [parsing, groupId, groupName, parseQr, navigation],
+  );
+
+  const handleReadCode = useCallback(
+    (event: any) => handlePayload(event.nativeEvent.codeStringValue),
+    [handlePayload],
+  );
+
+  const handleTestEta = useCallback(
+    () => handlePayload(
+      'https://invoicing.eta.gov.eg/receipts/search/08fb08e19f5e35c921047281cfa54106a339c976edc8600d6172a76019bc4378/share/2026-06-29T14:52:Z',
+    ),
+    [handlePayload],
   );
 
   if (hasPermission === null) {
@@ -175,6 +185,13 @@ function QRScannerScreen({ route, navigation }: Props) {
             <Text style={styles.hint}>وجّه الكاميرا نحو رمز QR الموجود على الإيصال</Text>
           )}
           <TouchableOpacity
+            style={styles.testBtn}
+            onPress={handleTestEta}
+            disabled={parsing}
+            activeOpacity={0.75}>
+            <Text style={styles.testBtnText}>🧪 تجربة ETA</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
             style={styles.manualEntryBtn}
             onPress={() => navigation.replace('AddBill', { groupId, groupName })}>
             <Text style={styles.manualEntryText}>إدخال يدوي</Text>
@@ -232,6 +249,13 @@ const styles = StyleSheet.create({
   cornerBR: { bottom: 0, right: 0, borderBottomWidth: THICKNESS, borderRightWidth: THICKNESS },
   hint: { color: '#fff', fontSize: 14, textAlign: 'center', paddingHorizontal: 32, opacity: 0.9 },
   parsingText: { color: '#fff', fontSize: 14, opacity: 0.9 },
+  testBtn: {
+    paddingHorizontal: 24,
+    paddingVertical: 9,
+    borderRadius: 20,
+    backgroundColor: 'rgba(99,102,241,0.75)',
+  },
+  testBtnText: { color: '#fff', fontSize: 13, fontWeight: '600' },
   manualEntryBtn: {
     paddingHorizontal: 32,
     paddingVertical: 10,
