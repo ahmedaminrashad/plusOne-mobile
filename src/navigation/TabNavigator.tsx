@@ -23,7 +23,7 @@ function EmptyScreen() {
 function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const { t } = useTranslation('navigation');
   const handleGroupsPress = useCallback(() => {
-    navigation.navigate('Groups');
+    navigation.navigate('Groups', { screen: 'Home' } as any);
   }, [navigation]);
 
   const handleFabPress = useCallback(() => {
