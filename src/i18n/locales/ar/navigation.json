@@ -1,0 +1,27 @@
+{
+  "appStack": {
+    "invitationsTitle": "الدعوات",
+    "createGroupTitle": "مجموعة جديدة",
+    "inviteMembersTitle": "دعوة أعضاء",
+    "addBillTitle": "إضافة إيصال",
+    "qrScannerTitle": "مسح QR",
+    "ocrCaptureTitle": "مسح إيصال ورقي",
+    "viewReceiptTitle": "الإيصال"
+  },
+  "tabBar": {
+    "groupsLabel": "مجموعاتي",
+    "settingsLabel": "الإعدادات"
+  },
+  "rootNavigator": {
+    "newNotificationTitle": "إشعار جديد",
+    "viewAction": "عرض"
+  },
+  "invitationPrompt": {
+    "label": "دعوة للانضمام",
+    "subtitle": "تمت دعوتك للانضمام إلى هذه المجموعة، هل تقبل؟",
+    "declineButton": "رفض",
+    "acceptButton": "قبول الدعوة",
+    "laterButton": "لاحقاً",
+    "counter": "{{current}} / {{total}} دعوات"
+  }
+}

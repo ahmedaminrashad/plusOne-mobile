@@ -13,6 +13,7 @@ import {
   Platform,
   ActivityIndicator,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { AppScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
 import Button from '../../components/common/Button';
@@ -20,6 +21,7 @@ import { useCreateBillMutation } from '../../store/api/billsApi';
 import { useGetGroupMembersQuery } from '../../store/api/groupsApi';
 import { useGetMeQuery } from '../../store/api/usersApi';
 import { GroupMember, TaxServiceType, ParsedReceiptData } from '../../types/models';
+import { formatCurrency } from '../../utils/format';
 
 type Props = AppScreenProps<'AddBill'>;
 
@@ -44,6 +46,7 @@ function AmountTypeToggle({
   value: TaxServiceType;
   onChange: (v: TaxServiceType) => void;
 }) {
+  const { t } = useTranslation('billing');
   return (
     <View style={styles.toggle}>
       <TouchableOpacity
@@ -54,13 +57,14 @@ function AmountTypeToggle({
       <TouchableOpacity
         style={[styles.toggleBtn, value === 'amount' && styles.toggleBtnActive]}
         onPress={() => onChange('amount')}>
-        <Text style={[styles.toggleText, value === 'amount' && styles.toggleTextActive]}>ج.م</Text>
+        <Text style={[styles.toggleText, value === 'amount' && styles.toggleTextActive]}>{t('common:currencyEGP')}</Text>
       </TouchableOpacity>
     </View>
   );
 }
 
 function CreateBillScreen({ route, navigation }: Props) {
+  const { t } = useTranslation('billing');
   const { groupId, groupName, prefilledData } = route.params;
   const isPreview = !!prefilledData;
 
@@ -133,7 +137,7 @@ function CreateBillScreen({ route, navigation }: Props) {
   const payerName =
     activeMembers.find((m) => m.userId === paidByUserId)?.user?.displayName ??
     me?.displayName ??
-    'اختر من دفع';
+    t('createBill.selectPayerFallback');
 
   const handleContinue = useCallback(async () => {
     if (!canContinue) return;
@@ -141,7 +145,7 @@ function CreateBillScreen({ route, navigation }: Props) {
     if (isLumpSum) {
       const amount = parseNum(lumpSumTotal);
       if (amount <= 0) {
-        Alert.alert('خطأ', 'يجب أن يكون المبلغ أكبر من صفر.');
+        Alert.alert(t('common:error'), t('createBill.amountMustBePositive'));
         return;
       }
       try {
@@ -155,7 +159,7 @@ function CreateBillScreen({ route, navigation }: Props) {
         }).unwrap();
         navigation.navigate('GroupDetail', { groupId, groupName });
       } catch {
-        Alert.alert('خطأ', 'تعذر حفظ الفاتورة، حاول مرة أخرى لاحقاً.');
+        Alert.alert(t('common:error'), t('createBill.saveFailed'));
       }
       return;
     }
@@ -195,7 +199,7 @@ function CreateBillScreen({ route, navigation }: Props) {
 
   const renderPayerRow = useCallback(
     ({ item }: { item: GroupMember }) => {
-      const name = item.user?.displayName ?? item.pendingPhone ?? 'مستخدم';
+      const name = item.user?.displayName ?? item.pendingPhone ?? t('createBill.defaultMemberName');
       const isSelected = item.userId === paidByUserId;
       return (
         <TouchableOpacity
@@ -215,18 +219,18 @@ function CreateBillScreen({ route, navigation }: Props) {
         {isPreview && (
           <View style={styles.previewBanner}>
             <Text style={styles.previewBannerText}>
-              {prefilledData?.captureMethod === 'qr' ? '📷 تم مسح QR — راجع التفاصيل وعدّل إن لزم' : '🖨 نتيجة OCR — راجع وعدّل أي حقل'}
+              {prefilledData?.captureMethod === 'qr' ? t('createBill.qrPreviewBanner') : t('createBill.ocrPreviewBanner')}
             </Text>
           </View>
         )}
 
         {/* Venue */}
-        <Text style={styles.sectionLabel}>المطعم / المحل</Text>
+        <Text style={styles.sectionLabel}>{t('createBill.venueLabel')}</Text>
         <TextInput
           style={styles.input}
           value={venueName}
           onChangeText={setVenueName}
-          placeholder="مثال: زوبا الزمالك (اختياري)"
+          placeholder={t('createBill.venuePlaceholder')}
           placeholderTextColor={Colors.textMuted}
           textAlign="right"
           maxLength={100}
@@ -237,37 +241,37 @@ function CreateBillScreen({ route, navigation }: Props) {
           <TouchableOpacity
             style={[styles.modeBtn, !isLumpSum && styles.modeBtnActive]}
             onPress={() => setIsLumpSum(false)}>
-            <Text style={[styles.modeBtnText, !isLumpSum && styles.modeBtnTextActive]}>أصناف مفصّلة</Text>
+            <Text style={[styles.modeBtnText, !isLumpSum && styles.modeBtnTextActive]}>{t('createBill.itemizedModeLabel')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.modeBtn, isLumpSum && styles.modeBtnActive]}
             onPress={() => setIsLumpSum(true)}>
-            <Text style={[styles.modeBtnText, isLumpSum && styles.modeBtnTextActive]}>إجمالي فقط</Text>
+            <Text style={[styles.modeBtnText, isLumpSum && styles.modeBtnTextActive]}>{t('createBill.lumpSumModeLabel')}</Text>
           </TouchableOpacity>
         </View>
 
         {isLumpSum ? (
           <>
-            <Text style={styles.sectionLabel}>المبلغ الإجمالي (ج.م) *</Text>
+            <Text style={styles.sectionLabel}>{t('createBill.lumpSumAmountLabel')}</Text>
             <TextInput
               style={styles.input}
               value={lumpSumTotal}
               onChangeText={setLumpSumTotal}
-              placeholder="0.00"
+              placeholder={t('createBill.amountPlaceholderZero')}
               placeholderTextColor={Colors.textMuted}
               keyboardType="decimal-pad"
               textAlign="right"
             />
-            <Text style={styles.lumpSumNote}>في وضع الإجمالي فقط، لن يتوفر التوزيع بالصنف.</Text>
+            <Text style={styles.lumpSumNote}>{t('createBill.lumpSumNote')}</Text>
           </>
         ) : (
           <>
             {/* Items */}
             <View style={styles.sectionHeader}>
               <TouchableOpacity onPress={addItem} style={styles.addItemBtn}>
-                <Text style={styles.addItemBtnText}>+ صنف جديد</Text>
+                <Text style={styles.addItemBtnText}>{t('createBill.addItemButton')}</Text>
               </TouchableOpacity>
-              <Text style={styles.sectionLabel}>الأصناف *</Text>
+              <Text style={styles.sectionLabel}>{t('createBill.itemsLabel')}</Text>
             </View>
 
             {items.map((item, index) => (
@@ -279,7 +283,7 @@ function CreateBillScreen({ route, navigation }: Props) {
                       style={[styles.input, styles.itemNameInput]}
                       value={item.name}
                       onChangeText={(v) => updateItem(item.id, 'name', v)}
-                      placeholder="اسم الصنف"
+                      placeholder={t('createBill.itemNamePlaceholder')}
                       placeholderTextColor={Colors.textMuted}
                       textAlign="right"
                       maxLength={100}
@@ -290,7 +294,7 @@ function CreateBillScreen({ route, navigation }: Props) {
                       style={[styles.input, styles.itemPriceInput]}
                       value={item.unitPrice}
                       onChangeText={(v) => updateItem(item.id, 'unitPrice', v)}
-                      placeholder="السعر"
+                      placeholder={t('createBill.pricePlaceholder')}
                       placeholderTextColor={Colors.textMuted}
                       keyboardType="decimal-pad"
                       textAlign="right"
@@ -300,7 +304,7 @@ function CreateBillScreen({ route, navigation }: Props) {
                       style={[styles.input, styles.itemQtyInput]}
                       value={item.qty}
                       onChangeText={(v) => updateItem(item.id, 'qty', v.replace(/[^0-9]/g, ''))}
-                      placeholder="الكمية"
+                      placeholder={t('createBill.qtyPlaceholder')}
                       placeholderTextColor={Colors.textMuted}
                       keyboardType="number-pad"
                       textAlign="center"
@@ -317,18 +321,18 @@ function CreateBillScreen({ route, navigation }: Props) {
 
             {/* Subtotal */}
             <View style={styles.subtotalRow}>
-              <Text style={styles.subtotalAmt}>{subtotal.toFixed(2)} ج.م</Text>
-              <Text style={styles.subtotalLabel}>المجموع الفرعي</Text>
+              <Text style={styles.subtotalAmt}>{formatCurrency(subtotal)}</Text>
+              <Text style={styles.subtotalLabel}>{t('createBill.subtotalLabel')}</Text>
             </View>
 
             {/* Tax */}
-            <Text style={styles.sectionLabel}>الضريبة (اختياري)</Text>
+            <Text style={styles.sectionLabel}>{t('createBill.taxLabel')}</Text>
             <View style={styles.amountTypeRow}>
               <TextInput
                 style={[styles.input, styles.flex1]}
                 value={taxValue}
                 onChangeText={setTaxValue}
-                placeholder={taxType === 'percent' ? 'مثال: 14' : 'مثال: 25.00'}
+                placeholder={taxType === 'percent' ? t('createBill.taxPlaceholderPercent') : t('createBill.taxPlaceholderAmount')}
                 placeholderTextColor={Colors.textMuted}
                 keyboardType="decimal-pad"
                 textAlign="right"
@@ -337,13 +341,13 @@ function CreateBillScreen({ route, navigation }: Props) {
             </View>
 
             {/* Service */}
-            <Text style={styles.sectionLabel}>رسوم الخدمة (اختياري)</Text>
+            <Text style={styles.sectionLabel}>{t('createBill.serviceLabel')}</Text>
             <View style={styles.amountTypeRow}>
               <TextInput
                 style={[styles.input, styles.flex1]}
                 value={serviceValue}
                 onChangeText={setServiceValue}
-                placeholder={serviceType === 'percent' ? 'مثال: 12' : 'مثال: 20.00'}
+                placeholder={serviceType === 'percent' ? t('createBill.servicePlaceholderPercent') : t('createBill.servicePlaceholderAmount')}
                 placeholderTextColor={Colors.textMuted}
                 keyboardType="decimal-pad"
                 textAlign="right"
@@ -352,13 +356,13 @@ function CreateBillScreen({ route, navigation }: Props) {
             </View>
 
             {/* Tip */}
-            <Text style={styles.sectionLabel}>الإكرامية (اختياري)</Text>
+            <Text style={styles.sectionLabel}>{t('createBill.tipLabel')}</Text>
             <View style={styles.amountTypeRow}>
               <TextInput
                 style={[styles.input, styles.flex1]}
                 value={tipValue}
                 onChangeText={setTipValue}
-                placeholder={tipType === 'percent' ? 'مثال: 10' : 'مثال: 15.00'}
+                placeholder={tipType === 'percent' ? t('createBill.tipPlaceholderPercent') : t('createBill.tipPlaceholderAmount')}
                 placeholderTextColor={Colors.textMuted}
                 keyboardType="decimal-pad"
                 textAlign="right"
@@ -368,38 +372,38 @@ function CreateBillScreen({ route, navigation }: Props) {
 
             {/* Grand total */}
             <View style={styles.grandTotalBox}>
-              <Text style={styles.grandTotalAmt}>{calculatedTotal.toFixed(2)} ج.م</Text>
-              <Text style={styles.grandTotalLabel}>الإجمالي</Text>
+              <Text style={styles.grandTotalAmt}>{formatCurrency(calculatedTotal)}</Text>
+              <Text style={styles.grandTotalLabel}>{t('createBill.grandTotalLabel')}</Text>
             </View>
 
             {/* Override */}
-            <Text style={styles.sectionLabel}>تجاوز الإجمالي (اختياري)</Text>
+            <Text style={styles.sectionLabel}>{t('createBill.overrideLabel')}</Text>
             <TextInput
               style={styles.input}
               value={grandTotalOverride}
               onChangeText={setGrandTotalOverride}
-              placeholder="اتركه فارغاً لاستخدام الإجمالي المحسوب"
+              placeholder={t('createBill.overridePlaceholder')}
               placeholderTextColor={Colors.textMuted}
               keyboardType="decimal-pad"
               textAlign="right"
             />
             {totalMismatch && (
               <Text style={styles.mismatchWarning}>
-                ⚠ الإجمالي المدخل لا يتطابق مع الحسابات — سيُستخدم رقمك.
+                {t('createBill.mismatchWarning')}
               </Text>
             )}
           </>
         )}
 
         {/* Payer */}
-        <Text style={styles.sectionLabel}>من دفع؟ *</Text>
+        <Text style={styles.sectionLabel}>{t('createBill.payerLabel')}</Text>
         <TouchableOpacity style={styles.pickerBtn} onPress={() => setPayerPickerVisible(true)}>
           <Text style={styles.pickerArrow}>▼</Text>
           <Text style={styles.pickerText}>{payerName}</Text>
         </TouchableOpacity>
 
         <Button
-          title="متابعة"
+          title={t('common:continue')}
           onPress={handleContinue}
           loading={isLoading}
           style={[styles.continueBtn, !canContinue && styles.continueBtnDisabled]}
@@ -417,7 +421,7 @@ function CreateBillScreen({ route, navigation }: Props) {
           activeOpacity={1}
           onPress={() => setPayerPickerVisible(false)}>
           <View style={styles.modalSheet}>
-            <Text style={styles.modalTitle}>من دفع؟</Text>
+            <Text style={styles.modalTitle}>{t('createBill.payerModalTitle')}</Text>
             <FlatList
               data={activeMembers}
               keyExtractor={(m) => m.id}

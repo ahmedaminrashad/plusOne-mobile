@@ -1,4 +1,5 @@
 import React, { useState, useCallback, memo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -19,15 +20,17 @@ import { GroupCategory } from '../../types/models';
 
 type Props = AppScreenProps<'CreateGroup'>;
 
-const CATEGORIES: { key: GroupCategory; label: string }[] = [
-  { key: 'friends', label: '👫 أصدقاء' },
-  { key: 'family', label: '👨‍👩‍👧 عائلة' },
-  { key: 'work', label: '💼 عمل' },
-  { key: 'travel', label: '✈️ سفر' },
-  { key: 'other', label: '📦 أخرى' },
-];
-
 function CreateGroupScreen({ navigation }: Props) {
+  const { t } = useTranslation('groups');
+
+  const CATEGORIES: { key: GroupCategory; label: string }[] = [
+    { key: 'friends', label: t('createGroup.categoryFriends') },
+    { key: 'family', label: t('createGroup.categoryFamily') },
+    { key: 'work', label: t('createGroup.categoryWork') },
+    { key: 'travel', label: t('createGroup.categoryTravel') },
+    { key: 'other', label: t('createGroup.categoryOther') },
+  ];
+
   const [name, setName] = useState('');
   const [category, setCategory] = useState<GroupCategory | undefined>();
   const [avatarUri, setAvatarUri] = useState<string | undefined>();
@@ -43,17 +46,17 @@ function CreateGroupScreen({ navigation }: Props) {
 
   const handleCreate = useCallback(async () => {
     const trimmed = name.trim();
-    if (!trimmed) { setNameError('اسم المجموعة مطلوب'); return; }
-    if (trimmed.length > 50) { setNameError('اسم المجموعة طويل جداً (أقصى 50 حرف)'); return; }
+    if (!trimmed) { setNameError(t('createGroup.nameRequired')); return; }
+    if (trimmed.length > 50) { setNameError(t('createGroup.nameTooLong')); return; }
     setNameError('');
 
     try {
       const group = await createGroup({ name: trimmed, category, avatarUrl: avatarUri }).unwrap();
       navigation.replace('GroupDetail', { groupId: group.id, groupName: group.name });
     } catch {
-      Alert.alert('خطأ', 'تعذر إنشاء المجموعة، حاول مرة أخرى لاحقاً');
+      Alert.alert(t('common:error'), t('createGroup.createError'));
     }
-  }, [name, category, avatarUri, createGroup, navigation]);
+  }, [name, category, avatarUri, createGroup, navigation, t]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -65,7 +68,7 @@ function CreateGroupScreen({ navigation }: Props) {
             {step < 3 && <View style={[styles.progressLine, step < 1 && styles.progressLineDone]} />}
           </View>
         ))}
-        <Text style={styles.progressLabel}>خطوة 1 من 3 – تفاصيل المجموعة</Text>
+        <Text style={styles.progressLabel}>{t('createGroup.stepLabel')}</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
@@ -76,20 +79,20 @@ function CreateGroupScreen({ navigation }: Props) {
               <Text style={styles.cameraBadgeIcon}>📷</Text>
             </View>
           </View>
-          <Text style={styles.addPhotoText}>{avatarUri ? 'تغيير الصورة' : 'إضافة صورة'}</Text>
+          <Text style={styles.addPhotoText}>{avatarUri ? t('createGroup.changePhoto') : t('createGroup.addPhoto')}</Text>
         </TouchableOpacity>
 
         <Input
-          label="اسم المجموعة *"
+          label={t('createGroup.nameLabel')}
           value={name}
           onChangeText={(v) => { setName(v); setNameError(''); }}
-          placeholder="مثال: رحلة الجامعة"
+          placeholder={t('createGroup.namePlaceholder')}
           error={nameError}
           maxLength={50}
           autoFocus
         />
 
-        <Text style={styles.categoryLabel}>الفئة (اختياري)</Text>
+        <Text style={styles.categoryLabel}>{t('createGroup.categoryLabel')}</Text>
         <View style={styles.chips}>
           {CATEGORIES.map((c) => (
             <TouchableOpacity
@@ -103,7 +106,7 @@ function CreateGroupScreen({ navigation }: Props) {
         </View>
 
         <Button
-          title="التالي – دعوة الأعضاء ›"
+          title={t('createGroup.nextCta')}
           onPress={handleCreate}
           loading={isLoading}
           disabled={!name.trim()}

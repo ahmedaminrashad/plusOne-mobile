@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Platform,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { createBottomTabNavigator, BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { TabParamList } from '../types/navigation';
 import AppStack from './AppStack';
@@ -20,6 +21,7 @@ function EmptyScreen() {
 }
 
 function CustomTabBar({ state, navigation }: BottomTabBarProps) {
+  const { t } = useTranslation('navigation');
   const handleGroupsPress = useCallback(() => {
     navigation.navigate('Groups');
   }, [navigation]);
@@ -48,7 +50,7 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
             {groupsActive ? '⊞' : '⊟'}
           </Text>
         </View>
-        <Text style={[styles.tabLabel, groupsActive && styles.tabLabelActive]}>مجموعاتي</Text>
+        <Text style={[styles.tabLabel, groupsActive && styles.tabLabelActive]}>{t('tabBar.groupsLabel')}</Text>
       </TouchableOpacity>
 
       {/* FAB middle */}
@@ -68,7 +70,7 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
             {settingsActive ? '⚙' : '⚙'}
           </Text>
         </View>
-        <Text style={[styles.tabLabel, settingsActive && styles.tabLabelActive]}>الإعدادات</Text>
+        <Text style={[styles.tabLabel, settingsActive && styles.tabLabelActive]}>{t('tabBar.settingsLabel')}</Text>
       </TouchableOpacity>
     </View>
   );

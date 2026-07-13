@@ -1,4 +1,5 @@
 import React, { memo, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -33,13 +34,14 @@ function InvitationCard({
   onDecline: () => void;
   loading: boolean;
 }) {
+  const { t } = useTranslation('groups');
   const group = invitation.group;
   return (
     <View style={styles.card}>
       <Avatar uri={group?.avatarUrl} name={group?.name} size={48} />
       <View style={styles.cardBody}>
         <Text style={styles.groupName} numberOfLines={1}>{group?.name ?? '...'}</Text>
-        <Text style={styles.cardSub}>تمت دعوتك للانضمام</Text>
+        <Text style={styles.cardSub}>{t('invitations.invitedToJoin')}</Text>
       </View>
       <View style={styles.actions}>
         <TouchableOpacity
@@ -47,7 +49,7 @@ function InvitationCard({
           onPress={onDecline}
           disabled={loading}
           activeOpacity={0.7}>
-          <Text style={styles.declineBtnText}>رفض</Text>
+          <Text style={styles.declineBtnText}>{t('invitations.decline')}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.actionBtn, styles.acceptBtn]}
@@ -57,7 +59,7 @@ function InvitationCard({
           {loading ? (
             <ActivityIndicator size="small" color={Colors.textOnPrimary} />
           ) : (
-            <Text style={styles.acceptBtnText}>قبول</Text>
+            <Text style={styles.acceptBtnText}>{t('invitations.accept')}</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -66,6 +68,7 @@ function InvitationCard({
 }
 
 function InvitationsScreen({ navigation }: Props) {
+  const { t } = useTranslation('groups');
   const { data: invitations, isLoading, isFetching, refetch } = useGetMyInvitationsQuery();
   const [accept, { isLoading: accepting }] = useAcceptInvitationMutation();
   const [decline, { isLoading: declining }] = useDeclineInvitationMutation();
@@ -88,8 +91,8 @@ function InvitationsScreen({ navigation }: Props) {
   const renderEmpty = () => (
     <View style={styles.empty}>
       <Text style={styles.emptyIcon}>📬</Text>
-      <Text style={styles.emptyTitle}>لا توجد دعوات</Text>
-      <Text style={styles.emptySubtitle}>ستظهر هنا الدعوات التي تصلك للانضمام إلى المجموعات</Text>
+      <Text style={styles.emptyTitle}>{t('invitations.emptyTitle')}</Text>
+      <Text style={styles.emptySubtitle}>{t('invitations.emptySubtitle')}</Text>
     </View>
   );
 

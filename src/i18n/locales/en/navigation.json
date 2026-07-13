@@ -1,0 +1,27 @@
+{
+  "appStack": {
+    "invitationsTitle": "Invitations",
+    "createGroupTitle": "New Group",
+    "inviteMembersTitle": "Invite Members",
+    "addBillTitle": "Add Receipt",
+    "qrScannerTitle": "Scan QR",
+    "ocrCaptureTitle": "Scan Paper Receipt",
+    "viewReceiptTitle": "Receipt"
+  },
+  "tabBar": {
+    "groupsLabel": "My Groups",
+    "settingsLabel": "Settings"
+  },
+  "rootNavigator": {
+    "newNotificationTitle": "New Notification",
+    "viewAction": "View"
+  },
+  "invitationPrompt": {
+    "label": "Invitation to Join",
+    "subtitle": "You've been invited to join this group. Do you accept?",
+    "declineButton": "Decline",
+    "acceptButton": "Accept Invitation",
+    "laterButton": "Later",
+    "counter": "{{current}} / {{total}} invitations"
+  }
+}

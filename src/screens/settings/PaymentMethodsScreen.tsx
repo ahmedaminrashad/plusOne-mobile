@@ -8,6 +8,7 @@ import {
   ScrollView,
   StatusBar,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { SettingsScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
 import { useGetMeQuery } from '../../store/api/usersApi';
@@ -15,6 +16,7 @@ import { useGetMeQuery } from '../../store/api/usersApi';
 type Props = SettingsScreenProps<'PaymentMethods'>;
 
 function PaymentMethodsScreen({ navigation }: Props) {
+  const { t } = useTranslation('settings');
   const { data: me } = useGetMeQuery();
 
   return (
@@ -24,9 +26,9 @@ function PaymentMethodsScreen({ navigation }: Props) {
       <View style={styles.header}>
         <View style={styles.deco1} />
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Text style={styles.backBtnText}>رجوع</Text>
+          <Text style={styles.backBtnText}>{t('common:back')}</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>وسائل الدفع</Text>
+        <Text style={styles.headerTitle}>{t('paymentMethods.headerTitle')}</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
@@ -38,9 +40,9 @@ function PaymentMethodsScreen({ navigation }: Props) {
               <Text style={styles.instaIcon}>P</Text>
             </View>
             <View style={styles.instaInfo}>
-              <Text style={styles.instaTitle}>InstaPay</Text>
+              <Text style={styles.instaTitle}>{t('paymentMethods.instaPayTitle')}</Text>
               <Text style={styles.instaSubtitle}>
-                {me?.instaPayAlias ? me.instaPayAlias : 'لم يتم الربط بعد'}
+                {me?.instaPayAlias ? me.instaPayAlias : t('paymentMethods.instaPayNotLinked')}
               </Text>
             </View>
             <TouchableOpacity
@@ -54,24 +56,24 @@ function PaymentMethodsScreen({ navigation }: Props) {
                 styles.instaActionText,
                 me?.instaPayAlias ? styles.instaActionTextLinked : styles.instaActionTextUnlinked,
               ]}>
-                {me?.instaPayAlias ? 'تعديل' : 'ربط'}
+                {me?.instaPayAlias ? t('common:edit') : t('paymentMethods.linkButton')}
               </Text>
             </TouchableOpacity>
           </View>
           {me?.instaPayAlias && (
             <View style={styles.instaAlias}>
-              <Text style={styles.instaAliasLabel}>المعرف</Text>
+              <Text style={styles.instaAliasLabel}>{t('paymentMethods.instaPayAliasLabel')}</Text>
               <Text style={styles.instaAliasValue}>{me.instaPayAlias}</Text>
             </View>
           )}
         </View>
 
         {/* Coming soon */}
-        <Text style={styles.sectionTitle}>طرق دفع اخرى</Text>
+        <Text style={styles.sectionTitle}>{t('paymentMethods.otherMethodsTitle')}</Text>
         <View style={styles.comingSoonCard}>
           <Text style={styles.comingSoonIcon}>🚧</Text>
-          <Text style={styles.comingSoonTitle}>قريباً</Text>
-          <Text style={styles.comingSoonSub}>ستتوفر بطاقات الائتمان والمحافظ الرقمية في التحديثات القادمة</Text>
+          <Text style={styles.comingSoonTitle}>{t('paymentMethods.comingSoonTitle')}</Text>
+          <Text style={styles.comingSoonSub}>{t('paymentMethods.comingSoonSubtitle')}</Text>
         </View>
 
       </ScrollView>

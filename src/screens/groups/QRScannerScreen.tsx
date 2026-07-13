@@ -10,6 +10,7 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { Camera } from 'react-native-camera-kit';
 import { AppScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
@@ -19,6 +20,7 @@ import { PrefilledBillData } from '../../types/models';
 type Props = AppScreenProps<'QRScanner'>;
 
 function QRScannerScreen({ route, navigation }: Props) {
+  const { t } = useTranslation('billing');
   const { groupId, groupName } = route.params;
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [parsing, setParsing] = useState(false);
@@ -31,10 +33,10 @@ function QRScannerScreen({ route, navigation }: Props) {
         const result = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.CAMERA,
           {
-            title: 'إذن الكاميرا',
-            message: 'يحتاج التطبيق إذن الكاميرا لمسح رمز QR من الإيصال',
-            buttonPositive: 'موافق',
-            buttonNegative: 'إلغاء',
+            title: t('qrScanner.permissionTitle'),
+            message: t('qrScanner.permissionMessage'),
+            buttonPositive: t('common:ok'),
+            buttonNegative: t('common:cancel'),
           },
         );
         const granted = result === PermissionsAndroid.RESULTS.GRANTED;
@@ -48,14 +50,14 @@ function QRScannerScreen({ route, navigation }: Props) {
 
   const handlePermissionDenied = useCallback(() => {
     Alert.alert(
-      'إذن مرفوض',
-      'يرجى منح الإذن للوصول إلى الكاميرا.',
+      t('qrScanner.permissionDeniedTitle'),
+      t('qrScanner.permissionDeniedMessage'),
       [
-        { text: 'إدخال يدوي', onPress: () => navigation.replace('AddBill', { groupId, groupName }) },
-        { text: 'إلغاء', onPress: () => navigation.goBack() },
+        { text: t('qrScanner.manualEntryButton'), onPress: () => navigation.replace('AddBill', { groupId, groupName }) },
+        { text: t('common:cancel'), onPress: () => navigation.goBack() },
       ],
     );
-  }, [navigation, groupId, groupName]);
+  }, [navigation, groupId, groupName, t]);
 
   const handlePayload = useCallback(
     async (payload: string) => {
@@ -83,11 +85,11 @@ function QRScannerScreen({ route, navigation }: Props) {
 
         if (result.fallback === 'webview' && result.url) {
           Alert.alert(
-            'لم يُتعرف على QR',
-            'لم يتم التعرف على هذا الرمز، سيتم فتح صفحة الإيصال للإدخال اليدوي.',
+            t('qrScanner.qrNotRecognizedTitle'),
+            t('qrScanner.webviewFallbackMessage'),
             [
-              { text: 'إدخال يدوي', onPress: () => navigation.replace('AddBill', { groupId, groupName }) },
-              { text: 'إلغاء', onPress: () => { scannedRef.current = false; setParsing(false); } },
+              { text: t('qrScanner.manualEntryButton'), onPress: () => navigation.replace('AddBill', { groupId, groupName }) },
+              { text: t('common:cancel'), onPress: () => { scannedRef.current = false; setParsing(false); } },
             ],
           );
           return;
@@ -95,25 +97,25 @@ function QRScannerScreen({ route, navigation }: Props) {
 
         // fallback: manual
         Alert.alert(
-          'لم يُتعرف على QR',
-          result.reason ?? 'هذا الرمز لا يحتوي على بيانات إيصال صالحة.',
+          t('qrScanner.qrNotRecognizedTitle'),
+          result.reason ?? t('qrScanner.invalidQrMessage'),
           [
-            { text: 'إدخال يدوي', onPress: () => navigation.replace('AddBill', { groupId, groupName }) },
-            { text: 'حاول مرة أخرى', onPress: () => { scannedRef.current = false; setParsing(false); } },
+            { text: t('qrScanner.manualEntryButton'), onPress: () => navigation.replace('AddBill', { groupId, groupName }) },
+            { text: t('common:retry'), onPress: () => { scannedRef.current = false; setParsing(false); } },
           ],
         );
       } catch {
         Alert.alert(
-          'تعذر تحميل الإيصال الرقمي',
-          'حدث خطأ أثناء معالجة الرمز. يرجى المحاولة مرة أخرى أو الإدخال اليدوي.',
+          t('qrScanner.loadFailedTitle'),
+          t('qrScanner.processErrorMessage'),
           [
-            { text: 'إدخال يدوي', onPress: () => navigation.replace('AddBill', { groupId, groupName }) },
-            { text: 'حاول مرة أخرى', onPress: () => { scannedRef.current = false; setParsing(false); } },
+            { text: t('qrScanner.manualEntryButton'), onPress: () => navigation.replace('AddBill', { groupId, groupName }) },
+            { text: t('common:retry'), onPress: () => { scannedRef.current = false; setParsing(false); } },
           ],
         );
       }
     },
-    [parsing, groupId, groupName, parseQr, navigation],
+    [parsing, groupId, groupName, parseQr, navigation, t],
   );
 
   const handleReadCode = useCallback(
@@ -140,13 +142,13 @@ function QRScannerScreen({ route, navigation }: Props) {
     return (
       <SafeAreaView style={styles.permissionScreen}>
         <Text style={styles.permIcon}>📷</Text>
-        <Text style={styles.permTitle}>يلزم إذن الكاميرا</Text>
-        <Text style={styles.permSub}>يرجى منح الإذن للوصول إلى الكاميرا لمسح رمز QR على الإيصال</Text>
+        <Text style={styles.permTitle}>{t('qrScanner.permissionRequiredTitle')}</Text>
+        <Text style={styles.permSub}>{t('qrScanner.permissionRequiredSub')}</Text>
         <TouchableOpacity style={styles.manualBtn} onPress={() => navigation.replace('AddBill', { groupId, groupName })}>
-          <Text style={styles.manualBtnText}>إدخال يدوي</Text>
+          <Text style={styles.manualBtnText}>{t('qrScanner.manualEntryButton')}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Text style={styles.backBtnText}>رجوع</Text>
+          <Text style={styles.backBtnText}>{t('common:back')}</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
@@ -179,25 +181,25 @@ function QRScannerScreen({ route, navigation }: Props) {
           {parsing ? (
             <>
               <ActivityIndicator size="large" color="#fff" />
-              <Text style={styles.parsingText}>جارٍ تحليل الإيصال...</Text>
+              <Text style={styles.parsingText}>{t('qrScanner.analyzingText')}</Text>
             </>
           ) : (
-            <Text style={styles.hint}>وجّه الكاميرا نحو رمز QR الموجود على الإيصال</Text>
+            <Text style={styles.hint}>{t('qrScanner.scanHint')}</Text>
           )}
           <TouchableOpacity
             style={styles.testBtn}
             onPress={handleTestEta}
             disabled={parsing}
             activeOpacity={0.75}>
-            <Text style={styles.testBtnText}>🧪 تجربة ETA</Text>
+            <Text style={styles.testBtnText}>{t('qrScanner.testEtaButton')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.manualEntryBtn}
             onPress={() => navigation.replace('AddBill', { groupId, groupName })}>
-            <Text style={styles.manualEntryText}>إدخال يدوي</Text>
+            <Text style={styles.manualEntryText}>{t('qrScanner.manualEntryButton')}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.cancelBtn} onPress={() => navigation.goBack()}>
-            <Text style={styles.cancelText}>إلغاء</Text>
+            <Text style={styles.cancelText}>{t('common:cancel')}</Text>
           </TouchableOpacity>
         </View>
       </View>

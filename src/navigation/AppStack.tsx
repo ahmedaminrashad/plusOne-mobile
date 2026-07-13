@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AppStackParamList } from '../types/navigation';
 import HomeScreen from '../screens/groups/HomeScreen';
@@ -17,6 +18,7 @@ import { Colors } from '../constants/colors';
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
 export default function AppStack() {
+  const { t } = useTranslation('navigation');
   return (
     <Stack.Navigator
       screenOptions={{
@@ -27,14 +29,14 @@ export default function AppStack() {
         contentStyle: { backgroundColor: Colors.background },
       }}>
       <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="Invitations" component={InvitationsScreen} options={{ title: 'الدعوات' }} />
-      <Stack.Screen name="CreateGroup" component={CreateGroupScreen} options={{ title: 'مجموعة جديدة' }} />
+      <Stack.Screen name="Invitations" component={InvitationsScreen} options={{ title: t('appStack.invitationsTitle') }} />
+      <Stack.Screen name="CreateGroup" component={CreateGroupScreen} options={{ title: t('appStack.createGroupTitle') }} />
       <Stack.Screen
         name="GroupDetail"
         component={GroupDetailScreen}
         options={({ route }) => ({ title: route.params.groupName })}
       />
-      <Stack.Screen name="InviteMembers" component={InviteMembersScreen} options={{ title: 'دعوة أعضاء' }} />
+      <Stack.Screen name="InviteMembers" component={InviteMembersScreen} options={{ title: t('appStack.inviteMembersTitle') }} />
       <Stack.Screen
         name="Chat"
         component={ChatScreen}
@@ -43,17 +45,17 @@ export default function AppStack() {
       <Stack.Screen
         name="AddBill"
         component={CreateBillScreen}
-        options={{ title: 'إضافة إيصال' }}
+        options={{ title: t('appStack.addBillTitle') }}
       />
       <Stack.Screen
         name="QRScanner"
         component={QRScannerScreen}
-        options={{ title: 'مسح QR', headerTransparent: true, headerTintColor: '#fff' }}
+        options={{ title: t('appStack.qrScannerTitle'), headerTransparent: true, headerTintColor: '#fff' }}
       />
       <Stack.Screen
         name="OCRCapture"
         component={OCRCaptureScreen}
-        options={{ title: 'مسح إيصال ورقي' }}
+        options={{ title: t('appStack.ocrCaptureTitle') }}
       />
       <Stack.Screen
         name="ReceiptSplit"
@@ -63,7 +65,7 @@ export default function AppStack() {
       <Stack.Screen
         name="ViewReceipt"
         component={ViewReceiptScreen}
-        options={{ title: 'الإيصال' }}
+        options={{ title: t('appStack.viewReceiptTitle') }}
       />
     </Stack.Navigator>
   );

@@ -10,6 +10,7 @@ import {
   Alert,
   StatusBar,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { SettingsScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
 
@@ -45,6 +46,7 @@ function ToggleRow({ icon, title, subtitle, value, onToggle, accentColor }: Togg
 }
 
 function SecurityScreen({ navigation }: Props) {
+  const { t } = useTranslation('settings');
   const [biometrics, setBiometrics] = useState(false);
   const [loginAlerts, setLoginAlerts] = useState(true);
   const [twoFactor, setTwoFactor] = useState(false);
@@ -52,17 +54,17 @@ function SecurityScreen({ navigation }: Props) {
   const handleBiometricsToggle = useCallback((v: boolean) => {
     if (v) {
       Alert.alert(
-        'تفعيل بصمة الاصبع',
-        'سيطلب منك التحقق عند كل تسجيل دخول.',
+        t('security.enableBiometricsTitle'),
+        t('security.enableBiometricsMessage'),
         [
-          { text: 'الغاء', style: 'cancel' },
-          { text: 'تفعيل', onPress: () => setBiometrics(true) },
+          { text: t('security.cancelButton'), style: 'cancel' },
+          { text: t('security.enableButton'), onPress: () => setBiometrics(true) },
         ],
       );
     } else {
       setBiometrics(false);
     }
-  }, []);
+  }, [t]);
 
   const score = biometrics && loginAlerts ? 8 : loginAlerts ? 5 : 3;
 
@@ -73,9 +75,9 @@ function SecurityScreen({ navigation }: Props) {
       <View style={styles.header}>
         <View style={styles.deco1} />
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Text style={styles.backBtnText}>رجوع</Text>
+          <Text style={styles.backBtnText}>{t('common:back')}</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>الامان والخصوصية</Text>
+        <Text style={styles.headerTitle}>{t('security.headerTitle')}</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
@@ -85,16 +87,16 @@ function SecurityScreen({ navigation }: Props) {
             <Text style={styles.scoreMax}>/10</Text>
           </View>
           <View style={styles.scoreInfo}>
-            <Text style={styles.scoreLabel}>نقاط الامان</Text>
-            <Text style={styles.scoreHint}>فعل المزيد من الخيارات لحساب اكثر امانا</Text>
+            <Text style={styles.scoreLabel}>{t('security.securityScoreLabel')}</Text>
+            <Text style={styles.scoreHint}>{t('security.securityScoreHint')}</Text>
           </View>
         </View>
 
         <View style={styles.card}>
           <ToggleRow
             icon={"🔔"}
-            title="تنبيهات تسجيل الدخول"
-            subtitle="إشعار عند تسجيل دخول جديد"
+            title={t('security.loginAlertsTitle')}
+            subtitle={t('security.loginAlertsSubtitle')}
             value={loginAlerts}
             onToggle={setLoginAlerts}
             accentColor={Colors.secondary}
@@ -102,8 +104,8 @@ function SecurityScreen({ navigation }: Props) {
           <View style={styles.divider} />
           <ToggleRow
             icon={"🖐️"}
-            title="البصمة / التعرف على الوجه"
-            subtitle="تسجيل الدخول بالمعرّف الحيوي"
+            title={t('security.biometricsTitle')}
+            subtitle={t('security.biometricsSubtitle')}
             value={biometrics}
             onToggle={handleBiometricsToggle}
             accentColor={Colors.accent}
@@ -111,24 +113,24 @@ function SecurityScreen({ navigation }: Props) {
           <View style={styles.divider} />
           <ToggleRow
             icon={"🔐"}
-            title="التحقق بخطوتين"
-            subtitle="طبقة حماية إضافية عند تسجيل الدخول"
+            title={t('security.twoFactorTitle')}
+            subtitle={t('security.twoFactorSubtitle')}
             value={twoFactor}
             onToggle={setTwoFactor}
             accentColor={Colors.primary}
           />
         </View>
 
-        <Text style={styles.sectionTitle}>الجلسات النشطة</Text>
+        <Text style={styles.sectionTitle}>{t('security.activeSessionsTitle')}</Text>
         <View style={styles.card}>
           <View style={styles.sessionRow}>
             <Text style={styles.sessionDeviceIcon}>{"📱"}</Text>
             <View style={styles.sessionInfo}>
-              <Text style={styles.sessionDevice}>هذا الجهاز</Text>
-              <Text style={styles.sessionTime}>نشط الآن</Text>
+              <Text style={styles.sessionDevice}>{t('security.thisDevice')}</Text>
+              <Text style={styles.sessionTime}>{t('security.activeNow')}</Text>
             </View>
             <View style={styles.sessionBadge}>
-              <Text style={styles.sessionBadgeText}>حالي</Text>
+              <Text style={styles.sessionBadgeText}>{t('security.currentBadge')}</Text>
             </View>
           </View>
         </View>

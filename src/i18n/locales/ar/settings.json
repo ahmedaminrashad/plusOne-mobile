@@ -1,0 +1,60 @@
+{
+  "settings": {
+    "title": "الإعدادات",
+    "accountSection": "الحساب",
+    "securitySection": "الأمان والخصوصية",
+    "appSection": "التطبيق",
+    "editProfileLabel": "تعديل الملف الشخصي",
+    "paymentMethodsLabel": "وسائل الدفع",
+    "securityLabel": "الأمان",
+    "languageLabel": "اللغة",
+    "helpSupportLabel": "المساعدة والدعم",
+    "aboutLabel": "عن التطبيق",
+    "logoutLabel": "تسجيل الخروج",
+    "logoutConfirmMessage": "هل تريد تسجيل الخروج؟",
+    "logoutConfirmButton": "خروج"
+  },
+  "security": {
+    "headerTitle": "الامان والخصوصية",
+    "enableBiometricsTitle": "تفعيل بصمة الاصبع",
+    "enableBiometricsMessage": "سيطلب منك التحقق عند كل تسجيل دخول.",
+    "cancelButton": "الغاء",
+    "enableButton": "تفعيل",
+    "securityScoreLabel": "نقاط الامان",
+    "securityScoreHint": "فعل المزيد من الخيارات لحساب اكثر امانا",
+    "loginAlertsTitle": "تنبيهات تسجيل الدخول",
+    "loginAlertsSubtitle": "إشعار عند تسجيل دخول جديد",
+    "biometricsTitle": "البصمة / التعرف على الوجه",
+    "biometricsSubtitle": "تسجيل الدخول بالمعرّف الحيوي",
+    "twoFactorTitle": "التحقق بخطوتين",
+    "twoFactorSubtitle": "طبقة حماية إضافية عند تسجيل الدخول",
+    "activeSessionsTitle": "الجلسات النشطة",
+    "thisDevice": "هذا الجهاز",
+    "activeNow": "نشط الآن",
+    "currentBadge": "حالي"
+  },
+  "editProfile": {
+    "backButton": "‹ رجوع",
+    "headerTitle": "تعديل الملف الشخصي",
+    "changePhoto": "تغيير الصورة",
+    "phoneLabel": "رقم الجوال",
+    "nameRequired": "الاسم مطلوب",
+    "nameTooLong": "الاسم طويل جداً",
+    "saveError": "تعذر حفظ التغييرات، حاول مرة أخرى.",
+    "fullNameLabel": "الاسم الكامل *",
+    "fullNamePlaceholder": "اسمك الكامل",
+    "instaPayLabel": "معرّف InstaPay (اختياري)",
+    "instaPayPlaceholder": "مثال: ahmed_hassan",
+    "saveButton": "حفظ التغييرات"
+  },
+  "paymentMethods": {
+    "headerTitle": "وسائل الدفع",
+    "instaPayTitle": "InstaPay",
+    "instaPayNotLinked": "لم يتم الربط بعد",
+    "linkButton": "ربط",
+    "instaPayAliasLabel": "المعرف",
+    "otherMethodsTitle": "طرق دفع اخرى",
+    "comingSoonTitle": "قريباً",
+    "comingSoonSubtitle": "ستتوفر بطاقات الائتمان والمحافظ الرقمية في التحديثات القادمة"
+  }
+}

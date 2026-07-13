@@ -11,6 +11,7 @@ import {
   StatusBar,
 } from 'react-native';
 import { launchImageLibrary } from 'react-native-image-picker';
+import { useTranslation } from 'react-i18next';
 import { SettingsScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
 import Avatar from '../../components/common/Avatar';
@@ -21,6 +22,7 @@ import { useGetMeQuery, useUpdateProfileMutation } from '../../store/api/usersAp
 type Props = SettingsScreenProps<'EditProfile'>;
 
 function EditProfileScreen({ navigation }: Props) {
+  const { t } = useTranslation('settings');
   const { data: me } = useGetMeQuery();
   const [updateProfile, { isLoading }] = useUpdateProfileMutation();
 
@@ -37,8 +39,8 @@ function EditProfileScreen({ navigation }: Props) {
 
   const handleSave = useCallback(async () => {
     const trimmed = displayName.trim();
-    if (!trimmed) { setNameError('الاسم مطلوب'); return; }
-    if (trimmed.length > 50) { setNameError('الاسم طويل جداً'); return; }
+    if (!trimmed) { setNameError(t('editProfile.nameRequired')); return; }
+    if (trimmed.length > 50) { setNameError(t('editProfile.nameTooLong')); return; }
     setNameError('');
     try {
       await updateProfile({
@@ -48,9 +50,9 @@ function EditProfileScreen({ navigation }: Props) {
       }).unwrap();
       navigation.goBack();
     } catch {
-      Alert.alert('خطأ', 'تعذر حفظ التغييرات، حاول مرة أخرى.');
+      Alert.alert(t('common:error'), t('editProfile.saveError'));
     }
-  }, [displayName, instaPayAlias, photoUri, updateProfile, navigation]);
+  }, [displayName, instaPayAlias, photoUri, updateProfile, navigation, t]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -59,9 +61,9 @@ function EditProfileScreen({ navigation }: Props) {
       <View style={styles.header}>
         <View style={styles.deco1} />
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Text style={styles.backBtnText}>‹ رجوع</Text>
+          <Text style={styles.backBtnText}>{t('editProfile.backButton')}</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>تعديل الملف الشخصي</Text>
+        <Text style={styles.headerTitle}>{t('editProfile.headerTitle')}</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
@@ -73,34 +75,34 @@ function EditProfileScreen({ navigation }: Props) {
               <Text style={styles.cameraBadgeIcon}>📷</Text>
             </View>
           </View>
-          <Text style={styles.changePhotoText}>تغيير الصورة</Text>
+          <Text style={styles.changePhotoText}>{t('editProfile.changePhoto')}</Text>
         </TouchableOpacity>
 
         {/* Phone (read-only) */}
         <View style={styles.readOnlyField}>
-          <Text style={styles.readOnlyLabel}>رقم الجوال</Text>
+          <Text style={styles.readOnlyLabel}>{t('editProfile.phoneLabel')}</Text>
           <Text style={styles.readOnlyValue}>{me?.phone ?? '—'}</Text>
         </View>
 
         <Input
-          label="الاسم الكامل *"
+          label={t('editProfile.fullNameLabel')}
           value={displayName}
           onChangeText={(v) => { setDisplayName(v); setNameError(''); }}
-          placeholder="اسمك الكامل"
+          placeholder={t('editProfile.fullNamePlaceholder')}
           error={nameError}
           maxLength={50}
         />
 
         <Input
-          label="معرّف InstaPay (اختياري)"
+          label={t('editProfile.instaPayLabel')}
           value={instaPayAlias}
           onChangeText={setInstaPayAlias}
-          placeholder="مثال: ahmed_hassan"
+          placeholder={t('editProfile.instaPayPlaceholder')}
           maxLength={60}
         />
 
         <Button
-          title="حفظ التغييرات"
+          title={t('editProfile.saveButton')}
           onPress={handleSave}
           loading={isLoading}
           disabled={!displayName.trim()}

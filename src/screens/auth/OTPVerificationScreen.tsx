@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { AuthScreenProps } from '../../types/navigation';
 import Button from '../../components/common/Button';
 import { Colors } from '../../constants/colors';
@@ -16,6 +17,7 @@ import { useVerifyOtpMutation, useSendOtpMutation } from '../../store/api/authAp
 import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { setTokens, setProfileComplete } from '../../store/slices/authSlice';
 import { SecureStorage } from '../../utils/storage';
+import { resolveErrorMessage } from '../../utils/errors';
 
 type Props = AuthScreenProps<'OTPVerification'>;
 
@@ -23,6 +25,7 @@ const OTP_LENGTH = 6;
 const RESEND_COOLDOWN = 60;
 
 function OTPVerificationScreen({ route, navigation }: Props) {
+  const { t } = useTranslation('auth');
   const { phone } = route.params;
   const dispatch = useAppDispatch();
 
@@ -57,8 +60,7 @@ function OTPVerificationScreen({ route, navigation }: Props) {
         navigation.navigate('ProfileSetup');
       }
     } catch (err: any) {
-      const msg = err?.data?.message?.error ?? err?.data?.message ?? 'الكود الذي أدخلته غير صحيح';
-      setError(typeof msg === 'string' ? msg : JSON.stringify(msg));
+      setError(resolveErrorMessage(err));
       setOtp('');
     }
   }, [otp, phone, verifyOtp, dispatch, navigation]);
@@ -77,7 +79,7 @@ function OTPVerificationScreen({ route, navigation }: Props) {
         });
       }, 1000);
     } catch {
-      setError('تعذر إرسال الكود، حاول مرة أخرى');
+      setError(t('otpVerification.resendFailed'));
     }
   }, [cooldown, phone, sendOtp]);
 
@@ -101,9 +103,9 @@ function OTPVerificationScreen({ route, navigation }: Props) {
         style={styles.content}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={styles.header}>
-          <Text style={styles.title}>أدخل رمز التحقق</Text>
+          <Text style={styles.title}>{t('otpVerification.title')}</Text>
           <Text style={styles.subtitle}>
-            أرسلنا رمز مكوّن من 6 أرقام إلى{'\n'}
+            {t('otpVerification.subtitle')}{'\n'}
             <Text style={styles.phone}>{phone}</Text>
           </Text>
         </View>
@@ -139,12 +141,12 @@ function OTPVerificationScreen({ route, navigation }: Props) {
           disabled={cooldown > 0 || isSending}
           style={styles.resendBtn}>
           <Text style={[styles.resendText, cooldown > 0 && styles.resendDisabled]}>
-            {cooldown > 0 ? `إعادة الإرسال بعد ${cooldown}ث` : 'إعادة إرسال الرمز'}
+            {cooldown > 0 ? t('otpVerification.resendCountdown', { count: cooldown }) : t('otpVerification.resendCode')}
           </Text>
         </TouchableOpacity>
 
         <Button
-          title="تحقق"
+          title={t('otpVerification.verifyButton')}
           onPress={handleVerify}
           loading={isLoading}
           disabled={otp.length < OTP_LENGTH}

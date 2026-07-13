@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef, memo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -17,6 +18,7 @@ import { Colors } from '../../constants/colors';
 import Avatar from '../../components/common/Avatar';
 import { useGetMeQuery } from '../../store/api/usersApi';
 import { useSendChatNotificationMutation } from '../../store/api/groupsApi';
+import { formatRelativeTime } from '../../utils/format';
 
 type Props = AppScreenProps<'Chat'>;
 
@@ -33,29 +35,6 @@ interface Message {
 
 const PAGE_SIZE = 30;
 
-function formatTimestamp(ts: FirebaseFirestoreTypes.Timestamp | null): string {
-  if (!ts) return '';
-  const date = ts.toDate();
-  const now = new Date();
-  const isToday =
-    date.getFullYear() === now.getFullYear() &&
-    date.getMonth() === now.getMonth() &&
-    date.getDate() === now.getDate();
-
-  if (isToday) {
-    const diffMs = now.getTime() - date.getTime();
-    const diffMin = Math.floor(diffMs / 60_000);
-    if (diffMin < 1) return 'الآن';
-    if (diffMin < 60) return `منذ ${diffMin} د`;
-    const diffHr = Math.floor(diffMin / 60);
-    return `منذ ${diffHr} س`;
-  }
-
-  return date.toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' }) +
-    ' ' +
-    date.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
-}
-
 function MessageBubble({
   msg,
   isMine,
@@ -67,7 +46,14 @@ function MessageBubble({
   showSender: boolean;
   onRetry?: (msg: Message) => void;
 }) {
-  const timeStr = msg._pending ? 'إرسال...' : msg._failed ? 'فشل الإرسال' : formatTimestamp(msg.createdAt);
+  const { t } = useTranslation('groups');
+  const timeStr = msg._pending
+    ? t('chat.sendingEllipsis')
+    : msg._failed
+      ? t('chat.sendFailed')
+      : msg.createdAt
+        ? formatRelativeTime(msg.createdAt.toDate())
+        : '';
 
   return (
     <View style={[styles.bubbleRow, isMine && styles.bubbleRowMine]}>
@@ -108,6 +94,7 @@ function MessageBubble({
 }
 
 function ChatScreen({ route }: Props) {
+  const { t } = useTranslation('groups');
   const { groupId } = route.params;
   const { data: me } = useGetMeQuery();
   const [sendChatNotification] = useSendChatNotificationMutation();
@@ -189,7 +176,7 @@ function ChatScreen({ route }: Props) {
     const optimistic: Message = {
       id: tempId,
       senderId: me.id,
-      senderName: me.displayName ?? 'مستخدم',
+      senderName: me.displayName ?? t('chat.defaultUserName'),
       senderPhoto: me.photoUrl ?? null,
       text: trimmed,
       createdAt: null,
@@ -200,7 +187,7 @@ function ChatScreen({ route }: Props) {
     try {
       await messagesRef.add({
         senderId: me.id,
-        senderName: me.displayName ?? 'مستخدم',
+        senderName: me.displayName ?? t('chat.defaultUserName'),
         senderPhoto: me.photoUrl ?? null,
         text: trimmed,
         createdAt: firestore.FieldValue.serverTimestamp(),
@@ -212,7 +199,7 @@ function ChatScreen({ route }: Props) {
       const preview = trimmed.length > 80 ? trimmed.slice(0, 80) + '…' : trimmed;
       sendChatNotification({
         groupId,
-        senderName: me.displayName ?? 'مستخدم',
+        senderName: me.displayName ?? t('chat.defaultUserName'),
         messagePreview: preview,
       }).catch(() => {});
     } catch {
@@ -220,7 +207,7 @@ function ChatScreen({ route }: Props) {
         prev.map((m) => (m.id === tempId ? { ...m, _pending: false, _failed: true } : m)),
       );
     }
-  }, [me, groupId, sendChatNotification]);
+  }, [me, groupId, sendChatNotification, t]);
 
   const handleSend = useCallback(() => {
     const trimmed = text.trim();
@@ -245,7 +232,7 @@ function ChatScreen({ route }: Props) {
   if (loadError) {
     return (
       <View style={styles.centered}>
-        <Text style={styles.errorText}>تعذر تحميل الرسائل، يرجى المحاولة لاحقاً.</Text>
+        <Text style={styles.errorText}>{t('chat.loadError')}</Text>
       </View>
     );
   }
@@ -260,7 +247,7 @@ function ChatScreen({ route }: Props) {
         {messages.length === 0 ? (
           <View style={styles.emptyChat}>
             <Text style={styles.emptyChatIcon}>💬</Text>
-            <Text style={styles.emptyChatText}>لا توجد رسائل بعد، ابدأ المحادثة!</Text>
+            <Text style={styles.emptyChatText}>{t('chat.emptyText')}</Text>
           </View>
         ) : (
           <FlatList
@@ -297,7 +284,7 @@ function ChatScreen({ route }: Props) {
             style={styles.input}
             value={text}
             onChangeText={setText}
-            placeholder="اكتب رسالة..."
+            placeholder={t('chat.messagePlaceholder')}
             placeholderTextColor={Colors.textMuted}
             multiline
             maxLength={1000}

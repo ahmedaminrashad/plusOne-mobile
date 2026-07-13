@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef, memo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -21,6 +22,7 @@ import Avatar from '../../components/common/Avatar';
 import Button from '../../components/common/Button';
 import { Colors } from '../../constants/colors';
 import { useGetMeQuery } from '../../store/api/usersApi';
+import { formatDate, formatRelativeTime } from '../../utils/format';
 
 type Props = AppScreenProps<'GroupDetail'>;
 type Tab = 'chat' | 'bills' | 'members';
@@ -42,27 +44,6 @@ interface ChatMessage {
 
 const CHAT_PAGE = 30;
 
-function formatMsgTime(ts: FirebaseFirestoreTypes.Timestamp | null): string {
-  if (!ts) return '';
-  const date = ts.toDate();
-  const now = new Date();
-  const isToday =
-    date.getFullYear() === now.getFullYear() &&
-    date.getMonth() === now.getMonth() &&
-    date.getDate() === now.getDate();
-  if (isToday) {
-    const diffMin = Math.floor((now.getTime() - date.getTime()) / 60_000);
-    if (diffMin < 1) return 'الآن';
-    if (diffMin < 60) return `منذ ${diffMin} د`;
-    return `منذ ${Math.floor(diffMin / 60)} س`;
-  }
-  return (
-    date.toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' }) +
-    ' ' +
-    date.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
-  );
-}
-
 // ──────────────────────────────────────────────────────────────
 // Member row
 // ──────────────────────────────────────────────────────────────
@@ -78,7 +59,8 @@ function MemberRow({
   isSelf: boolean;
   onRemove: () => void;
 }) {
-  const name = member.user?.displayName ?? member.pendingPhone ?? 'مستخدم';
+  const { t } = useTranslation('groups');
+  const name = member.user?.displayName ?? member.pendingPhone ?? t('groupDetail.defaultUserName');
   const isPending = member.status === 'pending';
   return (
     <View style={styles.memberRow}>
@@ -87,17 +69,17 @@ function MemberRow({
         <View style={styles.memberNameRow}>
           <Text style={styles.memberName}>{name}</Text>
           {member.role === 'admin' && (
-            <View style={styles.adminBadge}><Text style={styles.adminText}>مسؤول</Text></View>
+            <View style={styles.adminBadge}><Text style={styles.adminText}>{t('groupDetail.roleAdmin')}</Text></View>
           )}
           {isPending && (
-            <View style={styles.pendingBadge}><Text style={styles.pendingText}>قيد الانتظار</Text></View>
+            <View style={styles.pendingBadge}><Text style={styles.pendingText}>{t('groupDetail.statusPending')}</Text></View>
           )}
         </View>
         <Text style={styles.memberPhone}>{member.user?.phone ?? member.pendingPhone ?? ''}</Text>
       </View>
       {isAdmin && !isSelf && (
         <TouchableOpacity onPress={onRemove} style={styles.removeBtn}>
-          <Text style={styles.removeText}>إزالة</Text>
+          <Text style={styles.removeText}>{t('groupDetail.removeAction')}</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -119,9 +101,10 @@ function BillCard({
   onDelete: () => void;
   canDelete: boolean;
 }) {
-  const payerName = bill.paidBy?.displayName ?? 'مستخدم';
-  const date = new Date(bill.createdAt).toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' });
-  const displayName = bill.venueName ?? bill.title ?? 'فاتورة';
+  const { t } = useTranslation('groups');
+  const payerName = bill.paidBy?.displayName ?? t('groupDetail.defaultUserName');
+  const date = formatDate(new Date(bill.createdAt), { day: 'numeric', month: 'short' });
+  const displayName = bill.venueName ?? bill.title ?? t('groupDetail.defaultBillName');
   return (
     <TouchableOpacity style={styles.billCard} onPress={onPress} activeOpacity={0.7}>
       <View style={styles.billIcon}>
@@ -129,7 +112,7 @@ function BillCard({
       </View>
       <View style={styles.billInfo}>
         <Text style={styles.billTitle}>{displayName}</Text>
-        <Text style={styles.billMeta}>دفع {payerName} • {date}</Text>
+        <Text style={styles.billMeta}>{t('groupDetail.paidByMeta', { payer: payerName, date })}</Text>
       </View>
       <View style={styles.billRight}>
         <Text style={styles.billAmount}>{Number(bill.amount).toFixed(2)}</Text>
@@ -159,7 +142,14 @@ function ChatBubble({
   showSender: boolean;
   onRetry: (m: ChatMessage) => void;
 }) {
-  const timeStr = msg._pending ? 'إرسال...' : msg._failed ? 'فشل' : formatMsgTime(msg.createdAt);
+  const { t } = useTranslation('groups');
+  const timeStr = msg._pending
+    ? t('groupDetail.sendingEllipsis')
+    : msg._failed
+      ? t('common:failed')
+      : msg.createdAt
+        ? formatRelativeTime(msg.createdAt.toDate())
+        : '';
   return (
     <View style={[styles.bubbleRow, isMine && styles.bubbleRowMine]}>
       {!isMine && (
@@ -203,6 +193,7 @@ function ChatBubble({
 // ──────────────────────────────────────────────────────────────
 
 function GroupDetailScreen({ route, navigation }: Props) {
+  const { t } = useTranslation('groups');
   const { groupId, groupName } = route.params;
   const [activeTab, setActiveTab] = useState<Tab>('chat');
 
@@ -286,7 +277,7 @@ function GroupDetailScreen({ route, navigation }: Props) {
     const optimistic: ChatMessage = {
       id: tempId,
       senderId: me.id,
-      senderName: me.displayName ?? 'مستخدم',
+      senderName: me.displayName ?? t('groupDetail.defaultUserName'),
       senderPhoto: me.photoUrl ?? null,
       text: trimmed,
       createdAt: null,
@@ -296,7 +287,7 @@ function GroupDetailScreen({ route, navigation }: Props) {
     try {
       await messagesRef.add({
         senderId: me.id,
-        senderName: me.displayName ?? 'مستخدم',
+        senderName: me.displayName ?? t('groupDetail.defaultUserName'),
         senderPhoto: me.photoUrl ?? null,
         text: trimmed,
         createdAt: firestore.FieldValue.serverTimestamp(),
@@ -305,7 +296,7 @@ function GroupDetailScreen({ route, navigation }: Props) {
       const preview = trimmed.length > 80 ? trimmed.slice(0, 80) + '…' : trimmed;
       sendChatNotification({
         groupId,
-        senderName: me.displayName ?? 'مستخدم',
+        senderName: me.displayName ?? t('groupDetail.defaultUserName'),
         messagePreview: preview,
       }).catch(() => {});
     } catch {
@@ -314,7 +305,7 @@ function GroupDetailScreen({ route, navigation }: Props) {
       );
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [me, groupId, sendChatNotification]);
+  }, [me, groupId, sendChatNotification, t]);
 
   const handleChatSend = useCallback(() => {
     const trimmed = chatText.trim();
@@ -344,47 +335,51 @@ function GroupDetailScreen({ route, navigation }: Props) {
 
   const handleDeleteBill = useCallback(
     (bill: Bill) => {
-      Alert.alert('حذف الإيصال', `هل تريد حذف "${bill.venueName ?? bill.title ?? 'هذا الإيصال'}"؟`, [
-        { text: 'إلغاء', style: 'cancel' },
-        {
-          text: 'حذف',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteBill(bill.id).unwrap();
-            } catch {
-              Alert.alert('خطأ', 'تعذر حذف الإيصال');
-            }
-          },
-        },
-      ]);
-    },
-    [deleteBill],
-  );
-
-  const handleRemove = useCallback(
-    (member: GroupMember) => {
-      const name = member.user?.displayName ?? member.pendingPhone ?? 'هذا العضو';
       Alert.alert(
-        'إزالة عضو',
-        `هل تريد إزالة ${name} من المجموعة؟`,
+        t('groupDetail.deleteBillTitle'),
+        t('groupDetail.deleteBillMessage', { name: bill.venueName ?? bill.title ?? t('groupDetail.thisBillFallback') }),
         [
-          { text: 'إلغاء', style: 'cancel' },
+          { text: t('common:cancel'), style: 'cancel' },
           {
-            text: 'إزالة',
+            text: t('common:delete'),
             style: 'destructive',
             onPress: async () => {
               try {
-                await removeMember({ groupId, memberId: member.id }).unwrap();
+                await deleteBill(bill.id).unwrap();
               } catch {
-                Alert.alert('خطأ', 'تعذر إزالة العضو، حاول مرة أخرى لاحقاً');
+                Alert.alert(t('common:error'), t('groupDetail.deleteBillError'));
               }
             },
           },
         ],
       );
     },
-    [groupId, removeMember],
+    [deleteBill, t],
+  );
+
+  const handleRemove = useCallback(
+    (member: GroupMember) => {
+      const name = member.user?.displayName ?? member.pendingPhone ?? t('groupDetail.thisMemberFallback');
+      Alert.alert(
+        t('groupDetail.removeMemberTitle'),
+        t('groupDetail.removeMemberMessage', { name }),
+        [
+          { text: t('common:cancel'), style: 'cancel' },
+          {
+            text: t('groupDetail.removeAction'),
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                await removeMember({ groupId, memberId: member.id }).unwrap();
+              } catch {
+                Alert.alert(t('common:error'), t('groupDetail.removeMemberError'));
+              }
+            },
+          },
+        ],
+      );
+    },
+    [groupId, removeMember, t],
   );
 
   const renderMember = useCallback(
@@ -416,7 +411,7 @@ function GroupDetailScreen({ route, navigation }: Props) {
               style={[styles.tab, activeTab === tab && styles.tabActive]}
               onPress={() => setActiveTab(tab)}>
               <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
-                {tab === 'chat' ? '💬 الدردشة' : tab === 'bills' ? 'الفواتير' : 'الأعضاء'}
+                {tab === 'chat' ? t('groupDetail.tabChat') : tab === 'bills' ? t('groupDetail.tabBills') : t('groupDetail.tabMembers')}
               </Text>
             </TouchableOpacity>
           ))}
@@ -428,7 +423,7 @@ function GroupDetailScreen({ route, navigation }: Props) {
             {isChatPending ? (
               <View style={styles.centered}>
                 <Text style={styles.pendingChatText}>
-                  يجب قبول الدعوة أولاً للوصول إلى الدردشة.
+                  {t('groupDetail.pendingChatNotice')}
                 </Text>
               </View>
             ) : chatLoading ? (
@@ -438,7 +433,7 @@ function GroupDetailScreen({ route, navigation }: Props) {
             ) : chatMessages.length === 0 ? (
               <View style={styles.emptyChat}>
                 <Text style={styles.emptyChatIcon}>💬</Text>
-                <Text style={styles.emptyChatText}>لا توجد رسائل بعد، ابدأ المحادثة!</Text>
+                <Text style={styles.emptyChatText}>{t('groupDetail.emptyChatText')}</Text>
               </View>
             ) : (
               <FlatList
@@ -474,7 +469,7 @@ function GroupDetailScreen({ route, navigation }: Props) {
                   style={styles.chatInput}
                   value={chatText}
                   onChangeText={setChatText}
-                  placeholder="اكتب رسالة..."
+                  placeholder={t('groupDetail.messagePlaceholder')}
                   placeholderTextColor={Colors.textMuted}
                   multiline
                   maxLength={1000}
@@ -498,18 +493,18 @@ function GroupDetailScreen({ route, navigation }: Props) {
             <View style={styles.billActions}>
               <TouchableOpacity style={styles.billActionBtn} onPress={handleScanQR} activeOpacity={0.8}>
                 <Text style={styles.billActionIcon}>📷</Text>
-                <Text style={styles.billActionText}>مسح QR</Text>
+                <Text style={styles.billActionText}>{t('groupDetail.scanQR')}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.billActionBtn} onPress={handleScanOCR} activeOpacity={0.8}>
                 <Text style={styles.billActionIcon}>🖨</Text>
-                <Text style={styles.billActionText}>مسح إيصال</Text>
+                <Text style={styles.billActionText}>{t('groupDetail.scanReceipt')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.billActionBtn, styles.billActionBtnPrimary]}
                 onPress={handleAddBill}
                 activeOpacity={0.8}>
                 <Text style={styles.billActionIcon}>✏️</Text>
-                <Text style={[styles.billActionText, styles.billActionTextPrimary]}>يدوي</Text>
+                <Text style={[styles.billActionText, styles.billActionTextPrimary]}>{t('groupDetail.manualEntry')}</Text>
               </TouchableOpacity>
             </View>
 
@@ -518,8 +513,8 @@ function GroupDetailScreen({ route, navigation }: Props) {
             ) : !bills?.length ? (
               <View style={styles.emptyBills}>
                 <Text style={styles.emptyBillsIcon}>🧾</Text>
-                <Text style={styles.emptyBillsTitle}>لا توجد إيصالات بعد</Text>
-                <Text style={styles.emptyBillsSubtitle}>أضف أو امسح أول إيصال للمجموعة</Text>
+                <Text style={styles.emptyBillsTitle}>{t('groupDetail.emptyBillsTitle')}</Text>
+                <Text style={styles.emptyBillsSubtitle}>{t('groupDetail.emptyBillsSubtitle')}</Text>
               </View>
             ) : (
               <FlatList
@@ -544,7 +539,7 @@ function GroupDetailScreen({ route, navigation }: Props) {
           <View style={styles.flex}>
             {isAdmin && (
               <Button
-                title="+ دعوة أعضاء"
+                title={t('groupDetail.inviteMembersCta')}
                 onPress={() => navigation.navigate('InviteMembers', { groupId })}
                 variant="outline"
                 style={styles.inviteBtn}

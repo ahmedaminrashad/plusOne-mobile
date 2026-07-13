@@ -1,0 +1,60 @@
+{
+  "settings": {
+    "title": "Settings",
+    "accountSection": "Account",
+    "securitySection": "Security & Privacy",
+    "appSection": "App",
+    "editProfileLabel": "Edit Profile",
+    "paymentMethodsLabel": "Payment Methods",
+    "securityLabel": "Security",
+    "languageLabel": "Language",
+    "helpSupportLabel": "Help & Support",
+    "aboutLabel": "About",
+    "logoutLabel": "Log Out",
+    "logoutConfirmMessage": "Do you want to log out?",
+    "logoutConfirmButton": "Log out"
+  },
+  "security": {
+    "headerTitle": "Security & Privacy",
+    "enableBiometricsTitle": "Enable Fingerprint",
+    "enableBiometricsMessage": "You'll be asked to verify at every login.",
+    "cancelButton": "Cancel",
+    "enableButton": "Enable",
+    "securityScoreLabel": "Security Score",
+    "securityScoreHint": "Enable more options for a more secure account",
+    "loginAlertsTitle": "Login Alerts",
+    "loginAlertsSubtitle": "Notification on a new login",
+    "biometricsTitle": "Fingerprint / Face Recognition",
+    "biometricsSubtitle": "Sign in with biometric ID",
+    "twoFactorTitle": "Two-Step Verification",
+    "twoFactorSubtitle": "An extra layer of protection at login",
+    "activeSessionsTitle": "Active Sessions",
+    "thisDevice": "This device",
+    "activeNow": "Active now",
+    "currentBadge": "Current"
+  },
+  "editProfile": {
+    "backButton": "‹ Back",
+    "headerTitle": "Edit Profile",
+    "changePhoto": "Change Photo",
+    "phoneLabel": "Phone Number",
+    "nameRequired": "Name is required",
+    "nameTooLong": "Name is too long",
+    "saveError": "Couldn't save changes, please try again.",
+    "fullNameLabel": "Full Name *",
+    "fullNamePlaceholder": "Your full name",
+    "instaPayLabel": "InstaPay ID (optional)",
+    "instaPayPlaceholder": "e.g. ahmed_hassan",
+    "saveButton": "Save Changes"
+  },
+  "paymentMethods": {
+    "headerTitle": "Payment Methods",
+    "instaPayTitle": "InstaPay",
+    "instaPayNotLinked": "Not linked yet",
+    "linkButton": "Link",
+    "instaPayAliasLabel": "ID",
+    "otherMethodsTitle": "Other Payment Methods",
+    "comingSoonTitle": "Coming Soon",
+    "comingSoonSubtitle": "Credit cards and digital wallets will be available in future updates"
+  }
+}

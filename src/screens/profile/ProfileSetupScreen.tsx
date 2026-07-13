@@ -10,6 +10,7 @@ import {
   Platform,
 } from 'react-native';
 import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
+import { useTranslation } from 'react-i18next';
 import { AuthScreenProps } from '../../types/navigation';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
@@ -24,6 +25,7 @@ import { SecureStorage } from '../../utils/storage';
 type Props = AuthScreenProps<'ProfileSetup'>;
 
 function ProfileSetupScreen({ navigation }: Props) {
+  const { t } = useTranslation('auth');
   const dispatch = useAppDispatch();
   const [displayName, setDisplayName] = useState('');
   const [photoUrl, setPhotoUrl] = useState<string | undefined>();
@@ -35,10 +37,10 @@ function ProfileSetupScreen({ navigation }: Props) {
   const validate = useCallback(() => {
     const next: typeof errors = {};
     if (!isValidDisplayName(displayName)) {
-      next.displayName = 'يجب أن يكون الاسم بين 2 و 50 حرفاً';
+      next.displayName = t('profileSetup.nameLengthError');
     }
     if (instaPayAlias && !isValidInstaPayAlias(instaPayAlias)) {
-      next.instaPayAlias = 'اسم InstaPay غير صحيح';
+      next.instaPayAlias = t('profileSetup.instaPayError');
     }
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -52,65 +54,65 @@ function ProfileSetupScreen({ navigation }: Props) {
       if (stored) await SecureStorage.saveTokens(stored.accessToken, stored.refreshToken, true);
       dispatch(setProfileComplete(true));
     } catch {
-      Alert.alert('خطأ', 'تعذر حفظ الملف الشخصي، حاول مرة أخرى لاحقاً');
+      Alert.alert(t('common:error'), t('profileSetup.saveFailedMessage'));
     }
   }, [validate, updateProfile, displayName, photoUrl, instaPayAlias, dispatch]);
 
   const handleAddPhoto = useCallback(() => {
-    Alert.alert('إضافة صورة', 'اختر مصدر الصورة', [
+    Alert.alert(t('profileSetup.addPhotoTitle'), t('profileSetup.addPhotoMessage'), [
       {
-        text: 'الكاميرا',
+        text: t('profileSetup.cameraOption'),
         onPress: () => launchCamera({ mediaType: 'photo', quality: 0.8 }, (res) => {
           if (res.assets?.[0]?.uri) setPhotoUrl(res.assets[0].uri);
         }),
       },
       {
-        text: 'معرض الصور',
+        text: t('profileSetup.galleryOption'),
         onPress: () => launchImageLibrary({ mediaType: 'photo', quality: 0.8 }, (res) => {
           if (res.assets?.[0]?.uri) setPhotoUrl(res.assets[0].uri);
         }),
       },
-      { text: 'إلغاء', style: 'cancel' },
+      { text: t('common:cancel'), style: 'cancel' },
     ]);
-  }, []);
+  }, [t]);
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}>إعداد الملف الشخصي</Text>
-        <Text style={styles.subtitle}>كيف تريد أن يعرّفك أصدقاؤك؟</Text>
+        <Text style={styles.title}>{t('profileSetup.title')}</Text>
+        <Text style={styles.subtitle}>{t('profileSetup.subtitle')}</Text>
 
         <TouchableOpacity style={styles.avatarSection} onPress={handleAddPhoto}>
           <Avatar uri={photoUrl} name={displayName || '?'} size={88} />
-          <Text style={styles.addPhotoText}>{photoUrl ? 'تغيير الصورة' : 'إضافة صورة (اختياري)'}</Text>
+          <Text style={styles.addPhotoText}>{photoUrl ? t('profileSetup.changePhoto') : t('profileSetup.addPhoto')}</Text>
         </TouchableOpacity>
 
         <Input
-          label="الاسم المعروض *"
+          label={t('profileSetup.nameLabel')}
           value={displayName}
           onChangeText={(v) => { setDisplayName(v); setErrors((e) => ({ ...e, displayName: undefined })); }}
-          placeholder="مثال: أحمد محمد"
+          placeholder={t('profileSetup.namePlaceholder')}
           error={errors.displayName}
           maxLength={50}
           autoFocus
         />
 
         <Input
-          label="اسم InstaPay (اختياري)"
+          label={t('profileSetup.instaPayLabel')}
           value={instaPayAlias}
           onChangeText={(v) => { setInstaPayAlias(v); setErrors((e) => ({ ...e, instaPayAlias: undefined })); }}
-          placeholder="مثال: ahmed.pay"
+          placeholder={t('profileSetup.instaPayPlaceholder')}
           error={errors.instaPayAlias}
           maxLength={50}
         />
         <Text style={styles.instaHint}>
-          سيستخدم أصدقاؤك هذا الاسم لتحويل حصتهم إليك عبر InstaPay
+          {t('profileSetup.instaPayHint')}
         </Text>
 
-        <Button title="حفظ والمتابعة" onPress={handleSave} loading={isLoading} disabled={!displayName} style={styles.saveBtn} />
+        <Button title={t('profileSetup.saveButton')} onPress={handleSave} loading={isLoading} disabled={!displayName} style={styles.saveBtn} />
 
         <TouchableOpacity onPress={handleSave} style={styles.skipBtn}>
-          <Text style={styles.skipText}>تخطي في الوقت الحالي</Text>
+          <Text style={styles.skipText}>{t('profileSetup.skipButton')}</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

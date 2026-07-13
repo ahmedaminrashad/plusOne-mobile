@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   Image,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { launchCamera } from 'react-native-image-picker';
 import { AppScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
@@ -22,6 +23,7 @@ import { PrefilledBillData } from '../../types/models';
 type Props = AppScreenProps<'OCRCapture'>;
 
 function OCRCaptureScreen({ route, navigation }: Props) {
+  const { t } = useTranslation('billing');
   const { groupId, groupName } = route.params;
   const [capturedUri, setCapturedUri] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
@@ -32,25 +34,25 @@ function OCRCaptureScreen({ route, navigation }: Props) {
     const result = await PermissionsAndroid.request(
       PermissionsAndroid.PERMISSIONS.CAMERA,
       {
-        title: 'إذن الكاميرا',
-        message: 'يحتاج التطبيق إذن الكاميرا لمسح الإيصالات الورقية',
-        buttonPositive: 'موافق',
-        buttonNegative: 'إلغاء',
+        title: t('ocrCapture.permissionTitle'),
+        message: t('ocrCapture.permissionMessage'),
+        buttonPositive: t('common:ok'),
+        buttonNegative: t('common:cancel'),
       },
     );
     if (result !== PermissionsAndroid.RESULTS.GRANTED) {
       Alert.alert(
-        'إذن مرفوض',
-        'يرجى منح الإذن للوصول إلى الكاميرا.',
+        t('ocrCapture.permissionDeniedTitle'),
+        t('ocrCapture.permissionDeniedMessage'),
         [
-          { text: 'إدخال يدوي', onPress: () => navigation.replace('AddBill', { groupId, groupName }) },
-          { text: 'إلغاء', onPress: () => navigation.goBack() },
+          { text: t('ocrCapture.manualEntryButton'), onPress: () => navigation.replace('AddBill', { groupId, groupName }) },
+          { text: t('common:cancel'), onPress: () => navigation.goBack() },
         ],
       );
       return false;
     }
     return true;
-  }, [navigation, groupId, groupName]);
+  }, [navigation, groupId, groupName, t]);
 
   const handleCapture = useCallback(async () => {
     const ok = await requestCameraPermission();
@@ -60,7 +62,7 @@ function OCRCaptureScreen({ route, navigation }: Props) {
       { mediaType: 'photo', quality: 1.0, includeBase64: false },
       (response) => {
         if (response.errorCode) {
-          Alert.alert('خطأ', 'تعذر فتح الكاميرا. حاول مرة أخرى.');
+          Alert.alert(t('common:error'), t('ocrCapture.cameraOpenFailed'));
           return;
         }
         if (response.assets?.[0]?.uri) {
@@ -107,28 +109,28 @@ function OCRCaptureScreen({ route, navigation }: Props) {
 
       // OCR service not configured or failed — go to manual
       Alert.alert(
-        'تعذر معالجة الصورة',
+        t('ocrCapture.processFailedTitle'),
         data.reason === 'OCR service not configured'
-          ? 'خدمة OCR غير مفعّلة حالياً، يرجى الإدخال اليدوي.'
-          : 'تعذرت قراءة الإيصال، يرجى الإدخال اليدوي.',
+          ? t('ocrCapture.ocrNotConfiguredMessage')
+          : t('ocrCapture.ocrReadFailedMessage'),
         [
-          { text: 'إدخال يدوي', onPress: () => navigation.replace('AddBill', { groupId, groupName }) },
-          { text: 'حاول مرة أخرى', onPress: () => { setCapturedUri(null); } },
+          { text: t('ocrCapture.manualEntryButton'), onPress: () => navigation.replace('AddBill', { groupId, groupName }) },
+          { text: t('common:retry'), onPress: () => { setCapturedUri(null); } },
         ],
       );
     } catch {
       Alert.alert(
-        'تعذر الاتصال',
-        'تعذر الاتصال بالخادم. تحقق من الاتصال بالإنترنت وحاول مرة أخرى.',
+        t('ocrCapture.connectionFailedTitle'),
+        t('ocrCapture.connectionFailedMessage'),
         [
-          { text: 'إدخال يدوي', onPress: () => navigation.replace('AddBill', { groupId, groupName }) },
-          { text: 'حاول مرة أخرى', onPress: () => { setCapturedUri(null); } },
+          { text: t('ocrCapture.manualEntryButton'), onPress: () => navigation.replace('AddBill', { groupId, groupName }) },
+          { text: t('common:retry'), onPress: () => { setCapturedUri(null); } },
         ],
       );
     } finally {
       setProcessing(false);
     }
-  }, [capturedUri, groupId, groupName, accessToken, navigation]);
+  }, [capturedUri, groupId, groupName, accessToken, navigation, t]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -139,20 +141,20 @@ function OCRCaptureScreen({ route, navigation }: Props) {
             {processing ? (
               <View style={styles.processingRow}>
                 <ActivityIndicator color={Colors.primary} />
-                <Text style={styles.processingText}>جارٍ معالجة الإيصال...</Text>
+                <Text style={styles.processingText}>{t('ocrCapture.processingText')}</Text>
               </View>
             ) : (
               <>
                 <TouchableOpacity style={styles.primaryBtn} onPress={handleProcess}>
-                  <Text style={styles.primaryBtnText}>معالجة الإيصال</Text>
+                  <Text style={styles.primaryBtnText}>{t('ocrCapture.processButton')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.secondaryBtn} onPress={() => setCapturedUri(null)}>
-                  <Text style={styles.secondaryBtnText}>التقاط صورة جديدة</Text>
+                  <Text style={styles.secondaryBtnText}>{t('ocrCapture.retakePhotoButton')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.linkBtn}
                   onPress={() => navigation.replace('AddBill', { groupId, groupName })}>
-                  <Text style={styles.linkBtnText}>إدخال يدوي</Text>
+                  <Text style={styles.linkBtnText}>{t('ocrCapture.manualEntryButton')}</Text>
                 </TouchableOpacity>
               </>
             )}
@@ -165,20 +167,20 @@ function OCRCaptureScreen({ route, navigation }: Props) {
             <View style={[styles.guideCorner, styles.guideTR]} />
             <View style={[styles.guideCorner, styles.guideBL]} />
             <View style={[styles.guideCorner, styles.guideBR]} />
-            <Text style={styles.guideHint}>ضع الإيصال داخل الإطار</Text>
+            <Text style={styles.guideHint}>{t('ocrCapture.guideHint')}</Text>
           </View>
           <View style={styles.captureActions}>
-            <Text style={styles.captureTitle}>مسح إيصال ورقي</Text>
+            <Text style={styles.captureTitle}>{t('ocrCapture.captureTitle')}</Text>
             <Text style={styles.captureSub}>
-              التقط صورة واضحة للإيصال. ستستخرج خدمة OCR البنود والأسعار تلقائياً.
+              {t('ocrCapture.captureSubtitle')}
             </Text>
             <TouchableOpacity style={styles.captureBtn} onPress={handleCapture}>
-              <Text style={styles.captureBtnText}>📷  التقاط صورة</Text>
+              <Text style={styles.captureBtnText}>{t('ocrCapture.captureButton')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.linkBtn}
               onPress={() => navigation.replace('AddBill', { groupId, groupName })}>
-              <Text style={styles.linkBtnText}>إدخال يدوي</Text>
+              <Text style={styles.linkBtnText}>{t('ocrCapture.manualEntryButton')}</Text>
             </TouchableOpacity>
           </View>
         </View>

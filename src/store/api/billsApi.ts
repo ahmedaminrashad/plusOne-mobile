@@ -1,5 +1,10 @@
 import { baseApi } from './baseApi';
-import { Bill, BillLineItem, CaptureMethod, TaxServiceType } from '../../types/models';
+import { Bill, BillLineItem, CaptureMethod, TaxServiceType, Share } from '../../types/models';
+
+export interface BillDetail extends Bill {
+  shares: Share[];
+  aggregateStatus: 'fully_settled' | 'partially_settled' | 'pending' | 'voided';
+}
 
 interface CreateSharePayload {
   groupMemberId: string;
@@ -56,6 +61,10 @@ export const billsApi = baseApi.injectEndpoints({
       query: (groupId) => `/bills/group/${groupId}`,
       providesTags: ['Bill'],
     }),
+    getBillDetail: builder.query<BillDetail, string>({
+      query: (billId) => `/bills/${billId}`,
+      providesTags: (result, error, billId) => [{ type: 'Bill', id: billId }, 'Bill'],
+    }),
     createBill: builder.mutation<Bill, CreateBillPayload>({
       query: ({ groupId, ...body }) => ({
         url: `/bills/group/${groupId}`,
@@ -80,6 +89,7 @@ export const billsApi = baseApi.injectEndpoints({
 
 export const {
   useGetGroupBillsQuery,
+  useGetBillDetailQuery,
   useCreateBillMutation,
   useDeleteBillMutation,
   useParseQrBillMutation,

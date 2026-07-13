@@ -1,4 +1,4 @@
-import React, { memo, useCallback } from 'react';
+import React, { memo, useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,9 @@ import {
   ScrollView,
   Alert,
   StatusBar,
+  Modal,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { SettingsScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
 import Avatar from '../../components/common/Avatar';
@@ -17,6 +19,7 @@ import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { clearAuth } from '../../store/slices/authSlice';
 import { baseApi } from '../../store/api/baseApi';
 import { SecureStorage } from '../../utils/storage';
+import { changeLanguage, AppLanguage } from '../../i18n';
 
 type Props = SettingsScreenProps<'Settings'>;
 
@@ -53,15 +56,25 @@ function SettingsSection({ title, children }: { title: string; children: React.R
   );
 }
 
+const LANGUAGE_LABELS: Record<AppLanguage, string> = { ar: 'العربية', en: 'English' };
+
 function SettingsScreen({ navigation }: Props) {
+  const { t, i18n } = useTranslation('settings');
   const dispatch = useAppDispatch();
   const { data: me } = useGetMeQuery();
+  const [languagePickerVisible, setLanguagePickerVisible] = useState(false);
+  const currentLanguage = i18n.language as AppLanguage;
+
+  const handleSelectLanguage = useCallback((language: AppLanguage) => {
+    setLanguagePickerVisible(false);
+    if (language !== currentLanguage) changeLanguage(language);
+  }, [currentLanguage]);
 
   const handleLogout = useCallback(() => {
-    Alert.alert('تسجيل الخروج', 'هل تريد تسجيل الخروج؟', [
-      { text: 'إلغاء', style: 'cancel' },
+    Alert.alert(t('settings.logoutLabel'), t('settings.logoutConfirmMessage'), [
+      { text: t('common:cancel'), style: 'cancel' },
       {
-        text: 'خروج',
+        text: t('settings.logoutConfirmButton'),
         style: 'destructive',
         onPress: async () => {
           await SecureStorage.clearTokens();
@@ -70,7 +83,7 @@ function SettingsScreen({ navigation }: Props) {
         },
       },
     ]);
-  }, [dispatch]);
+  }, [dispatch, t]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -80,7 +93,7 @@ function SettingsScreen({ navigation }: Props) {
       <View style={styles.header}>
         <View style={styles.deco1} />
         <View style={styles.deco2} />
-        <Text style={styles.headerTitle}>الإعدادات</Text>
+        <Text style={styles.headerTitle}>{t('settings.title')}</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
@@ -96,33 +109,67 @@ function SettingsScreen({ navigation }: Props) {
             <Text style={styles.profilePhone}>{me?.phone ?? ''}</Text>
           </View>
           <View style={styles.editBadge}>
-            <Text style={styles.editBadgeText}>تعديل</Text>
+            <Text style={styles.editBadgeText}>{t('common:edit')}</Text>
           </View>
         </TouchableOpacity>
 
-        <SettingsSection title="الحساب">
-          <SettingsRow icon="👤" label="تعديل الملف الشخصي" onPress={() => navigation.navigate('EditProfile')} />
+        <SettingsSection title={t('settings.accountSection')}>
+          <SettingsRow icon="👤" label={t('settings.editProfileLabel')} onPress={() => navigation.navigate('EditProfile')} />
           <View style={styles.divider} />
-          <SettingsRow icon="💳" label="وسائل الدفع" onPress={() => navigation.navigate('PaymentMethods')} />
+          <SettingsRow icon="💳" label={t('settings.paymentMethodsLabel')} onPress={() => navigation.navigate('PaymentMethods')} />
         </SettingsSection>
 
-        <SettingsSection title="الأمان والخصوصية">
-          <SettingsRow icon="🔒" label="الأمان" onPress={() => navigation.navigate('SecuritySettings')} />
+        <SettingsSection title={t('settings.securitySection')}>
+          <SettingsRow icon="🔒" label={t('settings.securityLabel')} onPress={() => navigation.navigate('SecuritySettings')} />
         </SettingsSection>
 
-        <SettingsSection title="التطبيق">
-          <SettingsRow icon="🌐" label="اللغة" value="العربية" onPress={() => {}} />
+        <SettingsSection title={t('settings.appSection')}>
+          <SettingsRow
+            icon="🌐"
+            label={t('settings.languageLabel')}
+            value={LANGUAGE_LABELS[currentLanguage]}
+            onPress={() => setLanguagePickerVisible(true)}
+          />
           <View style={styles.divider} />
-          <SettingsRow icon="❓" label="المساعدة والدعم" onPress={() => {}} />
+          <SettingsRow icon="❓" label={t('settings.helpSupportLabel')} onPress={() => {}} />
           <View style={styles.divider} />
-          <SettingsRow icon="ℹ️" label="عن التطبيق" value="v1.0.0" onPress={() => {}} />
+          <SettingsRow icon="ℹ️" label={t('settings.aboutLabel')} value="v1.0.0" onPress={() => {}} />
         </SettingsSection>
 
         <SettingsSection title="">
-          <SettingsRow icon="🚪" label="تسجيل الخروج" onPress={handleLogout} danger chevron={false} />
+          <SettingsRow icon="🚪" label={t('settings.logoutLabel')} onPress={handleLogout} danger chevron={false} />
         </SettingsSection>
 
       </ScrollView>
+
+      <Modal
+        visible={languagePickerVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setLanguagePickerVisible(false)}>
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setLanguagePickerVisible(false)}>
+          <View style={styles.modalSheet}>
+            <Text style={styles.modalTitle}>{t('settings.languageLabel')}</Text>
+            {(Object.keys(LANGUAGE_LABELS) as AppLanguage[]).map((language) => {
+              const selected = language === currentLanguage;
+              return (
+                <TouchableOpacity
+                  key={language}
+                  style={[styles.languageRow, selected && styles.languageRowSelected]}
+                  onPress={() => handleSelectLanguage(language)}>
+                  <Text style={[styles.languageRowText, selected && styles.languageRowTextSelected]}>
+                    {LANGUAGE_LABELS[language]}
+                  </Text>
+                  {selected && <Text style={styles.checkmark}>✓</Text>}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -216,4 +263,26 @@ const styles = StyleSheet.create({
   rowChevron: { fontSize: 20, color: Colors.textMuted, marginLeft: 2 },
   rowChevronDanger: { color: Colors.danger },
   divider: { height: 1, backgroundColor: Colors.borderLight, marginLeft: 62 },
+
+  modalOverlay: { flex: 1, backgroundColor: Colors.overlay, justifyContent: 'flex-end' },
+  modalSheet: {
+    backgroundColor: Colors.surface,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 20,
+    paddingBottom: 40,
+  },
+  modalTitle: { fontSize: 17, fontWeight: '700', color: Colors.text, textAlign: 'center', marginBottom: 12, paddingHorizontal: 20 },
+  languageRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.borderLight,
+  },
+  languageRowSelected: { backgroundColor: Colors.primary + '10' },
+  languageRowText: { flex: 1, fontSize: 16, color: Colors.text, textAlign: 'right' },
+  languageRowTextSelected: { color: Colors.primary, fontWeight: '600' },
+  checkmark: { fontSize: 18, color: Colors.primary, marginLeft: 8 },
 });

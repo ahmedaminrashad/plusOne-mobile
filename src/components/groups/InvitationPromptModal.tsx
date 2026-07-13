@@ -7,6 +7,7 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { GroupMember } from '../../types/models';
 import Avatar from '../common/Avatar';
 import { Colors } from '../../constants/colors';
@@ -19,6 +20,7 @@ interface Props {
 }
 
 function InvitationPromptModal({ invitations, onAccept, onDecline, onDismiss }: Props) {
+  const { t } = useTranslation('navigation');
   const [index, setIndex] = useState(0);
   const [loading, setLoading] = useState<'accept' | 'decline' | null>(null);
 
@@ -61,18 +63,18 @@ function InvitationPromptModal({ invitations, onAccept, onDecline, onDismiss }: 
 
           {total > 1 && (
             <Text style={styles.counter}>
-              {index + 1} / {total} دعوات
+              {t('invitationPrompt.counter', { current: index + 1, total })}
             </Text>
           )}
 
           <View style={styles.body}>
             <Avatar uri={inv.group?.avatarUrl} name={inv.group?.name} size={80} />
-            <Text style={styles.label}>دعوة للانضمام</Text>
+            <Text style={styles.label}>{t('invitationPrompt.label')}</Text>
             <Text style={styles.groupName} numberOfLines={2}>
               {inv.group?.name}
             </Text>
             <Text style={styles.subtitle}>
-              تمت دعوتك للانضمام إلى هذه المجموعة، هل تقبل؟
+              {t('invitationPrompt.subtitle')}
             </Text>
           </View>
 
@@ -85,7 +87,7 @@ function InvitationPromptModal({ invitations, onAccept, onDecline, onDismiss }: 
               {loading === 'decline' ? (
                 <ActivityIndicator size="small" color={Colors.textSecondary} />
               ) : (
-                <Text style={styles.declineTxt}>رفض</Text>
+                <Text style={styles.declineTxt}>{t('invitationPrompt.declineButton')}</Text>
               )}
             </TouchableOpacity>
 
@@ -97,13 +99,13 @@ function InvitationPromptModal({ invitations, onAccept, onDecline, onDismiss }: 
               {loading === 'accept' ? (
                 <ActivityIndicator size="small" color={Colors.textOnPrimary} />
               ) : (
-                <Text style={styles.acceptTxt}>قبول الدعوة</Text>
+                <Text style={styles.acceptTxt}>{t('invitationPrompt.acceptButton')}</Text>
               )}
             </TouchableOpacity>
           </View>
 
           <TouchableOpacity onPress={onDismiss} style={styles.later}>
-            <Text style={styles.laterTxt}>لاحقاً</Text>
+            <Text style={styles.laterTxt}>{t('invitationPrompt.laterButton')}</Text>
           </TouchableOpacity>
         </View>
       </View>

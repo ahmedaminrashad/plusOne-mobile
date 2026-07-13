@@ -1,4 +1,5 @@
 import React, { useCallback, memo, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -35,6 +36,7 @@ function getGroupAccent(id: string): string {
 }
 
 function GroupCard({ group, onPress }: { group: Group; onPress: () => void }) {
+  const { t } = useTranslation('groups');
   const accent = getGroupAccent(group.id);
   const activeMembers = group.members?.filter((m) => m.status === 'active').length ?? 0;
   return (
@@ -43,7 +45,7 @@ function GroupCard({ group, onPress }: { group: Group; onPress: () => void }) {
       <Avatar uri={group.avatarUrl} name={group.name} size={46} />
       <View style={styles.cardInfo}>
         <Text style={styles.cardName} numberOfLines={1}>{group.name}</Text>
-        <Text style={styles.cardMeta}>{activeMembers} عضو نشط</Text>
+        <Text style={styles.cardMeta}>{t('home.activeMembersCount', { count: activeMembers })}</Text>
       </View>
       <Text style={styles.cardChevron}>›</Text>
     </TouchableOpacity>
@@ -51,6 +53,7 @@ function GroupCard({ group, onPress }: { group: Group; onPress: () => void }) {
 }
 
 function HomeScreen({ navigation }: Props) {
+  const { t } = useTranslation('groups');
   const { data: me } = useGetMeQuery();
   const { data: groups, isLoading, isFetching, refetch, isError } = useGetGroupsQuery();
   const { data: invitations } = useGetMyInvitationsQuery();
@@ -84,16 +87,16 @@ function HomeScreen({ navigation }: Props) {
   );
 
   const firstName = me?.displayName?.split(' ')[0];
-  const greeting = firstName ? `مرحباً، ${firstName}` : 'مرحباً';
+  const greeting = firstName ? t('home.greetingWithName', { name: firstName }) : t('home.greeting');
 
   const renderEmpty = () => (
     <View style={styles.empty}>
       <View style={styles.emptyIconWrap}>
         <Text style={styles.emptyIcon}>👥</Text>
       </View>
-      <Text style={styles.emptyTitle}>لا توجد مجموعات بعد</Text>
-      <Text style={styles.emptySubtitle}>أنشئ مجموعتك الأولى وابدأ في تتبع المصاريف مع أصدقائك وعائلتك</Text>
-      <Button title="+ إنشاء مجموعة" onPress={() => navigation.navigate('CreateGroup')} style={styles.emptyCta} />
+      <Text style={styles.emptyTitle}>{t('home.emptyTitle')}</Text>
+      <Text style={styles.emptySubtitle}>{t('home.emptySubtitle')}</Text>
+      <Button title={t('home.createGroupCta')} onPress={() => navigation.navigate('CreateGroup')} style={styles.emptyCta} />
     </View>
   );
 
@@ -130,13 +133,13 @@ function HomeScreen({ navigation }: Props) {
         <View style={styles.headerBottom}>
           <View>
             <Text style={styles.headerGreeting}>{greeting}</Text>
-            <Text style={styles.headerSub}>مجموعاتك</Text>
+            <Text style={styles.headerSub}>{t('home.subtitle')}</Text>
           </View>
         </View>
       </View>
 
       {isError && (
-        <Text style={styles.errorBanner}>تعذر تحميل المجموعات. اسحب للأسفل للمحاولة.</Text>
+        <Text style={styles.errorBanner}>{t('home.loadError')}</Text>
       )}
 
       <FlatList

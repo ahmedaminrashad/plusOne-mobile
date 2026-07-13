@@ -11,6 +11,7 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { AppScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
 import Avatar from '../../components/common/Avatar';
@@ -19,6 +20,8 @@ import { useGetGroupMembersQuery } from '../../store/api/groupsApi';
 import { useGetMeQuery } from '../../store/api/usersApi';
 import { useCreateBillMutation } from '../../store/api/billsApi';
 import { GroupMember, ParsedReceiptData } from '../../types/models';
+import { formatCurrency } from '../../utils/format';
+import i18n from '../../i18n';
 
 type Props = AppScreenProps<'ReceiptSplit'>;
 
@@ -31,7 +34,8 @@ interface ReceiptItem {
 }
 
 const getMemberId = (m: GroupMember) => m.userId ?? m.id;
-const getMemberName = (m: GroupMember) => m.user?.displayName ?? m.pendingPhone ?? 'مستخدم';
+const getMemberName = (m: GroupMember) =>
+  m.user?.displayName ?? m.pendingPhone ?? i18n.t('billing:receiptSplit.defaultMemberName');
 
 function MemberChip({
   member,
@@ -69,12 +73,13 @@ function ItemRow({
   members: GroupMember[];
   onToggle: (itemId: string, memberId: string) => void;
 }) {
+  const { t } = useTranslation('billing');
   const subtotal = item.price * item.qty;
   const unclaimed = item.claimedBy.length === 0;
   return (
     <View style={[styles.itemCard, unclaimed && styles.itemCardUnclaimed]}>
       <View style={styles.itemHeader}>
-        <Text style={styles.itemSubtotal}>{subtotal.toFixed(2)} ج.م</Text>
+        <Text style={styles.itemSubtotal}>{formatCurrency(subtotal)}</Text>
         <View style={styles.itemNameBlock}>
           <Text style={styles.itemName}>{item.name}</Text>
           {item.qty > 1 && (
@@ -92,10 +97,10 @@ function ItemRow({
           />
         ))}
       </ScrollView>
-      {unclaimed && <Text style={styles.unclaimedNote}>لم يُختر لها أحد بعد</Text>}
+      {unclaimed && <Text style={styles.unclaimedNote}>{t('receiptSplit.unclaimedNote')}</Text>}
       {item.claimedBy.length > 1 && (
         <Text style={styles.splitNote}>
-          {(subtotal / item.claimedBy.length).toFixed(2)} ج.م على كل شخص
+          {t('receiptSplit.perPersonShare', { amount: formatCurrency(subtotal / item.claimedBy.length) })}
         </Text>
       )}
     </View>
@@ -103,6 +108,7 @@ function ItemRow({
 }
 
 function ReceiptSplitScreen({ route, navigation }: Props) {
+  const { t } = useTranslation('billing');
   const { groupId, groupName, receiptJson } = route.params;
 
   const { data: members } = useGetGroupMembersQuery(groupId);
@@ -133,8 +139,8 @@ function ReceiptSplitScreen({ route, navigation }: Props) {
         })),
       );
     } catch {
-      Alert.alert('خطأ', 'تعذر قراءة بيانات الإيصال', [
-        { text: 'رجوع', onPress: () => navigation.goBack() },
+      Alert.alert(t('common:error'), t('receiptSplit.parseFailed'), [
+        { text: t('common:back'), onPress: () => navigation.goBack() },
       ]);
     }
   }, [receiptJson, navigation]);
@@ -202,21 +208,21 @@ function ReceiptSplitScreen({ route, navigation }: Props) {
   const payerName =
     activeMembers.find((m) => getMemberId(m) === paidByUserId)?.user?.displayName ??
     me?.displayName ??
-    'اختر من دفع';
+    t('receiptSplit.selectPayerFallback');
 
   const handleSave = useCallback(async () => {
     if (!paidByUserId) {
-      Alert.alert('خطأ', 'يرجى تحديد من دفع الإيصال');
+      Alert.alert(t('common:error'), t('receiptSplit.selectPayerRequired'));
       return;
     }
     const unclaimedItems = items.filter((i) => i.claimedBy.length === 0);
     if (unclaimedItems.length > 0) {
       Alert.alert(
-        'أصناف غير محددة',
-        `${unclaimedItems.length} صنف لم يُختر لها أحد. هل تريد المتابعة؟`,
+        t('receiptSplit.unclaimedItemsTitle'),
+        t('receiptSplit.unclaimedItemsMessage', { count: unclaimedItems.length }),
         [
-          { text: 'راجع', style: 'cancel' },
-          { text: 'متابعة', onPress: doSave },
+          { text: t('receiptSplit.reviewButton'), style: 'cancel' },
+          { text: t('common:continue'), onPress: doSave },
         ],
       );
       return;
@@ -228,14 +234,14 @@ function ReceiptSplitScreen({ route, navigation }: Props) {
   const doSave = useCallback(async () => {
     const breakdownLines = activeMembers
       .filter((m) => memberTotals[getMemberId(m)] !== undefined)
-      .map((m) => `${getMemberName(m)}: ${memberTotals[getMemberId(m)]!.toFixed(2)} ج.م`);
+      .map((m) => t('receiptSplit.breakdownLine', { name: getMemberName(m), amount: formatCurrency(memberTotals[getMemberId(m)]!) }));
 
     const notesParts: string[] = [];
     if (receipt.storeName ?? receipt.venueName) {
-      notesParts.push(`من: ${receipt.storeName ?? receipt.venueName}`);
+      notesParts.push(t('receiptSplit.fromVenue', { venue: receipt.storeName ?? receipt.venueName }));
     }
     if (breakdownLines.length) {
-      notesParts.push('التوزيع:', ...breakdownLines);
+      notesParts.push(t('receiptSplit.breakdownHeader'), ...breakdownLines);
     }
 
     // Shares are owed by everyone except the payer (the payer fronted the bill, they don't owe themselves).
@@ -267,7 +273,7 @@ function ReceiptSplitScreen({ route, navigation }: Props) {
       }).unwrap();
       navigation.navigate('GroupDetail', { groupId, groupName });
     } catch {
-      Alert.alert('خطأ', 'تعذر حفظ الإيصال، حاول مرة أخرى');
+      Alert.alert(t('common:error'), t('receiptSplit.saveFailed'));
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeMembers, memberTotals, receipt, grandTotal, paidByUserId, groupId, groupName, items, createBill, navigation]);
@@ -285,19 +291,19 @@ function ReceiptSplitScreen({ route, navigation }: Props) {
         {(receipt.storeName ?? receipt.venueName) ? (
           <Text style={styles.storeName}>{receipt.venueName ?? receipt.storeName}</Text>
         ) : null}
-        <Text style={styles.totalLabel}>الإجمالي</Text>
-        <Text style={styles.totalAmount}>{grandTotal.toFixed(2)} ج.م</Text>
+        <Text style={styles.totalLabel}>{t('receiptSplit.grandTotalLabel')}</Text>
+        <Text style={styles.totalAmount}>{formatCurrency(grandTotal)}</Text>
         {(taxAmt > 0 || serviceAmt > 0 || tipAmt > 0) && (
           <View style={styles.extrasRow}>
-            {taxAmt > 0 && <Text style={styles.extrasText}>ضريبة: {taxAmt.toFixed(2)}</Text>}
-            {serviceAmt > 0 && <Text style={styles.extrasText}>خدمة: {serviceAmt.toFixed(2)}</Text>}
-            {tipAmt > 0 && <Text style={styles.extrasText}>إكرامية: {tipAmt.toFixed(2)}</Text>}
+            {taxAmt > 0 && <Text style={styles.extrasText}>{t('receiptSplit.taxRow', { amount: taxAmt.toFixed(2) })}</Text>}
+            {serviceAmt > 0 && <Text style={styles.extrasText}>{t('receiptSplit.serviceRow', { amount: serviceAmt.toFixed(2) })}</Text>}
+            {tipAmt > 0 && <Text style={styles.extrasText}>{t('receiptSplit.tipRow', { amount: tipAmt.toFixed(2) })}</Text>}
           </View>
         )}
-        <Text style={styles.sectionTitle}>اختر من أخذ كل صنف</Text>
+        <Text style={styles.sectionTitle}>{t('receiptSplit.chooseItemsHint')}</Text>
       </View>
     ),
-    [receipt, grandTotal, taxAmt, serviceAmt, tipAmt],
+    [receipt, grandTotal, taxAmt, serviceAmt, tipAmt, t],
   );
 
   const summaryRows = activeMembers.filter((m) => memberTotals[getMemberId(m)] !== undefined);
@@ -316,12 +322,12 @@ function ReceiptSplitScreen({ route, navigation }: Props) {
       <View style={styles.bottomPanel}>
         {summaryRows.length > 0 && (
           <View style={styles.summarySection}>
-            <Text style={styles.summaryTitle}>ملخص الدفع</Text>
+            <Text style={styles.summaryTitle}>{t('receiptSplit.paymentSummaryTitle')}</Text>
             {summaryRows.map((m) => {
               const id = getMemberId(m);
               return (
                 <View key={m.id} style={styles.summaryRow}>
-                  <Text style={styles.summaryAmount}>{memberTotals[id]!.toFixed(2)} ج.م</Text>
+                  <Text style={styles.summaryAmount}>{formatCurrency(memberTotals[id]!)}</Text>
                   <View style={styles.summaryMember}>
                     <Text style={styles.summaryName}>{getMemberName(m)}</Text>
                     <Avatar uri={m.user?.photoUrl} name={getMemberName(m)} size={24} />
@@ -335,14 +341,14 @@ function ReceiptSplitScreen({ route, navigation }: Props) {
         <TouchableOpacity style={styles.payerRow} onPress={() => setPayerModalVisible(true)}>
           <Text style={styles.payerArrow}>▼</Text>
           <View style={styles.payerInfo}>
-            <Text style={styles.payerLabel}>من دفع الإيصال؟</Text>
+            <Text style={styles.payerLabel}>{t('receiptSplit.payerQuestionLabel')}</Text>
             <Text style={styles.payerName}>{payerName}</Text>
           </View>
           <Text style={styles.payerIcon}>💳</Text>
         </TouchableOpacity>
 
         <Button
-          title="حفظ الإيصال"
+          title={t('receiptSplit.saveButton')}
           onPress={handleSave}
           loading={isSaving}
           style={styles.saveBtn}
@@ -359,7 +365,7 @@ function ReceiptSplitScreen({ route, navigation }: Props) {
           activeOpacity={1}
           onPress={() => setPayerModalVisible(false)}>
           <View style={styles.modalSheet}>
-            <Text style={styles.modalTitle}>من دفع الإيصال؟</Text>
+            <Text style={styles.modalTitle}>{t('receiptSplit.payerQuestionLabel')}</Text>
             {activeMembers.map((m) => {
               const id = getMemberId(m);
               const selected = id === paidByUserId;

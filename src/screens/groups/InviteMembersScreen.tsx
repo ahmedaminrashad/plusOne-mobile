@@ -1,4 +1,5 @@
 import React, { useState, useCallback, memo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -18,6 +19,7 @@ import { useInviteMembersMutation } from '../../store/api/groupsApi';
 type Props = AppScreenProps<'InviteMembers'>;
 
 function InviteMembersScreen({ route, navigation }: Props) {
+  const { t } = useTranslation('groups');
   const { groupId } = route.params;
   const [phone, setPhone] = useState('');
   const [phoneError, setPhoneError] = useState('');
@@ -28,17 +30,17 @@ function InviteMembersScreen({ route, navigation }: Props) {
   const handleAddPhone = useCallback(() => {
     const formatted = formatPhone(phone.trim());
     if (!isValidPhone(formatted)) {
-      setPhoneError('لا يمكن إضافة الأعضاء بدون رقم هاتف صحيح');
+      setPhoneError(t('inviteMembers.invalidPhone'));
       return;
     }
     if (selected.includes(formatted)) {
-      setPhoneError('تم إضافة هذا الرقم مسبقاً');
+      setPhoneError(t('inviteMembers.phoneAlreadyAdded'));
       return;
     }
     setSelected((prev) => [...prev, formatted]);
     setPhone('');
     setPhoneError('');
-  }, [phone, selected]);
+  }, [phone, selected, t]);
 
   const handleRemovePhone = useCallback((p: string) => {
     setSelected((prev) => prev.filter((s) => s !== p));
@@ -48,35 +50,43 @@ function InviteMembersScreen({ route, navigation }: Props) {
     if (selected.length === 0) return;
     try {
       const result = await inviteMembers({ groupId, phones: selected }).unwrap();
+      let message = t('inviteMembers.sentBase', { count: result.sent });
+      if (result.failed > 0) {
+        message += t('inviteMembers.sentFailedFragment', { count: result.failed });
+      }
+      if (result.alreadyMembers > 0) {
+        message += t('inviteMembers.sentAlreadyMembersFragment', { count: result.alreadyMembers });
+      }
+      message += '.';
       Alert.alert(
-        'تم الإرسال',
-        `تم إرسال ${result.sent} دعوة بنجاح${result.failed > 0 ? `، فشل ${result.failed}` : ''}${result.alreadyMembers > 0 ? `، ${result.alreadyMembers} موجودون مسبقاً` : ''}.`,
-        [{ text: 'حسناً', onPress: () => navigation.goBack() }],
+        t('inviteMembers.sentTitle'),
+        message,
+        [{ text: t('inviteMembers.okButton'), onPress: () => navigation.goBack() }],
       );
     } catch {
-      Alert.alert('خطأ', 'تعذر إرسال الدعوات، حاول مرة أخرى لاحقاً');
+      Alert.alert(t('common:error'), t('inviteMembers.sendError'));
     }
-  }, [selected, groupId, inviteMembers, navigation]);
+  }, [selected, groupId, inviteMembers, navigation, t]);
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.title}>أدخل أرقام الهواتف</Text>
+        <Text style={styles.title}>{t('inviteMembers.title')}</Text>
         <Text style={styles.subtitle}>
-          سيتم إضافة المستخدمين المسجّلين فوراً، وسيتلقى الباقون رابط دعوة عبر SMS
+          {t('inviteMembers.subtitle')}
         </Text>
 
         <View style={styles.inputRow}>
           <Input
             value={phone}
             onChangeText={(v) => { setPhone(v); setPhoneError(''); }}
-            placeholder="+20 10 XXXX XXXX"
+            placeholder={t('inviteMembers.phonePlaceholder')}
             keyboardType="phone-pad"
             error={phoneError}
             containerStyle={styles.phoneInput}
           />
           <Button
-            title="إضافة"
+            title={t('common:add')}
             onPress={handleAddPhone}
             variant="outline"
             disabled={!phone.trim()}
@@ -105,7 +115,7 @@ function InviteMembersScreen({ route, navigation }: Props) {
 
       <View style={styles.footer}>
         <Button
-          title={`إرسال ${selected.length > 0 ? `(${selected.length})` : ''} دعوة`}
+          title={`${t('inviteMembers.sendCta')} ${selected.length > 0 ? `(${selected.length})` : ''} ${t('inviteMembers.invitationsWord')}`}
           onPress={handleSendInvites}
           loading={isLoading}
           disabled={selected.length === 0}

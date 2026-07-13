@@ -9,18 +9,21 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { AuthScreenProps } from '../../types/navigation';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import { Colors } from '../../constants/colors';
 import { isValidPhone, formatPhone } from '../../utils/validation';
 import { useSendOtpMutation } from '../../store/api/authApi';
+import { resolveErrorMessage } from '../../utils/errors';
 
 type Props = AuthScreenProps<'PhoneEntry'>;
 
 const COUNTRY_CODE = '+20';
 
 function PhoneEntryScreen({ navigation }: Props) {
+  const { t } = useTranslation('auth');
   const [phone, setPhone] = useState('');
   const [countryCode, setCountryCode] = useState(COUNTRY_CODE);
   const [error, setError] = useState('');
@@ -33,7 +36,7 @@ function PhoneEntryScreen({ navigation }: Props) {
     setError('');
 
     if (!isValidPhone(fullPhone)) {
-      setError('رقم الهاتف غير صحيح');
+      setError(t('phoneEntry.invalidPhone'));
       return;
     }
 
@@ -41,8 +44,7 @@ function PhoneEntryScreen({ navigation }: Props) {
       await sendOtp({ phone: fullPhone }).unwrap();
       navigation.navigate('OTPVerification', { phone: fullPhone });
     } catch (err: any) {
-      const msg = err?.data?.message?.error ?? err?.data?.message ?? 'تعذر إرسال الكود، حاول مرة أخرى';
-      setError(msg);
+      setError(resolveErrorMessage(err));
     }
   }, [fullPhone, sendOtp, navigation]);
 
@@ -52,29 +54,29 @@ function PhoneEntryScreen({ navigation }: Props) {
         style={styles.content}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={styles.header}>
-          <Text style={styles.title}>أدخل رقم هاتفك</Text>
-          <Text style={styles.subtitle}>سنرسل إليك رمز تحقق للتأكيد</Text>
+          <Text style={styles.title}>{t('phoneEntry.title')}</Text>
+          <Text style={styles.subtitle}>{t('phoneEntry.subtitle')}</Text>
         </View>
 
         <View style={styles.form}>
           <Input
-            label="رقم الهاتف"
+            label={t('phoneEntry.phoneLabel')}
             prefix={countryCode}
             value={phone}
             onChangeText={(v) => { setPhone(v); setError(''); }}
             keyboardType="phone-pad"
-            placeholder="10 XXXX XXXX"
+            placeholder={t('phoneEntry.phonePlaceholder')}
             maxLength={11}
             error={error}
             autoFocus
           />
           <Text style={styles.hint}>
-            كود مصر (+20) مُعبّأ تلقائياً، يمكنك تغييره
+            {t('phoneEntry.countryCodeHint')}
           </Text>
         </View>
 
         <Button
-          title="متابعة"
+          title={t('common:continue')}
           onPress={handleContinue}
           loading={isLoading}
           disabled={phone.length < 7}

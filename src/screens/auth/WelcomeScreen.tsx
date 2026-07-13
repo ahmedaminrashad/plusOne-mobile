@@ -7,6 +7,7 @@ import {
   SafeAreaView,
   StatusBar,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { AuthScreenProps } from '../../types/navigation';
 import Button from '../../components/common/Button';
 import { Colors } from '../../constants/colors';
@@ -14,6 +15,7 @@ import { Colors } from '../../constants/colors';
 type Props = AuthScreenProps<'Welcome'>;
 
 function WelcomeScreen({ navigation }: Props) {
+  const { t } = useTranslation('auth');
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
@@ -21,17 +23,17 @@ function WelcomeScreen({ navigation }: Props) {
         <View style={styles.logoSection}>
           <Image source={require('../../../assets/PlusOne.png')} style={styles.logo} resizeMode="contain" />
           <Text style={styles.appName}>+one</Text>
-          <Text style={styles.tagline}>اقسّم، تتبّع، وسوّى مع صحابك</Text>
+          <Text style={styles.tagline}>{t('welcome.tagline')}</Text>
         </View>
 
         <View style={styles.actions}>
           <Button
-            title="ابدأ الآن"
+            title={t('welcome.startButton')}
             onPress={() => navigation.navigate('PhoneEntry')}
             style={styles.primaryBtn}
           />
           <Text style={styles.terms}>
-            بالمتابعة، أنت توافق على شروط الخدمة وسياسة الخصوصية
+            {t('welcome.terms')}
           </Text>
         </View>
       </View>

@@ -12,18 +12,19 @@ import {
   AppState,
   AppStateStatus,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { AppScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
 import Avatar from '../../components/common/Avatar';
 import Button from '../../components/common/Button';
-import { useGetGroupBillsQuery } from '../../store/api/billsApi';
+import { useGetBillDetailQuery } from '../../store/api/billsApi';
 import {
-  useGetBillSharesQuery,
   usePayShareMutation,
   useCancelShareInitiationMutation,
 } from '../../store/api/sharesApi';
 import { useGetMeQuery } from '../../store/api/usersApi';
 import { BillLineItem, CaptureMethod } from '../../types/models';
+import { formatCurrency, formatDate } from '../../utils/format';
 
 // InstaPay's official Payment Link format (universal link — routes into the
 // InstaPay/bank app if installed, else opens in the browser). It only encodes the
@@ -44,12 +45,6 @@ async function tryOpenInstaPay(url: string): Promise<boolean> {
 
 type Props = AppScreenProps<'ViewReceipt'>;
 
-const CAPTURE_METHOD_LABEL: Record<CaptureMethod, string> = {
-  qr: 'مسح QR',
-  ocr: 'مسح إيصال',
-  manual: 'إدخال يدوي',
-};
-
 function LineItemRow({ item }: { item: BillLineItem }) {
   const subtotal = item.qty * item.unitPrice;
   return (
@@ -66,12 +61,18 @@ function LineItemRow({ item }: { item: BillLineItem }) {
 }
 
 function ViewReceiptScreen({ route }: Props) {
-  const { groupId, billId } = route.params;
-  const { data: bills, isLoading } = useGetGroupBillsQuery(groupId);
-  const bill = useMemo(() => bills?.find((b) => b.id === billId), [bills, billId]);
+  const { t } = useTranslation('billing');
+  const { billId } = route.params;
+  const { data: bill, isLoading } = useGetBillDetailQuery(billId);
+
+  const captureMethodLabel: Record<CaptureMethod, string> = {
+    qr: t('viewReceipt.captureMethodQr'),
+    ocr: t('viewReceipt.captureMethodOcr'),
+    manual: t('viewReceipt.captureMethodManual'),
+  };
 
   const { data: me } = useGetMeQuery();
-  const { data: shares } = useGetBillSharesQuery(billId);
+  const shares = bill?.shares;
   const [payShare, { isLoading: isPaying }] = usePayShareMutation();
   const [cancelInitiation] = useCancelShareInitiationMutation();
 
@@ -92,11 +93,11 @@ function ViewReceiptScreen({ route }: Props) {
       if (!myShare || myShare.status !== 'initiated') return;
 
       Alert.alert(
-        'هل أتممت الدفع؟',
-        `هل أرسلت ${(myShare.amountPiastres / 100).toFixed(2)} ${myShare.currency} عبر InstaPay؟`,
+        t('viewReceipt.paymentConfirmTitle'),
+        t('viewReceipt.paymentConfirmMessage', { amount: formatCurrency(myShare.amountPiastres / 100, myShare.currency) }),
         [
           {
-            text: 'لا، إلغاء',
+            text: t('viewReceipt.noCancelButton'),
             style: 'cancel',
             onPress: async () => {
               try {
@@ -106,7 +107,7 @@ function ViewReceiptScreen({ route }: Props) {
               }
             },
           },
-          { text: 'نعم، تم الدفع' },
+          { text: t('viewReceipt.yesPaidButton') },
         ],
       );
     });
@@ -116,24 +117,24 @@ function ViewReceiptScreen({ route }: Props) {
   const showManualCopyFallback = useCallback(
     (alias: string, amountText: string, currency: string, shareId: string) => {
       Alert.alert(
-        'الدفع عبر InstaPay',
-        `تعذر فتح تطبيق InstaPay تلقائياً. أرسل ${amountText} ${currency} إلى ${alias} عبر تطبيق InstaPay، ثم اضغط "تم الدفع" لتأكيد الإرسال.`,
+        t('viewReceipt.instaPayTitle'),
+        t('viewReceipt.manualPayInstructions', { amount: formatCurrency(Number(amountText), currency), alias }),
         [
-          { text: 'إلغاء', style: 'cancel' },
+          { text: t('common:cancel'), style: 'cancel' },
           {
-            text: 'تم الدفع',
+            text: t('viewReceipt.paidButton'),
             onPress: async () => {
               try {
                 await payShare(shareId).unwrap();
               } catch {
-                Alert.alert('خطأ', 'تعذر تسجيل حالة الدفع، يرجى المحاولة مرة أخرى');
+                Alert.alert(t('common:error'), t('viewReceipt.markPaidFailed'));
               }
             },
           },
         ],
       );
     },
-    [payShare],
+    [payShare, t],
   );
 
   const openInstaPayAndInitiate = useCallback(
@@ -159,7 +160,7 @@ function ViewReceiptScreen({ route }: Props) {
     if (!myShare || !bill) return;
     const alias = bill.paidBy?.instaPayAlias;
     if (!alias) {
-      Alert.alert('تنبيه', `${bill.paidBy?.displayName ?? 'المُنشئ'} لم يُضِف رقم InstaPay بعد`);
+      Alert.alert(t('viewReceipt.noAliasTitle'), t('viewReceipt.noAliasMessage', { name: bill.paidBy?.displayName ?? t('viewReceipt.creatorFallback') }));
       return;
     }
 
@@ -170,17 +171,17 @@ function ViewReceiptScreen({ route }: Props) {
     // The InstaPay link only carries the recipient — the amount isn't pre-filled,
     // so show it upfront before routing the payer into the app.
     Alert.alert(
-      'الدفع عبر InstaPay',
-      `سيتم فتح InstaPay لإرسال الأموال إلى ${alias}. أرسل ${amountText} ${currency} بعد فتح التطبيق.`,
+      t('viewReceipt.instaPayTitle'),
+      t('viewReceipt.payInstructions', { alias, amount: formatCurrency(Number(amountText), currency) }),
       [
-        { text: 'إلغاء', style: 'cancel' },
+        { text: t('common:cancel'), style: 'cancel' },
         {
-          text: 'متابعة',
+          text: t('common:continue'),
           onPress: () => openInstaPayAndInitiate(alias, amountText, currency, shareId),
         },
       ],
     );
-  }, [myShare, bill, openInstaPayAndInitiate]);
+  }, [myShare, bill, openInstaPayAndInitiate, t]);
 
   const subtotal = useMemo(
     () => (bill?.lineItems ?? []).reduce((sum, it) => sum + it.qty * it.unitPrice, 0),
@@ -217,19 +218,15 @@ function ViewReceiptScreen({ route }: Props) {
       <SafeAreaView style={styles.container}>
         <View style={styles.emptyState}>
           <Text style={styles.emptyIcon}>🧾</Text>
-          <Text style={styles.emptyText}>تعذر العثور على الإيصال</Text>
+          <Text style={styles.emptyText}>{t('viewReceipt.notFound')}</Text>
         </View>
       </SafeAreaView>
     );
   }
 
-  const payerName = bill.paidBy?.displayName ?? 'مستخدم';
-  const date = new Date(bill.createdAt).toLocaleDateString('ar-EG', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
-  const displayName = bill.venueName ?? bill.title ?? 'فاتورة';
+  const payerName = bill.paidBy?.displayName ?? t('viewReceipt.defaultUserName');
+  const date = formatDate(bill.createdAt);
+  const displayName = bill.venueName ?? bill.title ?? t('viewReceipt.defaultBillName');
 
   return (
     <SafeAreaView style={styles.container}>
@@ -250,16 +247,16 @@ function ViewReceiptScreen({ route }: Props) {
 
         <View style={styles.summaryCard}>
           <Text style={styles.venueName}>{displayName}</Text>
-          <Text style={styles.totalAmount}>{Number(bill.amount).toFixed(2)} {bill.currency}</Text>
+          <Text style={styles.totalAmount}>{formatCurrency(Number(bill.amount), bill.currency)}</Text>
 
           <View style={styles.payerRow}>
             <Avatar uri={bill.paidBy?.photoUrl} name={payerName} size={28} />
-            <Text style={styles.payerText}>دفع {payerName} • {date}</Text>
+            <Text style={styles.payerText}>{t('viewReceipt.paidByAndDate', { payerName, date })}</Text>
           </View>
 
           <View style={styles.badgeRow}>
             <View style={styles.badge}>
-              <Text style={styles.badgeText}>{CAPTURE_METHOD_LABEL[bill.captureMethod]}</Text>
+              <Text style={styles.badgeText}>{captureMethodLabel[bill.captureMethod]}</Text>
             </View>
           </View>
         </View>
@@ -267,18 +264,18 @@ function ViewReceiptScreen({ route }: Props) {
         {!isPayer && myShare && (
           <View style={styles.payCard}>
             {myShare.status === 'settled' ? (
-              <Text style={styles.paySettledText}>تم دفع نصيبك ✅</Text>
+              <Text style={styles.paySettledText}>{t('viewReceipt.shareSettled')}</Text>
             ) : myShare.status === 'initiated' ? (
               <Text style={styles.payPendingText}>
-                بانتظار تأكيد {payerName} لاستلام {(myShare.amountPiastres / 100).toFixed(2)} {myShare.currency}
+                {t('viewReceipt.awaitingConfirmation', { payerName, amount: formatCurrency(myShare.amountPiastres / 100, myShare.currency) })}
               </Text>
             ) : (
               <>
-                <Text style={styles.payLabel}>نصيبك من الفاتورة</Text>
+                <Text style={styles.payLabel}>{t('viewReceipt.yourShareLabel')}</Text>
                 <Text style={styles.payAmount}>
-                  {(myShare.amountPiastres / 100).toFixed(2)} {myShare.currency}
+                  {formatCurrency(myShare.amountPiastres / 100, myShare.currency)}
                 </Text>
-                <Button title="ادفع" onPress={handlePay} loading={isPaying} style={styles.payButton} />
+                <Button title={t('viewReceipt.payButton')} onPress={handlePay} loading={isPaying} style={styles.payButton} />
               </>
             )}
           </View>
@@ -286,7 +283,7 @@ function ViewReceiptScreen({ route }: Props) {
 
         {bill.lineItems && bill.lineItems.length > 0 && (
           <View style={styles.itemsCard}>
-            <Text style={styles.sectionTitle}>الأصناف</Text>
+            <Text style={styles.sectionTitle}>{t('viewReceipt.itemsTitle')}</Text>
             {bill.lineItems.map((item, idx) => (
               <LineItemRow key={idx} item={item} />
             ))}
@@ -295,29 +292,29 @@ function ViewReceiptScreen({ route }: Props) {
 
         {(taxAmt > 0 || serviceAmt > 0 || tipAmt > 0) && (
           <View style={styles.itemsCard}>
-            <Text style={styles.sectionTitle}>التفاصيل</Text>
+            <Text style={styles.sectionTitle}>{t('viewReceipt.detailsTitle')}</Text>
             {bill.lineItems && bill.lineItems.length > 0 && (
               <View style={styles.breakdownRow}>
                 <Text style={styles.breakdownValue}>{subtotal.toFixed(2)}</Text>
-                <Text style={styles.breakdownLabel}>المجموع الفرعي</Text>
+                <Text style={styles.breakdownLabel}>{t('viewReceipt.subtotalLabel')}</Text>
               </View>
             )}
             {taxAmt > 0 && (
               <View style={styles.breakdownRow}>
                 <Text style={styles.breakdownValue}>{taxAmt.toFixed(2)}</Text>
-                <Text style={styles.breakdownLabel}>ضريبة</Text>
+                <Text style={styles.breakdownLabel}>{t('viewReceipt.taxLabel')}</Text>
               </View>
             )}
             {serviceAmt > 0 && (
               <View style={styles.breakdownRow}>
                 <Text style={styles.breakdownValue}>{serviceAmt.toFixed(2)}</Text>
-                <Text style={styles.breakdownLabel}>خدمة</Text>
+                <Text style={styles.breakdownLabel}>{t('viewReceipt.serviceLabel')}</Text>
               </View>
             )}
             {tipAmt > 0 && (
               <View style={styles.breakdownRow}>
                 <Text style={styles.breakdownValue}>{tipAmt.toFixed(2)}</Text>
-                <Text style={styles.breakdownLabel}>إكرامية</Text>
+                <Text style={styles.breakdownLabel}>{t('viewReceipt.tipLabel')}</Text>
               </View>
             )}
           </View>
@@ -325,7 +322,7 @@ function ViewReceiptScreen({ route }: Props) {
 
         {bill.notes && (
           <View style={styles.itemsCard}>
-            <Text style={styles.sectionTitle}>ملاحظات</Text>
+            <Text style={styles.sectionTitle}>{t('viewReceipt.notesTitle')}</Text>
             <Text style={styles.notesText}>{bill.notes}</Text>
           </View>
         )}
