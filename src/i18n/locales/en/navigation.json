@@ -6,7 +6,8 @@
     "addBillTitle": "Add Receipt",
     "qrScannerTitle": "Scan QR",
     "ocrCaptureTitle": "Scan Paper Receipt",
-    "viewReceiptTitle": "Receipt"
+    "viewReceiptTitle": "Receipt",
+    "editBillItemsTitle": "Edit Items"
   },
   "tabBar": {
     "groupsLabel": "My Groups",

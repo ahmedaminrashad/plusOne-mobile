@@ -88,7 +88,18 @@
     "taxLabel": "Tax",
     "serviceLabel": "Service",
     "tipLabel": "Tip",
-    "notesTitle": "Notes"
+    "notesTitle": "Notes",
+    "editItemsButton": "Edit items",
+    "closeSplitButton": "Close split",
+    "closeSplitConfirmTitle": "Close this split?",
+    "closeSplitConfirmMessage": "No one will be able to change who took which item after this.",
+    "closeSplitFailed": "Couldn't close the split, please try again",
+    "closedBadge": "Closed"
+  },
+  "editBillItems": {
+    "saveButton": "Save changes",
+    "saveFailed": "Couldn't save changes, please try again",
+    "billClosedMessage": "This bill's split is already closed and can no longer be edited."
   },
   "qrScanner": {
     "permissionTitle": "Camera permission",

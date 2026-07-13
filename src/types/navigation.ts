@@ -21,6 +21,7 @@ export type AppStackParamList = {
   OCRCapture: { groupId: string; groupName: string };
   ReceiptSplit: { groupId: string; groupName: string; receiptJson: string };
   ViewReceipt: { groupId: string; groupName: string; billId: string };
+  EditBillItems: { groupId: string; groupName: string; billId: string };
 };
 
 export type SettingsStackParamList = {

@@ -17,7 +17,7 @@ import { AppScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
 import Avatar from '../../components/common/Avatar';
 import Button from '../../components/common/Button';
-import { useGetBillDetailQuery } from '../../store/api/billsApi';
+import { useGetBillDetailQuery, useCloseBillMutation } from '../../store/api/billsApi';
 import {
   usePayShareMutation,
   useCancelShareInitiationMutation,
@@ -60,10 +60,11 @@ function LineItemRow({ item }: { item: BillLineItem }) {
   );
 }
 
-function ViewReceiptScreen({ route }: Props) {
+function ViewReceiptScreen({ route, navigation }: Props) {
   const { t } = useTranslation('billing');
-  const { billId } = route.params;
+  const { groupId, groupName, billId } = route.params;
   const { data: bill, isLoading } = useGetBillDetailQuery(billId);
+  const [closeBill, { isLoading: isClosing }] = useCloseBillMutation();
 
   const captureMethodLabel: Record<CaptureMethod, string> = {
     qr: t('viewReceipt.captureMethodQr'),
@@ -81,6 +82,31 @@ function ViewReceiptScreen({ route }: Props) {
     [shares, me?.id],
   );
   const isPayer = !!me && !!bill && bill.paidByUserId === me.id;
+
+  const handleEditItems = useCallback(() => {
+    navigation.navigate('EditBillItems', { groupId, groupName, billId });
+  }, [navigation, groupId, groupName, billId]);
+
+  const handleCloseSplit = useCallback(() => {
+    Alert.alert(
+      t('viewReceipt.closeSplitConfirmTitle'),
+      t('viewReceipt.closeSplitConfirmMessage'),
+      [
+        { text: t('common:cancel'), style: 'cancel' },
+        {
+          text: t('viewReceipt.closeSplitButton'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await closeBill(billId).unwrap();
+            } catch {
+              Alert.alert(t('common:error'), t('viewReceipt.closeSplitFailed'));
+            }
+          },
+        },
+      ],
+    );
+  }, [closeBill, billId, t]);
 
   // Set right after a successful deep-link handoff; consumed on the next app-resume
   // to ask "did you complete the payment?" per the InstaPay handoff flow.
@@ -258,8 +284,33 @@ function ViewReceiptScreen({ route }: Props) {
             <View style={styles.badge}>
               <Text style={styles.badgeText}>{captureMethodLabel[bill.captureMethod]}</Text>
             </View>
+            {!bill.isEditable && (
+              <View style={[styles.badge, styles.closedBadge]}>
+                <Text style={[styles.badgeText, styles.closedBadgeText]}>{t('viewReceipt.closedBadge')}</Text>
+              </View>
+            )}
           </View>
         </View>
+
+        {bill.isEditable && bill.lineItems && bill.lineItems.length > 0 && (
+          <View style={styles.actionsRow}>
+            <Button
+              title={t('viewReceipt.editItemsButton')}
+              onPress={handleEditItems}
+              style={styles.actionButton}
+              variant="outline"
+            />
+            {isPayer && (
+              <Button
+                title={t('viewReceipt.closeSplitButton')}
+                onPress={handleCloseSplit}
+                loading={isClosing}
+                style={styles.actionButton}
+                variant="outline"
+              />
+            )}
+          </View>
+        )}
 
         {!isPayer && myShare && (
           <View style={styles.payCard}>
@@ -370,6 +421,16 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   badgeText: { fontSize: 11, color: Colors.textSecondary, fontWeight: '600' },
+  closedBadge: { backgroundColor: Colors.textMuted + '22' },
+  closedBadgeText: { color: Colors.textMuted },
+
+  actionsRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginHorizontal: 16,
+    marginBottom: 12,
+  },
+  actionButton: { flex: 1, height: 44 },
 
   itemsCard: {
     backgroundColor: Colors.surface,

@@ -4,11 +4,18 @@ import { Bill, BillLineItem, CaptureMethod, TaxServiceType, Share } from '../../
 export interface BillDetail extends Bill {
   shares: Share[];
   aggregateStatus: 'fully_settled' | 'partially_settled' | 'pending' | 'voided';
+  isEditable: boolean;
 }
 
 interface CreateSharePayload {
   groupMemberId: string;
   amountPiastres: number;
+}
+
+interface UpdateBillItemsPayload {
+  billId: string;
+  lineItems: BillLineItem[];
+  shares: CreateSharePayload[];
 }
 
 interface CreateBillPayload {
@@ -77,6 +84,18 @@ export const billsApi = baseApi.injectEndpoints({
       query: (billId) => ({ url: `/bills/${billId}`, method: 'DELETE' }),
       invalidatesTags: ['Bill'],
     }),
+    updateBillItems: builder.mutation<BillDetail, UpdateBillItemsPayload>({
+      query: ({ billId, ...body }) => ({
+        url: `/bills/${billId}/items`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: (result, error, { billId }) => [{ type: 'Bill', id: billId }, 'Bill'],
+    }),
+    closeBill: builder.mutation<Bill, string>({
+      query: (billId) => ({ url: `/bills/${billId}/close`, method: 'POST' }),
+      invalidatesTags: (result, error, billId) => [{ type: 'Bill', id: billId }, 'Bill'],
+    }),
     parseQrBill: builder.mutation<ParsedBillResult, ParseQrPayload>({
       query: ({ groupId, payload }) => ({
         url: `/bills/group/${groupId}/parse-qr`,
@@ -92,5 +111,7 @@ export const {
   useGetBillDetailQuery,
   useCreateBillMutation,
   useDeleteBillMutation,
+  useUpdateBillItemsMutation,
+  useCloseBillMutation,
   useParseQrBillMutation,
 } = billsApi;

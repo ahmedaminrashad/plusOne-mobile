@@ -88,7 +88,18 @@
     "taxLabel": "ضريبة",
     "serviceLabel": "خدمة",
     "tipLabel": "إكرامية",
-    "notesTitle": "ملاحظات"
+    "notesTitle": "ملاحظات",
+    "editItemsButton": "تعديل الأصناف",
+    "closeSplitButton": "إغلاق التوزيع",
+    "closeSplitConfirmTitle": "إغلاق هذا التوزيع؟",
+    "closeSplitConfirmMessage": "لن يتمكن أحد من تغيير من أخذ أي صنف بعد ذلك.",
+    "closeSplitFailed": "تعذر إغلاق التوزيع، يرجى المحاولة مرة أخرى",
+    "closedBadge": "مُغلق"
+  },
+  "editBillItems": {
+    "saveButton": "حفظ التغييرات",
+    "saveFailed": "تعذر حفظ التغييرات، يرجى المحاولة مرة أخرى",
+    "billClosedMessage": "تم إغلاق توزيع هذه الفاتورة ولا يمكن تعديله بعد الآن."
   },
   "qrScanner": {
     "permissionTitle": "إذن الكاميرا",

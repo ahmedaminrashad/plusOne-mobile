@@ -6,7 +6,8 @@
     "addBillTitle": "إضافة إيصال",
     "qrScannerTitle": "مسح QR",
     "ocrCaptureTitle": "مسح إيصال ورقي",
-    "viewReceiptTitle": "الإيصال"
+    "viewReceiptTitle": "الإيصال",
+    "editBillItemsTitle": "تعديل الأصناف"
   },
   "tabBar": {
     "groupsLabel": "مجموعاتي",

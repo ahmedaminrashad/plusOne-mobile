@@ -13,6 +13,7 @@ import QRScannerScreen from '../screens/groups/QRScannerScreen';
 import OCRCaptureScreen from '../screens/groups/OCRCaptureScreen';
 import ReceiptSplitScreen from '../screens/groups/ReceiptSplitScreen';
 import ViewReceiptScreen from '../screens/groups/ViewReceiptScreen';
+import EditBillItemsScreen from '../screens/groups/EditBillItemsScreen';
 import { Colors } from '../constants/colors';
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
@@ -66,6 +67,11 @@ export default function AppStack() {
         name="ViewReceipt"
         component={ViewReceiptScreen}
         options={{ title: t('appStack.viewReceiptTitle') }}
+      />
+      <Stack.Screen
+        name="EditBillItems"
+        component={EditBillItemsScreen}
+        options={{ title: t('appStack.editBillItemsTitle') }}
       />
     </Stack.Navigator>
   );

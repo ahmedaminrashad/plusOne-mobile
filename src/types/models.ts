@@ -19,6 +19,7 @@ export interface BillLineItem {
   name: string;
   qty: number;
   unitPrice: number;
+  claimedBy?: string[];
 }
 
 export interface GroupMember {
@@ -70,6 +71,7 @@ export interface Bill {
   serviceType: TaxServiceType | null;
   tip: number | null;
   tipType: TaxServiceType | null;
+  closedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
