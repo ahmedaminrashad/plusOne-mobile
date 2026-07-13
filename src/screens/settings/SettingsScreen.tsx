@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useState } from 'react';
+import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -14,7 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { SettingsScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
 import Avatar from '../../components/common/Avatar';
-import { useGetMeQuery } from '../../store/api/usersApi';
+import { useGetMeQuery, useSaveLanguageMutation } from '../../store/api/usersApi';
 import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { clearAuth } from '../../store/slices/authSlice';
 import { baseApi } from '../../store/api/baseApi';
@@ -64,11 +64,23 @@ function SettingsScreen({ navigation }: Props) {
   const { data: me } = useGetMeQuery();
   const [languagePickerVisible, setLanguagePickerVisible] = useState(false);
   const currentLanguage = i18n.language as AppLanguage;
+  const [saveLanguage] = useSaveLanguageMutation();
+
+  // Keep the backend in sync with the client's language — needed so push notifications
+  // (generated server-side) are sent in the right language. Runs once per screen visit,
+  // covering users who picked a language before this backend field existed.
+  const syncedRef = useRef(false);
+  useEffect(() => {
+    if (syncedRef.current) return;
+    syncedRef.current = true;
+    saveLanguage(currentLanguage).catch(() => {});
+  }, [currentLanguage, saveLanguage]);
 
   const handleSelectLanguage = useCallback((language: AppLanguage) => {
     setLanguagePickerVisible(false);
+    saveLanguage(language).catch(() => {});
     if (language !== currentLanguage) changeLanguage(language);
-  }, [currentLanguage]);
+  }, [currentLanguage, saveLanguage]);
 
   const handleLogout = useCallback(() => {
     Alert.alert(t('settings.logoutLabel'), t('settings.logoutConfirmMessage'), [

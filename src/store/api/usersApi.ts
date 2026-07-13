@@ -16,7 +16,16 @@ export const usersApi = baseApi.injectEndpoints({
     saveFcmToken: builder.mutation<void, string>({
       query: (fcmToken) => ({ url: '/users/me/fcm-token', method: 'PATCH', body: { fcmToken } }),
     }),
+
+    saveLanguage: builder.mutation<void, 'ar' | 'en'>({
+      query: (language) => ({ url: '/users/me/language', method: 'PATCH', body: { language } }),
+    }),
   }),
 });
 
-export const { useGetMeQuery, useUpdateProfileMutation, useSaveFcmTokenMutation } = usersApi;
+export const {
+  useGetMeQuery,
+  useUpdateProfileMutation,
+  useSaveFcmTokenMutation,
+  useSaveLanguageMutation,
+} = usersApi;

@@ -473,7 +473,6 @@ function GroupDetailScreen({ route, navigation }: Props) {
                   placeholderTextColor={Colors.textMuted}
                   multiline
                   maxLength={1000}
-                  textAlign="right"
                 />
                 <TouchableOpacity
                   style={[styles.sendBtn, !chatText.trim() && styles.sendBtnDisabled]}

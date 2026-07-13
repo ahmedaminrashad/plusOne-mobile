@@ -288,7 +288,6 @@ function ChatScreen({ route }: Props) {
             placeholderTextColor={Colors.textMuted}
             multiline
             maxLength={1000}
-            textAlign="right"
           />
           <TouchableOpacity
             style={[styles.sendBtn, !text.trim() && styles.sendBtnDisabled]}

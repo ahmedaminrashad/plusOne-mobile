@@ -22,6 +22,7 @@ import { useGetGroupMembersQuery } from '../../store/api/groupsApi';
 import { useGetMeQuery } from '../../store/api/usersApi';
 import { GroupMember, TaxServiceType, ParsedReceiptData } from '../../types/models';
 import { formatCurrency } from '../../utils/format';
+import { useInputTextAlign } from '../../utils/rtl';
 
 type Props = AppScreenProps<'AddBill'>;
 
@@ -65,6 +66,7 @@ function AmountTypeToggle({
 
 function CreateBillScreen({ route, navigation }: Props) {
   const { t } = useTranslation('billing');
+  const inputAlign = useInputTextAlign();
   const { groupId, groupName, prefilledData } = route.params;
   const isPreview = !!prefilledData;
 
@@ -232,7 +234,7 @@ function CreateBillScreen({ route, navigation }: Props) {
           onChangeText={setVenueName}
           placeholder={t('createBill.venuePlaceholder')}
           placeholderTextColor={Colors.textMuted}
-          textAlign="right"
+          textAlign={inputAlign}
           maxLength={100}
         />
 
@@ -260,7 +262,7 @@ function CreateBillScreen({ route, navigation }: Props) {
               placeholder={t('createBill.amountPlaceholderZero')}
               placeholderTextColor={Colors.textMuted}
               keyboardType="decimal-pad"
-              textAlign="right"
+              textAlign={inputAlign}
             />
             <Text style={styles.lumpSumNote}>{t('createBill.lumpSumNote')}</Text>
           </>
@@ -285,7 +287,7 @@ function CreateBillScreen({ route, navigation }: Props) {
                       onChangeText={(v) => updateItem(item.id, 'name', v)}
                       placeholder={t('createBill.itemNamePlaceholder')}
                       placeholderTextColor={Colors.textMuted}
-                      textAlign="right"
+                      textAlign={inputAlign}
                       maxLength={100}
                     />
                   </View>
@@ -297,7 +299,7 @@ function CreateBillScreen({ route, navigation }: Props) {
                       placeholder={t('createBill.pricePlaceholder')}
                       placeholderTextColor={Colors.textMuted}
                       keyboardType="decimal-pad"
-                      textAlign="right"
+                      textAlign={inputAlign}
                     />
                     <Text style={styles.multiplySign}>×</Text>
                     <TextInput
@@ -335,7 +337,7 @@ function CreateBillScreen({ route, navigation }: Props) {
                 placeholder={taxType === 'percent' ? t('createBill.taxPlaceholderPercent') : t('createBill.taxPlaceholderAmount')}
                 placeholderTextColor={Colors.textMuted}
                 keyboardType="decimal-pad"
-                textAlign="right"
+                textAlign={inputAlign}
               />
               <AmountTypeToggle value={taxType} onChange={setTaxType} />
             </View>
@@ -350,7 +352,7 @@ function CreateBillScreen({ route, navigation }: Props) {
                 placeholder={serviceType === 'percent' ? t('createBill.servicePlaceholderPercent') : t('createBill.servicePlaceholderAmount')}
                 placeholderTextColor={Colors.textMuted}
                 keyboardType="decimal-pad"
-                textAlign="right"
+                textAlign={inputAlign}
               />
               <AmountTypeToggle value={serviceType} onChange={setServiceType} />
             </View>
@@ -365,7 +367,7 @@ function CreateBillScreen({ route, navigation }: Props) {
                 placeholder={tipType === 'percent' ? t('createBill.tipPlaceholderPercent') : t('createBill.tipPlaceholderAmount')}
                 placeholderTextColor={Colors.textMuted}
                 keyboardType="decimal-pad"
-                textAlign="right"
+                textAlign={inputAlign}
               />
               <AmountTypeToggle value={tipType} onChange={setTipType} />
             </View>
@@ -385,7 +387,7 @@ function CreateBillScreen({ route, navigation }: Props) {
               placeholder={t('createBill.overridePlaceholder')}
               placeholderTextColor={Colors.textMuted}
               keyboardType="decimal-pad"
-              textAlign="right"
+              textAlign={inputAlign}
             />
             {totalMismatch && (
               <Text style={styles.mismatchWarning}>
