@@ -238,6 +238,15 @@ function ReceiptSplitScreen({ route, navigation }: Props) {
       notesParts.push('التوزيع:', ...breakdownLines);
     }
 
+    // Shares are owed by everyone except the payer (the payer fronted the bill, they don't owe themselves).
+    const shares = activeMembers
+      .filter((m) => m.userId !== paidByUserId && memberTotals[getMemberId(m)] !== undefined)
+      .map((m) => ({
+        groupMemberId: m.id,
+        amountPiastres: Math.floor(memberTotals[getMemberId(m)]! * 100),
+      }))
+      .filter((s) => s.amountPiastres > 0);
+
     try {
       await createBill({
         groupId,
@@ -254,6 +263,7 @@ function ReceiptSplitScreen({ route, navigation }: Props) {
         serviceType: receipt.serviceType,
         tip: receipt.tip,
         tipType: receipt.tipType,
+        shares,
       }).unwrap();
       navigation.navigate('GroupDetail', { groupId, groupName });
     } catch {

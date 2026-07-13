@@ -1,6 +1,11 @@
 import { baseApi } from './baseApi';
 import { Bill, BillLineItem, CaptureMethod, TaxServiceType } from '../../types/models';
 
+interface CreateSharePayload {
+  groupMemberId: string;
+  amountPiastres: number;
+}
+
 interface CreateBillPayload {
   groupId: string;
   title?: string;
@@ -19,6 +24,7 @@ interface CreateBillPayload {
   serviceType?: TaxServiceType;
   tip?: number;
   tipType?: TaxServiceType;
+  shares?: CreateSharePayload[];
 }
 
 interface ParseQrPayload {

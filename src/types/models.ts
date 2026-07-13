@@ -74,6 +74,27 @@ export interface Bill {
   updatedAt: string;
 }
 
+export type ShareStatus = 'pending' | 'initiated' | 'settled' | 'cancelled' | 'failed';
+export type ShareMethod = 'instapay' | 'card';
+
+export interface Share {
+  id: string;
+  billId: string;
+  groupId: string;
+  initiatorUserId: string;
+  initiator: User | null;
+  ownerUserId: string | null;
+  owner: User | null;
+  ownerPendingPhone: string | null;
+  amountPiastres: number;
+  currency: string;
+  status: ShareStatus;
+  method: ShareMethod;
+  reference: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ApiError {
   statusCode: number;
   message: string | { error: string };

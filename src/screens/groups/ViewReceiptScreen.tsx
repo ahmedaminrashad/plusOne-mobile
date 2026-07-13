@@ -1,4 +1,4 @@
-import React, { useMemo, memo } from 'react';
+import React, { useMemo, memo, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,12 +7,40 @@ import {
   StyleSheet,
   SafeAreaView,
   ActivityIndicator,
+  Alert,
+  Linking,
+  AppState,
+  AppStateStatus,
 } from 'react-native';
 import { AppScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
 import Avatar from '../../components/common/Avatar';
+import Button from '../../components/common/Button';
 import { useGetGroupBillsQuery } from '../../store/api/billsApi';
+import {
+  useGetBillSharesQuery,
+  usePayShareMutation,
+  useCancelShareInitiationMutation,
+} from '../../store/api/sharesApi';
+import { useGetMeQuery } from '../../store/api/usersApi';
 import { BillLineItem, CaptureMethod } from '../../types/models';
+
+// InstaPay's official Payment Link format (universal link — routes into the
+// InstaPay/bank app if installed, else opens in the browser). It only encodes the
+// recipient alias; amount and reference are not part of the link and must be
+// entered by the payer once inside the app, so we show them upfront in `handlePay`.
+function buildInstaPayLink(alias: string): string {
+  return `https://ipn.eg/S/${encodeURIComponent(alias)}`;
+}
+
+async function tryOpenInstaPay(url: string): Promise<boolean> {
+  try {
+    await Linking.openURL(url);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 type Props = AppScreenProps<'ViewReceipt'>;
 
@@ -41,6 +69,118 @@ function ViewReceiptScreen({ route }: Props) {
   const { groupId, billId } = route.params;
   const { data: bills, isLoading } = useGetGroupBillsQuery(groupId);
   const bill = useMemo(() => bills?.find((b) => b.id === billId), [bills, billId]);
+
+  const { data: me } = useGetMeQuery();
+  const { data: shares } = useGetBillSharesQuery(billId);
+  const [payShare, { isLoading: isPaying }] = usePayShareMutation();
+  const [cancelInitiation] = useCancelShareInitiationMutation();
+
+  const myShare = useMemo(
+    () => shares?.find((s) => s.ownerUserId === me?.id),
+    [shares, me?.id],
+  );
+  const isPayer = !!me && !!bill && bill.paidByUserId === me.id;
+
+  // Set right after a successful deep-link handoff; consumed on the next app-resume
+  // to ask "did you complete the payment?" per the InstaPay handoff flow.
+  const awaitingReturnRef = useRef(false);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (state: AppStateStatus) => {
+      if (state !== 'active' || !awaitingReturnRef.current) return;
+      awaitingReturnRef.current = false;
+      if (!myShare || myShare.status !== 'initiated') return;
+
+      Alert.alert(
+        'هل أتممت الدفع؟',
+        `هل أرسلت ${(myShare.amountPiastres / 100).toFixed(2)} ${myShare.currency} عبر InstaPay؟`,
+        [
+          {
+            text: 'لا، إلغاء',
+            style: 'cancel',
+            onPress: async () => {
+              try {
+                await cancelInitiation(myShare.id).unwrap();
+              } catch {
+                // share may have already been confirmed/failed by the initiator in the meantime — nothing to do
+              }
+            },
+          },
+          { text: 'نعم، تم الدفع' },
+        ],
+      );
+    });
+    return () => subscription.remove();
+  }, [myShare, cancelInitiation]);
+
+  const showManualCopyFallback = useCallback(
+    (alias: string, amountText: string, currency: string, shareId: string) => {
+      Alert.alert(
+        'الدفع عبر InstaPay',
+        `تعذر فتح تطبيق InstaPay تلقائياً. أرسل ${amountText} ${currency} إلى ${alias} عبر تطبيق InstaPay، ثم اضغط "تم الدفع" لتأكيد الإرسال.`,
+        [
+          { text: 'إلغاء', style: 'cancel' },
+          {
+            text: 'تم الدفع',
+            onPress: async () => {
+              try {
+                await payShare(shareId).unwrap();
+              } catch {
+                Alert.alert('خطأ', 'تعذر تسجيل حالة الدفع، يرجى المحاولة مرة أخرى');
+              }
+            },
+          },
+        ],
+      );
+    },
+    [payShare],
+  );
+
+  const openInstaPayAndInitiate = useCallback(
+    async (alias: string, amountText: string, currency: string, shareId: string) => {
+      const link = buildInstaPayLink(alias);
+      const opened = await tryOpenInstaPay(link);
+      if (!opened) {
+        showManualCopyFallback(alias, amountText, currency, shareId);
+        return;
+      }
+
+      awaitingReturnRef.current = true;
+      try {
+        await payShare(shareId).unwrap();
+      } catch {
+        // Idempotency conflicts (already initiated) are expected here and reconciled on app resume
+      }
+    },
+    [payShare, showManualCopyFallback],
+  );
+
+  const handlePay = useCallback(() => {
+    if (!myShare || !bill) return;
+    const alias = bill.paidBy?.instaPayAlias;
+    if (!alias) {
+      Alert.alert('تنبيه', `${bill.paidBy?.displayName ?? 'المُنشئ'} لم يُضِف رقم InstaPay بعد`);
+      return;
+    }
+
+    const amountText = (myShare.amountPiastres / 100).toFixed(2);
+    const shareId = myShare.id;
+    const currency = myShare.currency;
+
+    // The InstaPay link only carries the recipient — the amount isn't pre-filled,
+    // so show it upfront before routing the payer into the app.
+    Alert.alert(
+      'الدفع عبر InstaPay',
+      `سيتم فتح InstaPay لإرسال الأموال إلى ${alias}. أرسل ${amountText} ${currency} بعد فتح التطبيق.`,
+      [
+        { text: 'إلغاء', style: 'cancel' },
+        {
+          text: 'متابعة',
+          onPress: () => openInstaPayAndInitiate(alias, amountText, currency, shareId),
+        },
+      ],
+    );
+  }, [myShare, bill, openInstaPayAndInitiate]);
 
   const subtotal = useMemo(
     () => (bill?.lineItems ?? []).reduce((sum, it) => sum + it.qty * it.unitPrice, 0),
@@ -123,6 +263,26 @@ function ViewReceiptScreen({ route }: Props) {
             </View>
           </View>
         </View>
+
+        {!isPayer && myShare && (
+          <View style={styles.payCard}>
+            {myShare.status === 'settled' ? (
+              <Text style={styles.paySettledText}>تم دفع نصيبك ✅</Text>
+            ) : myShare.status === 'initiated' ? (
+              <Text style={styles.payPendingText}>
+                بانتظار تأكيد {payerName} لاستلام {(myShare.amountPiastres / 100).toFixed(2)} {myShare.currency}
+              </Text>
+            ) : (
+              <>
+                <Text style={styles.payLabel}>نصيبك من الفاتورة</Text>
+                <Text style={styles.payAmount}>
+                  {(myShare.amountPiastres / 100).toFixed(2)} {myShare.currency}
+                </Text>
+                <Button title="ادفع" onPress={handlePay} loading={isPaying} style={styles.payButton} />
+              </>
+            )}
+          </View>
+        )}
 
         {bill.lineItems && bill.lineItems.length > 0 && (
           <View style={styles.itemsCard}>
@@ -226,6 +386,25 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 1,
   },
+
+  payCard: {
+    backgroundColor: Colors.surface,
+    marginHorizontal: 16,
+    marginBottom: 12,
+    borderRadius: 14,
+    padding: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  payLabel: { fontSize: 13, color: Colors.textSecondary, marginBottom: 4 },
+  payAmount: { fontSize: 24, fontWeight: '800', color: Colors.primary, marginBottom: 12 },
+  payButton: { alignSelf: 'stretch' },
+  payPendingText: { fontSize: 13, fontWeight: '600', color: Colors.warning, textAlign: 'center' },
+  paySettledText: { fontSize: 13, fontWeight: '600', color: Colors.success, textAlign: 'center' },
   sectionTitle: { fontSize: 13, fontWeight: '700', color: Colors.textSecondary, textAlign: 'right', marginBottom: 10 },
 
   itemRow: {

@@ -123,7 +123,7 @@ function QRScannerScreen({ route, navigation }: Props) {
 
   const handleTestEta = useCallback(
     () => handlePayload(
-      'https://invoicing.eta.gov.eg/receipts/search/08fb08e19f5e35c921047281cfa54106a339c976edc8600d6172a76019bc4378/share/2026-06-29T14:52:Z',
+      'https://invoicing.eta.gov.eg/receipts/search/ff700ca9ac9eeb3f4d2e19b4726bceb23eb1761ae861a8546fdc2a3481437aa9/share/2026-07-11T00:01:42Z',
     ),
     [handlePayload],
   );
