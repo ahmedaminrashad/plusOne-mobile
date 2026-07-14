@@ -13,6 +13,7 @@ import {
   AppStateStatus,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { useFocusEffect } from '@react-navigation/native';
 import { AppScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
 import Avatar from '../../components/common/Avatar';
@@ -25,20 +26,15 @@ import {
 import { useGetMeQuery } from '../../store/api/usersApi';
 import { BillLineItem, CaptureMethod } from '../../types/models';
 import { formatCurrency, formatDate } from '../../utils/format';
-
-// InstaPay's official Payment Link format (universal link — routes into the
-// InstaPay/bank app if installed, else opens in the browser). It only encodes the
-// recipient alias; amount and reference are not part of the link and must be
-// entered by the payer once inside the app, so we show them upfront in `handlePay`.
-function buildInstaPayLink(alias: string): string {
-  return `https://ipn.eg/S/${encodeURIComponent(alias)}`;
-}
+import { normalizeInstaPayIdentifier, buildInstaPayLink } from '../../utils/instapay';
 
 async function tryOpenInstaPay(url: string): Promise<boolean> {
+  console.log('[InstaPay] opening deep link:', url);
   try {
     await Linking.openURL(url);
     return true;
-  } catch {
+  } catch (err) {
+    console.log('[InstaPay] failed to open deep link:', url, err);
     return false;
   }
 }
@@ -63,8 +59,17 @@ function LineItemRow({ item }: { item: BillLineItem }) {
 function ViewReceiptScreen({ route, navigation }: Props) {
   const { t } = useTranslation('billing');
   const { groupId, groupName, billId } = route.params;
-  const { data: bill, isLoading } = useGetBillDetailQuery(billId);
+  const { data: bill, isLoading, refetch: refetchBill } = useGetBillDetailQuery(billId);
   const [closeBill, { isLoading: isClosing }] = useCloseBillMutation();
+
+  // The payer's InstaPay ID can change on another device after this bill was first
+  // cached here — refetch on every focus so `bill.paidBy.instaPayAlias` stays current
+  // before the payer taps "Pay".
+  useFocusEffect(
+    useCallback(() => {
+      refetchBill();
+    }, [refetchBill]),
+  );
 
   const captureMethodLabel: Record<CaptureMethod, string> = {
     qr: t('viewReceipt.captureMethodQr'),
@@ -184,11 +189,12 @@ function ViewReceiptScreen({ route, navigation }: Props) {
 
   const handlePay = useCallback(() => {
     if (!myShare || !bill) return;
-    const alias = bill.paidBy?.instaPayAlias;
-    if (!alias) {
+    const rawAlias = bill.paidBy?.instaPayAlias;
+    if (!rawAlias) {
       Alert.alert(t('viewReceipt.noAliasTitle'), t('viewReceipt.noAliasMessage', { name: bill.paidBy?.displayName ?? t('viewReceipt.creatorFallback') }));
       return;
     }
+    const alias = normalizeInstaPayIdentifier(rawAlias);
 
     const amountText = (myShare.amountPiastres / 100).toFixed(2);
     const shareId = myShare.id;

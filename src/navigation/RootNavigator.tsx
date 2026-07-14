@@ -9,7 +9,7 @@ import AuthStack from './AuthStack';
 import TabNavigator from './TabNavigator';
 import { View, ActivityIndicator, StyleSheet, Alert } from 'react-native';
 import { Colors } from '../constants/colors';
-import { useSaveFcmTokenMutation } from '../store/api/usersApi';
+import { useGetMeQuery, useSaveFcmTokenMutation } from '../store/api/usersApi';
 import {
   requestNotificationPermission,
   getFcmToken,
@@ -23,7 +23,7 @@ export default function RootNavigator() {
   const { t } = useTranslation('navigation');
   const dispatch = useAppDispatch();
   const { isAuthenticated, isProfileComplete } = useAppSelector((s) => s.auth);
-  const [loading, setLoading] = useState(true);
+  const [tokensRestored, setTokensRestored] = useState(false);
   const [saveFcmToken] = useSaveFcmTokenMutation();
   const navRef = useRef<NavigationContainerRef<TabParamList>>(null);
 
@@ -34,9 +34,19 @@ export default function RootNavigator() {
         dispatch(setTokens(tokens));
         dispatch(setProfileComplete(tokens.isProfileComplete));
       }
-      setLoading(false);
+      setTokensRestored(true);
     })();
   }, [dispatch]);
+
+  // Stored tokens only prove a session existed at some point — the access token is
+  // short-lived, so re-verify it against the backend on every app open. If it's expired
+  // and the refresh (handled inside baseApi's reauth wrapper) fails, clearAuth() flips
+  // isAuthenticated to false and this redirects to the login stack below.
+  const { isFetching: verifyingSession } = useGetMeQuery(undefined, {
+    skip: !tokensRestored || !isAuthenticated,
+  });
+
+  const loading = !tokensRestored || (isAuthenticated && verifyingSession);
 
   // Register FCM token when authenticated
   useEffect(() => {

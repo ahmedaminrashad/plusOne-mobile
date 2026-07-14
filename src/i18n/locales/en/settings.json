@@ -43,8 +43,8 @@
     "saveError": "Couldn't save changes, please try again.",
     "fullNameLabel": "Full Name *",
     "fullNamePlaceholder": "Your full name",
-    "instaPayLabel": "InstaPay ID (optional)",
-    "instaPayPlaceholder": "e.g. ahmed_hassan",
+    "instaPayLabel": "InstaPay ID or phone (optional)",
+    "instaPayPlaceholder": "e.g. ahmed_hassan or 01001234567",
     "saveButton": "Save Changes"
   },
   "paymentMethods": {

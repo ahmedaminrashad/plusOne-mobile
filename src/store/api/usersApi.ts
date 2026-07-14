@@ -10,7 +10,7 @@ export const usersApi = baseApi.injectEndpoints({
 
     updateProfile: builder.mutation<User, { displayName?: string; photoUrl?: string; instaPayAlias?: string }>({
       query: (body) => ({ url: '/users/me', method: 'PATCH', body }),
-      invalidatesTags: ['User'],
+      invalidatesTags: ['User', 'Bill'],
     }),
 
     saveFcmToken: builder.mutation<void, string>({

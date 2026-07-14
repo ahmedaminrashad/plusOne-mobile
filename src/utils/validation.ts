@@ -7,7 +7,7 @@ export function isValidDisplayName(name: string): boolean {
 }
 
 export function isValidInstaPayAlias(alias: string): boolean {
-  return /^[a-zA-Z0-9._@-]{3,50}$/.test(alias);
+  return /^\+?[a-zA-Z0-9._@-]{3,50}$/.test(alias);
 }
 
 export function formatPhone(phone: string, countryCode = '+20'): string {

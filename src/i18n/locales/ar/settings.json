@@ -43,8 +43,8 @@
     "saveError": "تعذر حفظ التغييرات، حاول مرة أخرى.",
     "fullNameLabel": "الاسم الكامل *",
     "fullNamePlaceholder": "اسمك الكامل",
-    "instaPayLabel": "معرّف InstaPay (اختياري)",
-    "instaPayPlaceholder": "مثال: ahmed_hassan",
+    "instaPayLabel": "معرّف أو رقم InstaPay (اختياري)",
+    "instaPayPlaceholder": "مثال: ahmed_hassan أو 01001234567",
     "saveButton": "حفظ التغييرات"
   },
   "paymentMethods": {
