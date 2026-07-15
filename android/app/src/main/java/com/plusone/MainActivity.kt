@@ -1,7 +1,10 @@
 package com.plusone
 
 import android.content.Intent
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import java.io.File
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
@@ -24,7 +27,7 @@ class MainActivity : ReactActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    captureSharedText(intent)
+    captureSharedContent(intent)
   }
 
   // launchMode="singleTask" means an already-running instance gets this instead of a
@@ -32,12 +35,40 @@ class MainActivity : ReactActivity() {
   override fun onNewIntent(intent: Intent) {
     super.onNewIntent(intent)
     setIntent(intent)
-    captureSharedText(intent)
+    captureSharedContent(intent)
   }
 
-  private fun captureSharedText(intent: Intent?) {
-    if (intent?.action == Intent.ACTION_SEND && intent.type == "text/plain") {
+  private fun captureSharedContent(intent: Intent?) {
+    if (intent?.action != Intent.ACTION_SEND) return
+    if (intent.type == "text/plain") {
       pendingSharedText = intent.getStringExtra(Intent.EXTRA_TEXT)
+    } else if (intent.type?.startsWith("image/") == true) {
+      val uri = getStreamExtra(intent) ?: return
+      pendingSharedImagePath = copySharedImageToInternalStorage(uri)
+    }
+  }
+
+  @Suppress("DEPRECATION")
+  private fun getStreamExtra(intent: Intent): Uri? =
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+      intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
+    } else {
+      intent.getParcelableExtra(Intent.EXTRA_STREAM)
+    }
+
+  // Content:// URIs from the sharing app are only valid for the lifetime of the share —
+  // copy the bytes into our own storage now so the path is still readable whenever the
+  // user gets around to attaching it to a receipt later.
+  private fun copySharedImageToInternalStorage(uri: Uri): String? {
+    return try {
+      val dir = File(filesDir, "shared_receipts").apply { mkdirs() }
+      val file = File(dir, "receipt_${System.currentTimeMillis()}.jpg")
+      contentResolver.openInputStream(uri)?.use { input ->
+        file.outputStream().use { output -> input.copyTo(output) }
+      }
+      "file://${file.absolutePath}"
+    } catch (e: Exception) {
+      null
     }
   }
 
@@ -45,12 +76,21 @@ class MainActivity : ReactActivity() {
     @Volatile
     private var pendingSharedText: String? = null
 
+    @Volatile
+    private var pendingSharedImagePath: String? = null
+
     // One-shot read: JS polls this on launch and on every foreground resume, so once
     // consumed it must not be handed out again on the next check.
     fun consumePendingSharedText(): String? {
       val text = pendingSharedText
       pendingSharedText = null
       return text
+    }
+
+    fun consumePendingSharedImage(): String? {
+      val path = pendingSharedImagePath
+      pendingSharedImagePath = null
+      return path
     }
   }
 }

@@ -83,6 +83,8 @@
     "sendFailed": "فشل الإرسال",
     "loadError": "تعذر تحميل الرسائل، يرجى المحاولة لاحقاً.",
     "emptyText": "لا توجد رسائل بعد، ابدأ المحادثة!",
-    "messagePlaceholder": "اكتب رسالة..."
+    "messagePlaceholder": "اكتب رسالة...",
+    "imagePreviewLabel": "📷 صورة",
+    "imageTooLarge": "الصورة كبيرة جداً (الحد الأقصى 10 ميجابايت)"
   }
 }

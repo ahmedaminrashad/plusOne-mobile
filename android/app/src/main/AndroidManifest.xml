@@ -32,6 +32,13 @@
             <category android:name="android.intent.category.DEFAULT" />
             <data android:mimeType="text/plain" />
         </intent-filter>
+        <!-- Same, but for images (e.g. a payment-confirmation screenshot shared from
+             InstaPay or the gallery), so PlusOne shows up as a share target for photos too. -->
+        <intent-filter>
+            <action android:name="android.intent.action.SEND" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <data android:mimeType="image/*" />
+        </intent-filter>
       </activity>
     </application>
 </manifest>

@@ -11,13 +11,17 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Image,
+  Alert,
 } from 'react-native';
+import { launchImageLibrary } from 'react-native-image-picker';
 import firestore, { FirebaseFirestoreTypes } from '@react-native-firebase/firestore';
 import { AppScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
+import { ASSET_BASE_URL } from '../../config';
 import Avatar from '../../components/common/Avatar';
 import { useGetMeQuery } from '../../store/api/usersApi';
-import { useSendChatNotificationMutation } from '../../store/api/groupsApi';
+import { useSendChatNotificationMutation, useUploadChatImageMutation } from '../../store/api/groupsApi';
 import { formatRelativeTime } from '../../utils/format';
 
 type Props = AppScreenProps<'Chat'>;
@@ -28,7 +32,9 @@ interface Message {
   senderName: string;
   senderPhoto: string | null;
   text: string;
+  imageUrl?: string | null;
   createdAt: FirebaseFirestoreTypes.Timestamp | null;
+  clientId?: string;
   _failed?: boolean;
   _pending?: boolean;
 }
@@ -75,10 +81,16 @@ function MessageBubble({
           onPress={msg._failed && onRetry ? () => onRetry(msg) : undefined}>
           <View style={[
             styles.bubble,
+            msg.imageUrl && styles.bubbleImageWrap,
             isMine ? styles.bubbleMine : styles.bubbleTheirs,
             msg._failed && styles.bubbleFailed,
           ]}>
-            <Text style={[styles.bubbleText, isMine && styles.bubbleTextMine]}>{msg.text}</Text>
+            {msg.imageUrl && (
+              <Image source={{ uri: msg.imageUrl }} style={styles.bubbleImage} resizeMode="cover" />
+            )}
+            {!!msg.text && (
+              <Text style={[styles.bubbleText, isMine && styles.bubbleTextMine]}>{msg.text}</Text>
+            )}
             <Text style={[
               styles.bubbleTime,
               isMine && styles.bubbleTimeMine,
@@ -98,6 +110,7 @@ function ChatScreen({ route }: Props) {
   const { groupId } = route.params;
   const { data: me } = useGetMeQuery();
   const [sendChatNotification] = useSendChatNotificationMutation();
+  const [uploadChatImage] = useUploadChatImageMutation();
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState('');
@@ -124,9 +137,15 @@ function ChatScreen({ route }: Props) {
             ...(d.data() as Omit<Message, 'id'>),
           }));
           setMessages((prev) => {
-            // Merge: replace real-version of any pending/failed msg, keep others
-            const realIds = new Set(snap.docs.map((d) => d.id));
-            const pending = prev.filter((m) => (m._pending || m._failed) && !realIds.has(m.id));
+            // Merge: drop optimistic/failed placeholders once their real doc has
+            // actually arrived in this snapshot (matched by clientId, since the
+            // placeholder's tempId never equals the real Firestore doc id).
+            const arrivedClientIds = new Set(
+              msgs.map((m) => m.clientId).filter((id): id is string => !!id),
+            );
+            const pending = prev.filter(
+              (m) => (m._pending || m._failed) && !arrivedClientIds.has(m.id),
+            );
             return [...pending, ...msgs];
           });
           if (snap.docs.length > 0) {
@@ -191,9 +210,11 @@ function ChatScreen({ route }: Props) {
         senderPhoto: me.photoUrl ?? null,
         text: trimmed,
         createdAt: firestore.FieldValue.serverTimestamp(),
+        clientId: tempId,
       });
-      // Remove optimistic after real message arrives via listener
-      setMessages((prev) => prev.filter((m) => m.id !== tempId));
+      // Placeholder is removed by the onSnapshot merge once the real doc
+      // (matched via clientId) actually appears in the visible list — not here,
+      // since the write ack can resolve before the listener sees the new doc.
 
       // Fire-and-forget push notification
       const preview = trimmed.length > 80 ? trimmed.slice(0, 80) + '…' : trimmed;
@@ -209,6 +230,47 @@ function ChatScreen({ route }: Props) {
     }
   }, [me, groupId, sendChatNotification, t]);
 
+  const doSendImage = useCallback(async (uri: string) => {
+    if (!me) return;
+    const tempId = `pending-${Date.now()}`;
+    const optimistic: Message = {
+      id: tempId,
+      senderId: me.id,
+      senderName: me.displayName ?? t('chat.defaultUserName'),
+      senderPhoto: me.photoUrl ?? null,
+      text: '',
+      imageUrl: uri,
+      createdAt: null,
+      _pending: true,
+    };
+    setMessages((prev) => [optimistic, ...prev]);
+
+    try {
+      const { url } = await uploadChatImage({ groupId, uri }).unwrap();
+      await messagesRef.add({
+        senderId: me.id,
+        senderName: me.displayName ?? t('chat.defaultUserName'),
+        senderPhoto: me.photoUrl ?? null,
+        text: '',
+        imageUrl: `${ASSET_BASE_URL}${url}`,
+        createdAt: firestore.FieldValue.serverTimestamp(),
+        clientId: tempId,
+      });
+      // Placeholder is removed by the onSnapshot merge once the real doc
+      // (matched via clientId) actually appears in the visible list.
+
+      sendChatNotification({
+        groupId,
+        senderName: me.displayName ?? t('chat.defaultUserName'),
+        messagePreview: t('chat.imagePreviewLabel'),
+      }).catch(() => {});
+    } catch {
+      setMessages((prev) =>
+        prev.map((m) => (m.id === tempId ? { ...m, _pending: false, _failed: true } : m)),
+      );
+    }
+  }, [me, groupId, uploadChatImage, sendChatNotification, t]);
+
   const handleSend = useCallback(() => {
     const trimmed = text.trim();
     if (!trimmed) return;
@@ -216,10 +278,26 @@ function ChatScreen({ route }: Props) {
     doSend(trimmed);
   }, [text, doSend]);
 
+  const handlePickImage = useCallback(() => {
+    launchImageLibrary({ mediaType: 'photo', quality: 0.8 }, (res) => {
+      const uri = res.assets?.[0]?.uri;
+      if (!uri) return;
+      if (res.assets?.[0]?.fileSize && res.assets[0].fileSize > 10 * 1024 * 1024) {
+        Alert.alert(t('common:error'), t('chat.imageTooLarge'));
+        return;
+      }
+      doSendImage(uri);
+    });
+  }, [doSendImage, t]);
+
   const handleRetry = useCallback((msg: Message) => {
     setMessages((prev) => prev.filter((m) => m.id !== msg.id));
-    doSend(msg.text);
-  }, [doSend]);
+    if (msg.imageUrl) {
+      doSendImage(msg.imageUrl);
+    } else {
+      doSend(msg.text);
+    }
+  }, [doSend, doSendImage]);
 
   if (loading) {
     return (
@@ -280,6 +358,12 @@ function ChatScreen({ route }: Props) {
         )}
 
         <View style={styles.inputRow}>
+          <TouchableOpacity
+            style={styles.attachBtn}
+            onPress={handlePickImage}
+            activeOpacity={0.8}>
+            <Text style={styles.attachIcon}>📎</Text>
+          </TouchableOpacity>
           <TextInput
             style={styles.input}
             value={text}
@@ -340,6 +424,8 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   bubbleFailed: { opacity: 0.7, borderWidth: 1, borderColor: Colors.danger + '60' },
+  bubbleImageWrap: { padding: 4 },
+  bubbleImage: { width: 200, height: 200, borderRadius: 12, marginBottom: 4 },
   bubbleText: { fontSize: 15, color: Colors.text, lineHeight: 20 },
   bubbleTextMine: { color: Colors.textOnPrimary },
   bubbleTime: { fontSize: 10, color: Colors.textMuted, marginTop: 4, textAlign: 'right' },
@@ -377,6 +463,14 @@ const styles = StyleSheet.create({
   },
   sendBtnDisabled: { backgroundColor: Colors.border },
   sendIcon: { color: Colors.textOnPrimary, fontSize: 14 },
+  attachBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  attachIcon: { fontSize: 20 },
 
   emptyChat: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12 },
   emptyChatIcon: { fontSize: 52 },

@@ -17,8 +17,9 @@ import {
   getInitialNotification,
   onForegroundMessage,
 } from '../services/notifications';
-import { consumePendingSharedText } from '../services/shareIntent';
+import { consumePendingSharedText, consumePendingSharedImage } from '../services/shareIntent';
 import { extractInstaPayIdentifierFromSharedText } from '../utils/instapay';
+import { AppStorage } from '../utils/storage';
 import { TabParamList } from '../types/navigation';
 
 export default function RootNavigator() {
@@ -123,6 +124,25 @@ export default function RootNavigator() {
     });
     return () => subscription.remove();
   }, [showApp]);
+
+  // Same idea, for a photo shared into PlusOne (e.g. an InstaPay payment screenshot).
+  // There's no group context at share time, so instead of navigating anywhere we just
+  // stash it for the next "Add receipt" screen to offer, per the chosen simpler flow.
+  useEffect(() => {
+    if (!showApp) return;
+    const checkForSharedImage = () => {
+      consumePendingSharedImage().then(async (uri) => {
+        if (!uri) return;
+        await AppStorage.setPendingReceiptImage(uri);
+        Alert.alert(t('rootNavigator.sharedImageSavedTitle'), t('rootNavigator.sharedImageSavedMessage'));
+      });
+    };
+    checkForSharedImage();
+    const subscription = AppState.addEventListener('change', (state: AppStateStatus) => {
+      if (state === 'active') checkForSharedImage();
+    });
+    return () => subscription.remove();
+  }, [showApp, t]);
 
   if (loading) {
     return (

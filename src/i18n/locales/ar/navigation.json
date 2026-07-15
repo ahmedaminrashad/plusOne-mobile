@@ -15,7 +15,9 @@
   },
   "rootNavigator": {
     "newNotificationTitle": "إشعار جديد",
-    "viewAction": "عرض"
+    "viewAction": "عرض",
+    "sharedImageSavedTitle": "تم حفظ الصورة",
+    "sharedImageSavedMessage": "يمكنك إرفاقها في المرة القادمة التي تضيف فيها إيصالاً."
   },
   "invitationPrompt": {
     "label": "دعوة للانضمام",

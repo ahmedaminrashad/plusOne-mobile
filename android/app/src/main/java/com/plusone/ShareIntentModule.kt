@@ -14,4 +14,9 @@ class ShareIntentModule(reactContext: ReactApplicationContext) :
   fun getInitialSharedText(promise: Promise) {
     promise.resolve(MainActivity.consumePendingSharedText())
   }
+
+  @ReactMethod
+  fun getInitialSharedImage(promise: Promise) {
+    promise.resolve(MainActivity.consumePendingSharedImage())
+  }
 }

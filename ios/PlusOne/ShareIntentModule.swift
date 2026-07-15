@@ -10,6 +10,7 @@ class ShareIntentModule: NSObject {
 
   static let appGroupId = "group.org.reactjs.native.example.PlusOne"
   static let sharedTextKey = "sharedInstaPayText"
+  static let sharedImageFileNameKey = "sharedReceiptImageFileName"
 
   @objc
   static func requiresMainQueueSetup() -> Bool {
@@ -25,5 +26,23 @@ class ShareIntentModule: NSObject {
     let text = defaults?.string(forKey: ShareIntentModule.sharedTextKey)
     defaults?.removeObject(forKey: ShareIntentModule.sharedTextKey)
     resolve(text)
+  }
+
+  @objc
+  func getInitialSharedImage(
+    _ resolve: @escaping RCTPromiseResolveBlock,
+    rejecter reject: @escaping RCTPromiseRejectBlock
+  ) {
+    let defaults = UserDefaults(suiteName: ShareIntentModule.appGroupId)
+    guard let fileName = defaults?.string(forKey: ShareIntentModule.sharedImageFileNameKey),
+          let containerURL = FileManager.default.containerURL(
+            forSecurityApplicationGroupIdentifier: ShareIntentModule.appGroupId
+          )
+    else {
+      resolve(nil)
+      return
+    }
+    defaults?.removeObject(forKey: ShareIntentModule.sharedImageFileNameKey)
+    resolve(containerURL.appendingPathComponent(fileName).absoluteString)
   }
 }

@@ -262,6 +262,7 @@ function ReceiptSplitScreen({ route, navigation }: Props) {
         notes: notesParts.join('\n') || undefined,
         captureMethod: receipt.captureMethod ?? 'manual',
         sourceRef: receipt.sourceRef,
+        receiptPhotoUrl: receipt.receiptPhotoUrl,
         lineItems: items.map((it) => ({ name: it.name, qty: it.qty, unitPrice: it.price })),
         tax: receipt.tax,
         taxType: receipt.taxType,

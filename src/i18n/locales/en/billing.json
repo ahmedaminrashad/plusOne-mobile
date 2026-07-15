@@ -32,6 +32,7 @@
     "defaultMemberName": "User",
     "qrPreviewBanner": "📷 QR scanned — review the details and edit if needed",
     "ocrPreviewBanner": "🖨 OCR result — review and edit any field",
+    "sharedPhotoAttached": "Photo shared from another app is attached to this receipt",
     "amountMustBePositive": "The amount must be greater than zero.",
     "saveFailed": "Couldn't save the bill, please try again later."
   },

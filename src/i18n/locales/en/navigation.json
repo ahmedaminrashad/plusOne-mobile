@@ -15,7 +15,9 @@
   },
   "rootNavigator": {
     "newNotificationTitle": "New Notification",
-    "viewAction": "View"
+    "viewAction": "View",
+    "sharedImageSavedTitle": "Photo saved",
+    "sharedImageSavedMessage": "You can attach it next time you add a receipt."
   },
   "invitationPrompt": {
     "label": "Invitation to Join",

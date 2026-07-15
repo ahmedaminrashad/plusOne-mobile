@@ -128,4 +128,5 @@ export interface ParsedReceiptData {
   grandTotal?: number;
   captureMethod?: CaptureMethod;
   sourceRef?: string;
+  receiptPhotoUrl?: string;
 }

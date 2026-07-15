@@ -83,6 +83,8 @@
     "sendFailed": "Failed to send",
     "loadError": "Couldn't load messages, please try again later.",
     "emptyText": "No messages yet, start the conversation!",
-    "messagePlaceholder": "Type a message..."
+    "messagePlaceholder": "Type a message...",
+    "imagePreviewLabel": "📷 Photo",
+    "imageTooLarge": "Image is too large (max 10 MB)"
   }
 }
