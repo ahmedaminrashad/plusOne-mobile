@@ -21,13 +21,13 @@ import { useGetMeQuery, useUpdateProfileMutation } from '../../store/api/usersAp
 
 type Props = SettingsScreenProps<'EditProfile'>;
 
-function EditProfileScreen({ navigation }: Props) {
+function EditProfileScreen({ navigation, route }: Props) {
   const { t } = useTranslation('settings');
   const { data: me } = useGetMeQuery();
   const [updateProfile, { isLoading }] = useUpdateProfileMutation();
 
   const [displayName, setDisplayName] = useState(me?.displayName ?? '');
-  const [instaPayAlias, setInstaPayAlias] = useState(me?.instaPayAlias ?? '');
+  const [instaPayAlias, setInstaPayAlias] = useState(route.params?.prefillInstaPayAlias ?? me?.instaPayAlias ?? '');
   const [photoUri, setPhotoUri] = useState<string | undefined>(me?.photoUrl ?? undefined);
   const [nameError, setNameError] = useState('');
 

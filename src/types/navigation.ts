@@ -26,7 +26,7 @@ export type AppStackParamList = {
 
 export type SettingsStackParamList = {
   Settings: undefined;
-  EditProfile: undefined;
+  EditProfile: { prefillInstaPayAlias?: string } | undefined;
   SecuritySettings: undefined;
   PaymentMethods: undefined;
 };

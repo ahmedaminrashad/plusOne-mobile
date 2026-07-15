@@ -7,7 +7,7 @@ import { setTokens, setProfileComplete } from '../store/slices/authSlice';
 import { useAppDispatch } from '../hooks/useAppDispatch';
 import AuthStack from './AuthStack';
 import TabNavigator from './TabNavigator';
-import { View, ActivityIndicator, StyleSheet, Alert } from 'react-native';
+import { View, ActivityIndicator, StyleSheet, Alert, AppState, AppStateStatus } from 'react-native';
 import { Colors } from '../constants/colors';
 import { useGetMeQuery, useSaveFcmTokenMutation } from '../store/api/usersApi';
 import {
@@ -17,6 +17,8 @@ import {
   getInitialNotification,
   onForegroundMessage,
 } from '../services/notifications';
+import { consumePendingSharedText } from '../services/shareIntent';
+import { extractInstaPayIdentifierFromSharedText } from '../utils/instapay';
 import { TabParamList } from '../types/navigation';
 
 export default function RootNavigator() {
@@ -47,6 +49,7 @@ export default function RootNavigator() {
   });
 
   const loading = !tokensRestored || (isAuthenticated && verifyingSession);
+  const showApp = isAuthenticated && isProfileComplete;
 
   // Register FCM token when authenticated
   useEffect(() => {
@@ -100,6 +103,27 @@ export default function RootNavigator() {
     return unsub;
   }, [navigateFromNotification]);
 
+  // When the user shares InstaPay's "Click the link to send money to..." text into
+  // PlusOne (from the InstaPay app's own Share sheet), route straight to Edit Profile
+  // with the parsed identifier pre-filled instead of making them type it in by hand.
+  useEffect(() => {
+    if (!showApp) return;
+    const checkForSharedText = () => {
+      consumePendingSharedText().then((text) => {
+        if (!text) return;
+        const identifier = extractInstaPayIdentifierFromSharedText(text);
+        if (!identifier) return;
+        const nav = navRef.current as any;
+        nav?.navigate('SettingsTab', { screen: 'EditProfile', params: { prefillInstaPayAlias: identifier } });
+      });
+    };
+    checkForSharedText();
+    const subscription = AppState.addEventListener('change', (state: AppStateStatus) => {
+      if (state === 'active') checkForSharedText();
+    });
+    return () => subscription.remove();
+  }, [showApp]);
+
   if (loading) {
     return (
       <View style={styles.loader}>
@@ -107,8 +131,6 @@ export default function RootNavigator() {
       </View>
     );
   }
-
-  const showApp = isAuthenticated && isProfileComplete;
 
   return (
     <NavigationContainer ref={navRef}>

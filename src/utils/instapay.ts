@@ -18,3 +18,16 @@ export function normalizeInstaPayIdentifier(alias: string): string {
 export function buildInstaPayLink(alias: string): string {
   return `https://ipn.eg/S/${encodeURIComponent(normalizeInstaPayIdentifier(alias))}`;
 }
+
+// InstaPay's own "Share" action sends the receiver a block like:
+//   https://ipn.eg/S/ahmedaminrashad/instapay/975P1k
+//   Click the link to send money to
+//   ahmedaminrashad@instapay
+//   Powered by InstaPay
+// Everything after "/S/" up to the next whitespace is the receiver identifier
+// InstaPay itself resolves (username plus its own routing/request suffix) —
+// we take it verbatim rather than re-splitting it, since InstaPay generated it.
+export function extractInstaPayIdentifierFromSharedText(text: string): string | null {
+  const match = text.match(/ipn\.eg\/S\/(\S+)/i);
+  return match ? match[1] : null;
+}
