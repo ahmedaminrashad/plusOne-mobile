@@ -97,6 +97,17 @@ export interface Share {
   updatedAt: string;
 }
 
+export interface ChatMessage {
+  id: string;
+  groupId: string;
+  senderId: string;
+  senderName: string;
+  senderPhoto: string | null;
+  text: string | null;
+  imageUrl: string | null;
+  createdAt: string;
+}
+
 export interface ApiError {
   statusCode: number;
   message: string | { error: string };

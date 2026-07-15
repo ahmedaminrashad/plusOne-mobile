@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import java.io.File
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
@@ -39,12 +40,17 @@ class MainActivity : ReactActivity() {
   }
 
   private fun captureSharedContent(intent: Intent?) {
+    Log.d("PlusOneShare", "captureSharedContent action=${intent?.action} type=${intent?.type} extras=${intent?.extras?.keySet()}")
     if (intent?.action != Intent.ACTION_SEND) return
     if (intent.type == "text/plain") {
       pendingSharedText = intent.getStringExtra(Intent.EXTRA_TEXT)
+      Log.d("PlusOneShare", "captured text, length=${pendingSharedText?.length}")
     } else if (intent.type?.startsWith("image/") == true) {
-      val uri = getStreamExtra(intent) ?: return
+      val uri = getStreamExtra(intent)
+      Log.d("PlusOneShare", "image branch, EXTRA_STREAM uri=$uri")
+      if (uri == null) return
       pendingSharedImagePath = copySharedImageToInternalStorage(uri)
+      Log.d("PlusOneShare", "copied image path=$pendingSharedImagePath")
     }
   }
 
@@ -68,6 +74,7 @@ class MainActivity : ReactActivity() {
       }
       "file://${file.absolutePath}"
     } catch (e: Exception) {
+      Log.e("PlusOneShare", "failed to copy shared image from $uri", e)
       null
     }
   }

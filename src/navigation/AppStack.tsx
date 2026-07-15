@@ -14,6 +14,7 @@ import OCRCaptureScreen from '../screens/groups/OCRCaptureScreen';
 import ReceiptSplitScreen from '../screens/groups/ReceiptSplitScreen';
 import ViewReceiptScreen from '../screens/groups/ViewReceiptScreen';
 import EditBillItemsScreen from '../screens/groups/EditBillItemsScreen';
+import SelectGroupToShareScreen from '../screens/groups/SelectGroupToShareScreen';
 import { Colors } from '../constants/colors';
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
@@ -72,6 +73,11 @@ export default function AppStack() {
         name="EditBillItems"
         component={EditBillItemsScreen}
         options={{ title: t('appStack.editBillItemsTitle') }}
+      />
+      <Stack.Screen
+        name="SelectGroupToShare"
+        component={SelectGroupToShareScreen}
+        options={{ title: t('appStack.selectGroupToShareTitle') }}
       />
     </Stack.Navigator>
   );

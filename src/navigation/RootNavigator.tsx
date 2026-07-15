@@ -19,7 +19,6 @@ import {
 } from '../services/notifications';
 import { consumePendingSharedText, consumePendingSharedImage } from '../services/shareIntent';
 import { extractInstaPayIdentifierFromSharedText } from '../utils/instapay';
-import { AppStorage } from '../utils/storage';
 import { TabParamList } from '../types/navigation';
 
 export default function RootNavigator() {
@@ -27,6 +26,7 @@ export default function RootNavigator() {
   const dispatch = useAppDispatch();
   const { isAuthenticated, isProfileComplete } = useAppSelector((s) => s.auth);
   const [tokensRestored, setTokensRestored] = useState(false);
+  const [navReady, setNavReady] = useState(false);
   const [saveFcmToken] = useSaveFcmTokenMutation();
   const navRef = useRef<NavigationContainerRef<TabParamList>>(null);
 
@@ -108,7 +108,7 @@ export default function RootNavigator() {
   // PlusOne (from the InstaPay app's own Share sheet), route straight to Edit Profile
   // with the parsed identifier pre-filled instead of making them type it in by hand.
   useEffect(() => {
-    if (!showApp) return;
+    if (!showApp || !navReady) return;
     const checkForSharedText = () => {
       consumePendingSharedText().then((text) => {
         if (!text) return;
@@ -123,18 +123,18 @@ export default function RootNavigator() {
       if (state === 'active') checkForSharedText();
     });
     return () => subscription.remove();
-  }, [showApp]);
+  }, [showApp, navReady]);
 
-  // Same idea, for a photo shared into PlusOne (e.g. an InstaPay payment screenshot).
-  // There's no group context at share time, so instead of navigating anywhere we just
-  // stash it for the next "Add receipt" screen to offer, per the chosen simpler flow.
+  // Same idea, for a photo shared into PlusOne from another app (e.g. the Photos
+  // app's share sheet) — send the user straight to "pick a group" so the photo can
+  // be posted into that group's chat.
   useEffect(() => {
-    if (!showApp) return;
+    if (!showApp || !navReady) return;
     const checkForSharedImage = () => {
-      consumePendingSharedImage().then(async (uri) => {
+      consumePendingSharedImage().then((uri) => {
         if (!uri) return;
-        await AppStorage.setPendingReceiptImage(uri);
-        Alert.alert(t('rootNavigator.sharedImageSavedTitle'), t('rootNavigator.sharedImageSavedMessage'));
+        const nav = navRef.current as any;
+        nav?.navigate('Groups', { screen: 'SelectGroupToShare', params: { imageUri: uri } });
       });
     };
     checkForSharedImage();
@@ -142,7 +142,7 @@ export default function RootNavigator() {
       if (state === 'active') checkForSharedImage();
     });
     return () => subscription.remove();
-  }, [showApp, t]);
+  }, [showApp, navReady]);
 
   if (loading) {
     return (
@@ -153,7 +153,7 @@ export default function RootNavigator() {
   }
 
   return (
-    <NavigationContainer ref={navRef}>
+    <NavigationContainer ref={navRef} onReady={() => setNavReady(true)}>
       {showApp ? <TabNavigator /> : <AuthStack />}
     </NavigationContainer>
   );

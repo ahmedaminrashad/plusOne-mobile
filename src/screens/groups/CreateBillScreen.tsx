@@ -12,7 +12,6 @@ import {
   SafeAreaView,
   Platform,
   ActivityIndicator,
-  Image,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { AppScreenProps } from '../../types/navigation';
@@ -24,7 +23,6 @@ import { useGetMeQuery } from '../../store/api/usersApi';
 import { GroupMember, TaxServiceType, ParsedReceiptData } from '../../types/models';
 import { formatCurrency } from '../../utils/format';
 import { useInputTextAlign } from '../../utils/rtl';
-import { AppStorage } from '../../utils/storage';
 
 type Props = AppScreenProps<'AddBill'>;
 
@@ -95,7 +93,6 @@ function CreateBillScreen({ route, navigation }: Props) {
   const [payerPickerVisible, setPayerPickerVisible] = useState(false);
   const [isLumpSum, setIsLumpSum] = useState(false);
   const [lumpSumTotal, setLumpSumTotal] = useState('');
-  const [receiptPhotoUri, setReceiptPhotoUri] = useState<string | null>(null);
 
   const { data: members } = useGetGroupMembersQuery(groupId);
   const { data: me } = useGetMeQuery();
@@ -106,19 +103,6 @@ function CreateBillScreen({ route, navigation }: Props) {
   useEffect(() => {
     if (me && !paidByUserId) setPaidByUserId(me.id);
   }, [me, paidByUserId]);
-
-  // A photo shared into PlusOne from another app (e.g. an InstaPay screenshot) sits
-  // waiting in storage until the user opens Add Receipt — offer it here, once.
-  useEffect(() => {
-    if (isPreview) return;
-    (async () => {
-      const uri = await AppStorage.getPendingReceiptImage();
-      if (uri) {
-        setReceiptPhotoUri(uri);
-        await AppStorage.clearPendingReceiptImage();
-      }
-    })();
-  }, [isPreview]);
 
   const subtotal = items.reduce((sum, it) => sum + parseNum(it.qty) * parseNum(it.unitPrice), 0);
   const taxAmt = taxValue
@@ -174,7 +158,6 @@ function CreateBillScreen({ route, navigation }: Props) {
           venueName: venueName.trim() || undefined,
           captureMethod: prefilledData?.captureMethod ?? 'manual',
           sourceRef: prefilledData?.sourceRef,
-          receiptPhotoUrl: receiptPhotoUri ?? undefined,
         }).unwrap();
         navigation.navigate('GroupDetail', { groupId, groupName });
       } catch {
@@ -203,7 +186,6 @@ function CreateBillScreen({ route, navigation }: Props) {
       grandTotal: hasOverride ? grandTotal : undefined,
       captureMethod: prefilledData?.captureMethod ?? 'manual',
       sourceRef: prefilledData?.sourceRef,
-      receiptPhotoUrl: receiptPhotoUri ?? undefined,
     };
 
     navigation.navigate('ReceiptSplit', {
@@ -214,7 +196,7 @@ function CreateBillScreen({ route, navigation }: Props) {
   }, [
     canContinue, isLumpSum, lumpSumTotal, items, venueName, taxValue, taxType,
     serviceValue, serviceType, tipValue, tipType, hasOverride, grandTotal,
-    paidByUserId, groupId, groupName, prefilledData, receiptPhotoUri, createBill, navigation,
+    paidByUserId, groupId, groupName, prefilledData, createBill, navigation,
   ]);
 
   const renderPayerRow = useCallback(
@@ -241,16 +223,6 @@ function CreateBillScreen({ route, navigation }: Props) {
             <Text style={styles.previewBannerText}>
               {prefilledData?.captureMethod === 'qr' ? t('createBill.qrPreviewBanner') : t('createBill.ocrPreviewBanner')}
             </Text>
-          </View>
-        )}
-
-        {receiptPhotoUri && (
-          <View style={styles.sharedPhotoRow}>
-            <Image source={{ uri: receiptPhotoUri }} style={styles.sharedPhotoThumb} />
-            <Text style={styles.sharedPhotoText} numberOfLines={2}>{t('createBill.sharedPhotoAttached')}</Text>
-            <TouchableOpacity onPress={() => setReceiptPhotoUri(null)} style={styles.sharedPhotoRemoveBtn}>
-              <Text style={styles.sharedPhotoRemoveText}>✕</Text>
-            </TouchableOpacity>
           </View>
         )}
 
@@ -481,22 +453,6 @@ const styles = StyleSheet.create({
     borderColor: Colors.primary + '40',
   },
   previewBannerText: { color: Colors.primary, fontSize: 13, fontWeight: '600', textAlign: 'right' },
-
-  sharedPhotoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: Colors.surface,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    padding: 10,
-    marginBottom: 16,
-  },
-  sharedPhotoThumb: { width: 44, height: 44, borderRadius: 8 },
-  sharedPhotoText: { flex: 1, fontSize: 13, color: Colors.textSecondary },
-  sharedPhotoRemoveBtn: { padding: 6 },
-  sharedPhotoRemoveText: { fontSize: 14, color: Colors.danger },
 
   sectionLabel: {
     fontSize: 13,

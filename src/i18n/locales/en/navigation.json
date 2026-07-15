@@ -7,7 +7,8 @@
     "qrScannerTitle": "Scan QR",
     "ocrCaptureTitle": "Scan Paper Receipt",
     "viewReceiptTitle": "Receipt",
-    "editBillItemsTitle": "Edit Items"
+    "editBillItemsTitle": "Edit Items",
+    "selectGroupToShareTitle": "Send to Group"
   },
   "tabBar": {
     "groupsLabel": "My Groups",
@@ -15,9 +16,7 @@
   },
   "rootNavigator": {
     "newNotificationTitle": "New Notification",
-    "viewAction": "View",
-    "sharedImageSavedTitle": "Photo saved",
-    "sharedImageSavedMessage": "You can attach it next time you add a receipt."
+    "viewAction": "View"
   },
   "invitationPrompt": {
     "label": "Invitation to Join",

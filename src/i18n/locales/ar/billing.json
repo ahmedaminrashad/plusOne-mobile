@@ -32,7 +32,6 @@
     "defaultMemberName": "مستخدم",
     "qrPreviewBanner": "📷 تم مسح QR — راجع التفاصيل وعدّل إن لزم",
     "ocrPreviewBanner": "🖨 نتيجة OCR — راجع وعدّل أي حقل",
-    "sharedPhotoAttached": "تم إرفاق صورة تمت مشاركتها من تطبيق آخر بهذا الإيصال",
     "amountMustBePositive": "يجب أن يكون المبلغ أكبر من صفر.",
     "saveFailed": "تعذر حفظ الفاتورة، حاول مرة أخرى لاحقاً."
   },

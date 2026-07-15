@@ -18,13 +18,10 @@
     "statusPending": "قيد الانتظار",
     "removeAction": "إزالة",
     "paidByMeta": "دفع {{payer}} • {{date}}",
-    "sendingEllipsis": "إرسال...",
     "tabChat": "💬 الدردشة",
     "tabBills": "الفواتير",
     "tabMembers": "الأعضاء",
     "pendingChatNotice": "يجب قبول الدعوة أولاً للوصول إلى الدردشة.",
-    "emptyChatText": "لا توجد رسائل بعد، ابدأ المحادثة!",
-    "messagePlaceholder": "اكتب رسالة...",
     "scanQR": "مسح QR",
     "scanReceipt": "مسح إيصال",
     "manualEntry": "يدوي",
@@ -86,5 +83,11 @@
     "messagePlaceholder": "اكتب رسالة...",
     "imagePreviewLabel": "📷 صورة",
     "imageTooLarge": "الصورة كبيرة جداً (الحد الأقصى 10 ميجابايت)"
+  },
+  "shareToGroup": {
+    "subtitle": "اختر مجموعة لمشاركة هذه الصورة معها",
+    "loadError": "تعذر تحميل المجموعات.",
+    "emptyTitle": "لا توجد مجموعات بعد",
+    "emptySubtitle": "أنشئ مجموعة أولاً لمشاركة الصور معها"
   }
 }

@@ -5,7 +5,6 @@ import type { AppLanguage } from '../i18n';
 const ACCESS_TOKEN_KEY = 'plusone_access_token';
 const REFRESH_TOKEN_KEY = 'plusone_refresh_token';
 const LANGUAGE_KEY = 'plusone_language';
-const PENDING_RECEIPT_IMAGE_KEY = 'plusone_pending_receipt_image';
 
 export const SecureStorage = {
   async saveTokens(accessToken: string, refreshToken: string, isProfileComplete: boolean): Promise<void> {
@@ -36,20 +35,5 @@ export const AppStorage = {
 
   async setLanguage(language: AppLanguage): Promise<void> {
     await AsyncStorage.setItem(LANGUAGE_KEY, language);
-  },
-
-  // Holds a photo shared into PlusOne from another app (e.g. InstaPay) until the user
-  // gets around to attaching it to a receipt — unlike the share-intent hand-off itself,
-  // this is peek-then-explicit-clear since it may sit unused across several app opens.
-  async getPendingReceiptImage(): Promise<string | null> {
-    return AsyncStorage.getItem(PENDING_RECEIPT_IMAGE_KEY);
-  },
-
-  async setPendingReceiptImage(uri: string): Promise<void> {
-    await AsyncStorage.setItem(PENDING_RECEIPT_IMAGE_KEY, uri);
-  },
-
-  async clearPendingReceiptImage(): Promise<void> {
-    await AsyncStorage.removeItem(PENDING_RECEIPT_IMAGE_KEY);
   },
 };

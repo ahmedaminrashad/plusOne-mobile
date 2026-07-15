@@ -7,7 +7,8 @@
     "qrScannerTitle": "مسح QR",
     "ocrCaptureTitle": "مسح إيصال ورقي",
     "viewReceiptTitle": "الإيصال",
-    "editBillItemsTitle": "تعديل الأصناف"
+    "editBillItemsTitle": "تعديل الأصناف",
+    "selectGroupToShareTitle": "إرسال إلى مجموعة"
   },
   "tabBar": {
     "groupsLabel": "مجموعاتي",
@@ -15,9 +16,7 @@
   },
   "rootNavigator": {
     "newNotificationTitle": "إشعار جديد",
-    "viewAction": "عرض",
-    "sharedImageSavedTitle": "تم حفظ الصورة",
-    "sharedImageSavedMessage": "يمكنك إرفاقها في المرة القادمة التي تضيف فيها إيصالاً."
+    "viewAction": "عرض"
   },
   "invitationPrompt": {
     "label": "دعوة للانضمام",

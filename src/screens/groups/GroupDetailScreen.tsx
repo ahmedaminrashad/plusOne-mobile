@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef, memo } from 'react';
+import React, { useState, useCallback, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   View,
@@ -11,38 +11,20 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  TextInput,
 } from 'react-native';
-import firestore, { FirebaseFirestoreTypes } from '@react-native-firebase/firestore';
 import { AppScreenProps } from '../../types/navigation';
-import { useGetGroupMembersQuery, useRemoveMemberMutation, useSendChatNotificationMutation } from '../../store/api/groupsApi';
+import { useGetGroupMembersQuery, useRemoveMemberMutation } from '../../store/api/groupsApi';
 import { useGetGroupBillsQuery, useDeleteBillMutation } from '../../store/api/billsApi';
 import { GroupMember, MemberRole, Bill } from '../../types/models';
 import Avatar from '../../components/common/Avatar';
 import Button from '../../components/common/Button';
 import { Colors } from '../../constants/colors';
 import { useGetMeQuery } from '../../store/api/usersApi';
-import { formatDate, formatRelativeTime } from '../../utils/format';
+import { formatDate } from '../../utils/format';
+import GroupChatPane from './GroupChatPane';
 
 type Props = AppScreenProps<'GroupDetail'>;
 type Tab = 'chat' | 'bills' | 'members';
-
-// ──────────────────────────────────────────────────────────────
-// Chat types
-// ──────────────────────────────────────────────────────────────
-
-interface ChatMessage {
-  id: string;
-  senderId: string;
-  senderName: string;
-  senderPhoto: string | null;
-  text: string;
-  createdAt: FirebaseFirestoreTypes.Timestamp | null;
-  _pending?: boolean;
-  _failed?: boolean;
-}
-
-const CHAT_PAGE = 30;
 
 // ──────────────────────────────────────────────────────────────
 // Member row
@@ -128,67 +110,6 @@ function BillCard({
 }
 
 // ──────────────────────────────────────────────────────────────
-// Chat bubble
-// ──────────────────────────────────────────────────────────────
-
-function ChatBubble({
-  msg,
-  isMine,
-  showSender,
-  onRetry,
-}: {
-  msg: ChatMessage;
-  isMine: boolean;
-  showSender: boolean;
-  onRetry: (m: ChatMessage) => void;
-}) {
-  const { t } = useTranslation('groups');
-  const timeStr = msg._pending
-    ? t('groupDetail.sendingEllipsis')
-    : msg._failed
-      ? t('common:failed')
-      : msg.createdAt
-        ? formatRelativeTime(msg.createdAt.toDate())
-        : '';
-  return (
-    <View style={[styles.bubbleRow, isMine && styles.bubbleRowMine]}>
-      {!isMine && (
-        <View style={styles.avatarCol}>
-          {showSender ? (
-            <Avatar uri={msg.senderPhoto} name={msg.senderName} size={32} />
-          ) : (
-            <View style={styles.avatarSpacer} />
-          )}
-        </View>
-      )}
-      <View style={styles.bubbleCol}>
-        {!isMine && showSender && (
-          <Text style={styles.senderName}>{msg.senderName}</Text>
-        )}
-        <TouchableOpacity
-          activeOpacity={msg._failed ? 0.6 : 1}
-          onPress={msg._failed ? () => onRetry(msg) : undefined}>
-          <View style={[
-            styles.bubble,
-            isMine ? styles.bubbleMine : styles.bubbleTheirs,
-            msg._failed && styles.bubbleFailed,
-          ]}>
-            <Text style={[styles.bubbleText, isMine && styles.bubbleTextMine]}>{msg.text}</Text>
-            <Text style={[
-              styles.bubbleTime,
-              isMine && styles.bubbleTimeMine,
-              msg._failed && styles.bubbleTimeFailed,
-            ]}>
-              {msg._failed ? '⚠ ' : ''}{timeStr}
-            </Text>
-          </View>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-}
-
-// ──────────────────────────────────────────────────────────────
 // Main screen
 // ──────────────────────────────────────────────────────────────
 
@@ -204,120 +125,9 @@ function GroupDetailScreen({ route, navigation }: Props) {
   const [removeMember] = useRemoveMemberMutation();
   const [deleteBill] = useDeleteBillMutation();
   const { data: me } = useGetMeQuery();
-  const [sendChatNotification] = useSendChatNotificationMutation();
 
   const myMembership = members?.find((m) => m.userId === me?.id);
   const isAdmin = myMembership?.role === 'admin';
-
-  // ── Chat state ──────────────────────────────────────────────
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [chatText, setChatText] = useState('');
-  const [chatLoading, setChatLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const lastDocRef = useRef<FirebaseFirestoreTypes.QueryDocumentSnapshot | null>(null);
-  const chatListRef = useRef<FlatList>(null);
-
-  const messagesRef = firestore()
-    .collection('groupChats')
-    .doc(groupId)
-    .collection('messages');
-
-  useEffect(() => {
-    const unsub = messagesRef
-      .orderBy('createdAt', 'desc')
-      .limit(CHAT_PAGE)
-      .onSnapshot(
-        (snap) => {
-          const msgs: ChatMessage[] = snap.docs.map((d) => ({
-            id: d.id,
-            ...(d.data() as Omit<ChatMessage, 'id'>),
-          }));
-          setChatMessages((prev) => {
-            const realIds = new Set(snap.docs.map((d) => d.id));
-            const pending = prev.filter((m) => (m._pending || m._failed) && !realIds.has(m.id));
-            return [...pending, ...msgs];
-          });
-          if (snap.docs.length > 0) lastDocRef.current = snap.docs[snap.docs.length - 1];
-          setHasMore(snap.docs.length >= CHAT_PAGE);
-          setChatLoading(false);
-        },
-        () => setChatLoading(false),
-      );
-    return unsub;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [groupId]);
-
-  const loadMoreMessages = useCallback(async () => {
-    if (loadingMore || !hasMore || !lastDocRef.current) return;
-    setLoadingMore(true);
-    try {
-      const snap = await messagesRef
-        .orderBy('createdAt', 'desc')
-        .startAfter(lastDocRef.current)
-        .limit(CHAT_PAGE)
-        .get();
-      if (snap.docs.length === 0) { setHasMore(false); return; }
-      lastDocRef.current = snap.docs[snap.docs.length - 1];
-      const older: ChatMessage[] = snap.docs.map((d) => ({
-        id: d.id,
-        ...(d.data() as Omit<ChatMessage, 'id'>),
-      }));
-      setChatMessages((prev) => [...prev, ...older]);
-      setHasMore(snap.docs.length >= CHAT_PAGE);
-    } finally {
-      setLoadingMore(false);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loadingMore, hasMore, groupId]);
-
-  const doSendMessage = useCallback(async (trimmed: string) => {
-    if (!me) return;
-    const tempId = `pending-${Date.now()}`;
-    const optimistic: ChatMessage = {
-      id: tempId,
-      senderId: me.id,
-      senderName: me.displayName ?? t('groupDetail.defaultUserName'),
-      senderPhoto: me.photoUrl ?? null,
-      text: trimmed,
-      createdAt: null,
-      _pending: true,
-    };
-    setChatMessages((prev) => [optimistic, ...prev]);
-    try {
-      await messagesRef.add({
-        senderId: me.id,
-        senderName: me.displayName ?? t('groupDetail.defaultUserName'),
-        senderPhoto: me.photoUrl ?? null,
-        text: trimmed,
-        createdAt: firestore.FieldValue.serverTimestamp(),
-      });
-      setChatMessages((prev) => prev.filter((m) => m.id !== tempId));
-      const preview = trimmed.length > 80 ? trimmed.slice(0, 80) + '…' : trimmed;
-      sendChatNotification({
-        groupId,
-        senderName: me.displayName ?? t('groupDetail.defaultUserName'),
-        messagePreview: preview,
-      }).catch(() => {});
-    } catch {
-      setChatMessages((prev) =>
-        prev.map((m) => (m.id === tempId ? { ...m, _pending: false, _failed: true } : m)),
-      );
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [me, groupId, sendChatNotification, t]);
-
-  const handleChatSend = useCallback(() => {
-    const trimmed = chatText.trim();
-    if (!trimmed) return;
-    setChatText('');
-    doSendMessage(trimmed);
-  }, [chatText, doSendMessage]);
-
-  const handleChatRetry = useCallback((msg: ChatMessage) => {
-    setChatMessages((prev) => prev.filter((m) => m.id !== msg.id));
-    doSendMessage(msg.text);
-  }, [doSendMessage]);
 
   // ── Bills actions ───────────────────────────────────────────
 
@@ -400,7 +210,7 @@ function GroupDetailScreen({ route, navigation }: Props) {
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior="padding"
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}>
 
         {/* Tab bar */}
@@ -426,62 +236,8 @@ function GroupDetailScreen({ route, navigation }: Props) {
                   {t('groupDetail.pendingChatNotice')}
                 </Text>
               </View>
-            ) : chatLoading ? (
-              <View style={styles.centered}>
-                <ActivityIndicator size="large" color={Colors.primary} />
-              </View>
-            ) : chatMessages.length === 0 ? (
-              <View style={styles.emptyChat}>
-                <Text style={styles.emptyChatIcon}>💬</Text>
-                <Text style={styles.emptyChatText}>{t('groupDetail.emptyChatText')}</Text>
-              </View>
             ) : (
-              <FlatList
-                ref={chatListRef}
-                data={chatMessages}
-                keyExtractor={(m) => m.id}
-                renderItem={({ item, index }) => {
-                  const isMine = item.senderId === me?.id;
-                  const nextMsg = chatMessages[index + 1];
-                  const showSender = !isMine && (!nextMsg || nextMsg.senderId !== item.senderId);
-                  return (
-                    <ChatBubble
-                      msg={item}
-                      isMine={isMine}
-                      showSender={showSender}
-                      onRetry={handleChatRetry}
-                    />
-                  );
-                }}
-                inverted
-                contentContainerStyle={styles.chatList}
-                onEndReached={loadMoreMessages}
-                onEndReachedThreshold={0.3}
-                ListFooterComponent={
-                  loadingMore ? <ActivityIndicator color={Colors.primary} style={styles.loadMoreSpinner} /> : null
-                }
-              />
-            )}
-
-            {!isChatPending && (
-              <View style={styles.inputRow}>
-                <TextInput
-                  style={styles.chatInput}
-                  value={chatText}
-                  onChangeText={setChatText}
-                  placeholder={t('groupDetail.messagePlaceholder')}
-                  placeholderTextColor={Colors.textMuted}
-                  multiline
-                  maxLength={1000}
-                />
-                <TouchableOpacity
-                  style={[styles.sendBtn, !chatText.trim() && styles.sendBtnDisabled]}
-                  onPress={handleChatSend}
-                  disabled={!chatText.trim()}
-                  activeOpacity={0.8}>
-                  <Text style={styles.sendIcon}>▶</Text>
-                </TouchableOpacity>
-              </View>
+              <GroupChatPane groupId={groupId} />
             )}
           </View>
         )}
@@ -580,71 +336,7 @@ const styles = StyleSheet.create({
   tabTextActive: { color: Colors.primary, fontWeight: '700' },
 
   // Chat
-  chatList: { padding: 12 },
-  loadMoreSpinner: { paddingVertical: 16 },
-  emptyChat: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12 },
-  emptyChatIcon: { fontSize: 48 },
-  emptyChatText: { fontSize: 14, color: Colors.textSecondary, textAlign: 'center' },
   pendingChatText: { fontSize: 14, color: Colors.textSecondary, textAlign: 'center' },
-
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: Colors.surface,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-    gap: 8,
-  },
-  chatInput: {
-    flex: 1,
-    minHeight: 40,
-    maxHeight: 100,
-    backgroundColor: Colors.background,
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    fontSize: 15,
-    color: Colors.text,
-  },
-  sendBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: Colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  sendBtnDisabled: { backgroundColor: Colors.border },
-  sendIcon: { color: Colors.textOnPrimary, fontSize: 13 },
-
-  // Chat bubble
-  bubbleRow: { flexDirection: 'row', alignItems: 'flex-end', marginBottom: 4 },
-  bubbleRowMine: { flexDirection: 'row-reverse' },
-  avatarCol: { width: 38, alignItems: 'center', justifyContent: 'flex-end', marginRight: 4 },
-  avatarSpacer: { width: 32, height: 32 },
-  bubbleCol: { flex: 1 },
-  senderName: { fontSize: 10, fontWeight: '700', color: Colors.primary, marginBottom: 2, marginLeft: 4 },
-  bubble: {
-    maxWidth: '80%',
-    alignSelf: 'flex-start',
-    borderRadius: 16,
-    paddingHorizontal: 11,
-    paddingVertical: 7,
-  },
-  bubbleMine: { alignSelf: 'flex-end', backgroundColor: Colors.primary, borderBottomRightRadius: 4 },
-  bubbleTheirs: {
-    backgroundColor: Colors.surface,
-    borderBottomLeftRadius: 4,
-    shadowColor: '#000', shadowOpacity: 0.04, shadowOffset: { width: 0, height: 1 }, shadowRadius: 3, elevation: 1,
-  },
-  bubbleFailed: { opacity: 0.7, borderWidth: 1, borderColor: Colors.danger + '55' },
-  bubbleText: { fontSize: 14, color: Colors.text, lineHeight: 19 },
-  bubbleTextMine: { color: Colors.textOnPrimary },
-  bubbleTime: { fontSize: 9, color: Colors.textMuted, marginTop: 3, textAlign: 'right' },
-  bubbleTimeMine: { color: 'rgba(255,255,255,0.7)' },
-  bubbleTimeFailed: { color: Colors.danger },
 
   // Bills
   billActions: { flexDirection: 'row', gap: 8, padding: 12, paddingBottom: 6 },

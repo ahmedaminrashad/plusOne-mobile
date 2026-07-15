@@ -18,13 +18,10 @@
     "statusPending": "Pending",
     "removeAction": "Remove",
     "paidByMeta": "Paid by {{payer}} • {{date}}",
-    "sendingEllipsis": "Sending...",
     "tabChat": "💬 Chat",
     "tabBills": "Bills",
     "tabMembers": "Members",
     "pendingChatNotice": "You must accept the invitation first to access the chat.",
-    "emptyChatText": "No messages yet, start the conversation!",
-    "messagePlaceholder": "Type a message...",
     "scanQR": "Scan QR",
     "scanReceipt": "Scan receipt",
     "manualEntry": "Manual",
@@ -86,5 +83,11 @@
     "messagePlaceholder": "Type a message...",
     "imagePreviewLabel": "📷 Photo",
     "imageTooLarge": "Image is too large (max 10 MB)"
+  },
+  "shareToGroup": {
+    "subtitle": "Choose a group to share this photo with",
+    "loadError": "Couldn't load groups.",
+    "emptyTitle": "No groups yet",
+    "emptySubtitle": "Create a group first to share photos with it"
   }
 }

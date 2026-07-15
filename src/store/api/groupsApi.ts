@@ -1,5 +1,5 @@
 import { baseApi } from './baseApi';
-import { Group, GroupMember } from '../../types/models';
+import { Group, GroupMember, ChatMessage } from '../../types/models';
 
 export const groupsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -61,12 +61,18 @@ export const groupsApi = baseApi.injectEndpoints({
       invalidatesTags: ['Invitation'],
     }),
 
-    sendChatNotification: builder.mutation<void, { groupId: string; senderName: string; messagePreview: string }>({
-      query: ({ groupId, senderName, messagePreview }) => ({
-        url: `/groups/${groupId}/chat-notification`,
+    getGroupMessages: builder.query<ChatMessage[], { groupId: string; limit: number }>({
+      query: ({ groupId, limit }) => `/groups/${groupId}/messages?limit=${limit}`,
+      providesTags: (_r, _e, { groupId }) => [{ type: 'Message', id: groupId }],
+    }),
+
+    sendGroupMessage: builder.mutation<ChatMessage, { groupId: string; text?: string; imageUrl?: string }>({
+      query: ({ groupId, text, imageUrl }) => ({
+        url: `/groups/${groupId}/messages`,
         method: 'POST',
-        body: { senderName, messagePreview },
+        body: { text, imageUrl },
       }),
+      invalidatesTags: (_r, _e, { groupId }) => [{ type: 'Message', id: groupId }],
     }),
 
     uploadChatImage: builder.mutation<{ url: string }, { groupId: string; uri: string; fileName?: string; mimeType?: string }>({
@@ -93,6 +99,7 @@ export const {
   useGetMyInvitationsQuery,
   useAcceptInvitationMutation,
   useDeclineInvitationMutation,
-  useSendChatNotificationMutation,
+  useGetGroupMessagesQuery,
+  useSendGroupMessageMutation,
   useUploadChatImageMutation,
 } = groupsApi;

@@ -15,8 +15,9 @@ export type AppStackParamList = {
   CreateGroup: undefined;
   GroupDetail: { groupId: string; groupName: string };
   InviteMembers: { groupId: string };
-  Chat: { groupId: string; groupName: string };
-  AddBill: { groupId: string; groupName: string; receiptPhotoUri?: string; prefilledData?: PrefilledBillData };
+  Chat: { groupId: string; groupName: string; sharedImageUri?: string };
+  SelectGroupToShare: { imageUri: string };
+  AddBill: { groupId: string; groupName: string; prefilledData?: PrefilledBillData };
   QRScanner: { groupId: string; groupName: string };
   OCRCapture: { groupId: string; groupName: string };
   ReceiptSplit: { groupId: string; groupName: string; receiptJson: string };
