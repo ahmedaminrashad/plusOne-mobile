@@ -78,7 +78,8 @@ export const billsApi = baseApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: ['Bill'],
+      // Creating a bill also shares it into the group chat as a message, so refresh that feed too.
+      invalidatesTags: ['Bill', 'Message'],
     }),
     deleteBill: builder.mutation<void, string>({
       query: (billId) => ({ url: `/bills/${billId}`, method: 'DELETE' }),

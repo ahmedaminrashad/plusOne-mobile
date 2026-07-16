@@ -82,7 +82,11 @@
     "emptyText": "لا توجد رسائل بعد، ابدأ المحادثة!",
     "messagePlaceholder": "اكتب رسالة...",
     "imagePreviewLabel": "📷 صورة",
-    "imageTooLarge": "الصورة كبيرة جداً (الحد الأقصى 10 ميجابايت)"
+    "imageTooLarge": "الصورة كبيرة جداً (الحد الأقصى 10 ميجابايت)",
+    "receiptDefaultTitle": "إيصال",
+    "receiptItemCount": "{{count}} صنف",
+    "receiptNoItemsYet": "لم تُضَف أصناف بعد",
+    "receiptOpenCta": "عرض وإضافة أصناف ‹"
   },
   "shareToGroup": {
     "subtitle": "اختر مجموعة لمشاركة هذه الصورة معها",

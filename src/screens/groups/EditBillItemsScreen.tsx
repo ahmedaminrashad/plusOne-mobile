@@ -3,6 +3,7 @@ import {
   View,
   Text,
   FlatList,
+  TextInput,
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
@@ -25,9 +26,13 @@ type Props = AppScreenProps<'EditBillItems'>;
 interface EditableItem {
   id: string;
   name: string;
-  price: number;
+  price: string;
   qty: number;
   claimedBy: string[];
+}
+
+function parseNum(s: string): number {
+  return parseFloat(s.replace(',', '.')) || 0;
 }
 
 const getMemberId = (m: GroupMember) => m.userId ?? m.id;
@@ -65,13 +70,15 @@ function ItemRow({
   item,
   members,
   onToggle,
+  onPriceChange,
 }: {
   item: EditableItem;
   members: GroupMember[];
   onToggle: (itemId: string, memberId: string) => void;
+  onPriceChange: (itemId: string, price: string) => void;
 }) {
   const { t } = useTranslation('billing');
-  const subtotal = item.price * item.qty;
+  const subtotal = parseNum(item.price) * item.qty;
   const unclaimed = item.claimedBy.length === 0;
   return (
     <View style={[styles.itemCard, unclaimed && styles.itemCardUnclaimed]}>
@@ -79,9 +86,16 @@ function ItemRow({
         <Text style={styles.itemSubtotal}>{formatCurrency(subtotal)}</Text>
         <View style={styles.itemNameBlock}>
           <Text style={styles.itemName}>{item.name}</Text>
-          {item.qty > 1 && (
-            <Text style={styles.itemQty}>{item.qty} × {item.price.toFixed(2)}</Text>
-          )}
+          <View style={styles.priceRow}>
+            {item.qty > 1 && <Text style={styles.itemQty}>{item.qty} ×</Text>}
+            <TextInput
+              style={styles.priceInput}
+              value={item.price}
+              onChangeText={(v) => onPriceChange(item.id, v)}
+              keyboardType="decimal-pad"
+              textAlign="right"
+            />
+          </View>
         </View>
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsRow}>
@@ -114,6 +128,9 @@ function EditBillItemsScreen({ route, navigation }: Props) {
 
   const [items, setItems] = useState<EditableItem[]>([]);
   const [hydrated, setHydrated] = useState(false);
+  const [newItemName, setNewItemName] = useState('');
+  const [newItemQty, setNewItemQty] = useState('1');
+  const [newItemPrice, setNewItemPrice] = useState('');
 
   const activeMembers = useMemo(
     () => (members ?? []).filter((m) => m.status === 'active' && (m.userId || m.pendingPhone)),
@@ -126,7 +143,7 @@ function EditBillItemsScreen({ route, navigation }: Props) {
       (bill.lineItems ?? []).map((it, idx) => ({
         id: String(idx),
         name: it.name,
-        price: Number(it.unitPrice),
+        price: String(it.unitPrice),
         qty: Number(it.qty),
         claimedBy: it.claimedBy ?? [],
       })),
@@ -135,7 +152,7 @@ function EditBillItemsScreen({ route, navigation }: Props) {
   }, [bill, hydrated]);
 
   const subtotal = useMemo(
-    () => items.reduce((sum, it) => sum + it.price * it.qty, 0),
+    () => items.reduce((sum, it) => sum + parseNum(it.price) * it.qty, 0),
     [items],
   );
 
@@ -160,7 +177,7 @@ function EditBillItemsScreen({ route, navigation }: Props) {
     const totals: Record<string, number> = {};
     for (const item of items) {
       if (!item.claimedBy.length) continue;
-      const share = (item.price * item.qty) / item.claimedBy.length;
+      const share = (parseNum(item.price) * item.qty) / item.claimedBy.length;
       for (const id of item.claimedBy) {
         totals[id] = (totals[id] ?? 0) + share;
       }
@@ -174,6 +191,27 @@ function EditBillItemsScreen({ route, navigation }: Props) {
     }
     return totals;
   }, [items, taxAmt, serviceAmt, tipAmt, subtotal]);
+
+  const handleAddItem = useCallback(() => {
+    const name = newItemName.trim();
+    const qty = parseInt(newItemQty, 10);
+    const price = parseNum(newItemPrice);
+    if (!name || price <= 0 || !qty || qty <= 0) {
+      Alert.alert(t('common:error'), t('editBillItems.addItemInvalid'));
+      return;
+    }
+    setItems((prev) => [
+      ...prev,
+      { id: `new-${Date.now()}-${Math.random().toString(36).slice(2)}`, name, price: newItemPrice.trim(), qty, claimedBy: [] },
+    ]);
+    setNewItemName('');
+    setNewItemQty('1');
+    setNewItemPrice('');
+  }, [newItemName, newItemQty, newItemPrice, t]);
+
+  const updateItemPrice = useCallback((itemId: string, price: string) => {
+    setItems((prev) => prev.map((item) => (item.id === itemId ? { ...item, price } : item)));
+  }, []);
 
   const toggleClaim = useCallback((itemId: string, memberId: string) => {
     setItems((prev) =>
@@ -203,7 +241,7 @@ function EditBillItemsScreen({ route, navigation }: Props) {
         lineItems: items.map((it) => ({
           name: it.name,
           qty: it.qty,
-          unitPrice: it.price,
+          unitPrice: parseNum(it.price),
           claimedBy: it.claimedBy,
         })),
         shares,
@@ -234,9 +272,9 @@ function EditBillItemsScreen({ route, navigation }: Props) {
 
   const renderItem = useCallback(
     ({ item }: { item: EditableItem }) => (
-      <ItemRow item={item} members={activeMembers} onToggle={toggleClaim} />
+      <ItemRow item={item} members={activeMembers} onToggle={toggleClaim} onPriceChange={updateItemPrice} />
     ),
-    [activeMembers, toggleClaim],
+    [activeMembers, toggleClaim, updateItemPrice],
   );
 
   if (isLoading || !bill) {
@@ -268,6 +306,40 @@ function EditBillItemsScreen({ route, navigation }: Props) {
     </View>
   );
 
+  const ListFooter = (
+    <View style={styles.addItemPanel}>
+      <Text style={styles.addItemTitle}>{t('editBillItems.addItemTitle')}</Text>
+      <View style={styles.addItemRow}>
+        <TextInput
+          style={[styles.addItemInput, styles.addItemInputName]}
+          placeholder={t('createBill.itemNamePlaceholder')}
+          placeholderTextColor={Colors.textMuted}
+          value={newItemName}
+          onChangeText={setNewItemName}
+        />
+        <TextInput
+          style={[styles.addItemInput, styles.addItemInputQty]}
+          placeholder={t('createBill.qtyPlaceholder')}
+          placeholderTextColor={Colors.textMuted}
+          value={newItemQty}
+          onChangeText={setNewItemQty}
+          keyboardType="number-pad"
+        />
+        <TextInput
+          style={[styles.addItemInput, styles.addItemInputPrice]}
+          placeholder={t('createBill.pricePlaceholder')}
+          placeholderTextColor={Colors.textMuted}
+          value={newItemPrice}
+          onChangeText={setNewItemPrice}
+          keyboardType="decimal-pad"
+        />
+        <TouchableOpacity style={styles.addItemBtn} onPress={handleAddItem} activeOpacity={0.8}>
+          <Text style={styles.addItemBtnText}>+</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       <FlatList
@@ -275,6 +347,7 @@ function EditBillItemsScreen({ route, navigation }: Props) {
         keyExtractor={(it) => it.id}
         renderItem={renderItem}
         ListHeaderComponent={ListHeader}
+        ListFooterComponent={ListFooter}
         contentContainerStyle={styles.list}
         keyboardShouldPersistTaps="handled"
       />
@@ -338,8 +411,20 @@ const styles = StyleSheet.create({
   itemHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 },
   itemNameBlock: { flex: 1, alignItems: 'flex-end' },
   itemName: { fontSize: 15, fontWeight: '600', color: Colors.text, textAlign: 'right' },
-  itemQty: { fontSize: 12, color: Colors.textMuted, marginTop: 2 },
+  itemQty: { fontSize: 12, color: Colors.textMuted },
   itemSubtotal: { fontSize: 16, fontWeight: '700', color: Colors.text, marginLeft: 8 },
+  priceRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
+  priceInput: {
+    fontSize: 12,
+    color: Colors.text,
+    backgroundColor: Colors.background,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    minWidth: 56,
+  },
 
   chipsRow: { flexDirection: 'row', gap: 8, paddingBottom: 4 },
   chip: {
@@ -370,6 +455,40 @@ const styles = StyleSheet.create({
 
   unclaimedNote: { fontSize: 11, color: Colors.warning, textAlign: 'right', marginTop: 6 },
   splitNote: { fontSize: 11, color: Colors.textMuted, textAlign: 'right', marginTop: 4 },
+
+  addItemPanel: {
+    backgroundColor: Colors.surface,
+    marginHorizontal: 16,
+    marginTop: 4,
+    marginBottom: 10,
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    borderStyle: 'dashed',
+  },
+  addItemTitle: { fontSize: 13, fontWeight: '700', color: Colors.textSecondary, textAlign: 'right', marginBottom: 8 },
+  addItemRow: { flexDirection: 'row', gap: 6, alignItems: 'center' },
+  addItemInput: {
+    backgroundColor: Colors.background,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    fontSize: 13,
+    color: Colors.text,
+  },
+  addItemInputName: { flex: 2 },
+  addItemInputQty: { flex: 1 },
+  addItemInputPrice: { flex: 1 },
+  addItemBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: Colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  addItemBtnText: { color: Colors.textOnPrimary, fontSize: 18, fontWeight: '700' },
 
   bottomPanel: {
     backgroundColor: Colors.surface,

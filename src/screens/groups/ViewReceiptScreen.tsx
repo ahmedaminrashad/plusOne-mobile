@@ -298,10 +298,10 @@ function ViewReceiptScreen({ route, navigation }: Props) {
           </View>
         </View>
 
-        {bill.isEditable && bill.lineItems && bill.lineItems.length > 0 && (
+        {bill.isEditable && (
           <View style={styles.actionsRow}>
             <Button
-              title={t('viewReceipt.editItemsButton')}
+              title={bill.lineItems && bill.lineItems.length > 0 ? t('viewReceipt.editItemsButton') : t('viewReceipt.addItemsButton')}
               onPress={handleEditItems}
               style={styles.actionButton}
               variant="outline"

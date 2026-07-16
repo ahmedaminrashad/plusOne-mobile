@@ -90,6 +90,7 @@
     "tipLabel": "Tip",
     "notesTitle": "Notes",
     "editItemsButton": "Edit items",
+    "addItemsButton": "Add items",
     "closeSplitButton": "Close split",
     "closeSplitConfirmTitle": "Close this split?",
     "closeSplitConfirmMessage": "No one will be able to change who took which item after this.",
@@ -99,7 +100,9 @@
   "editBillItems": {
     "saveButton": "Save changes",
     "saveFailed": "Couldn't save changes, please try again",
-    "billClosedMessage": "This bill's split is already closed and can no longer be edited."
+    "billClosedMessage": "This bill's split is already closed and can no longer be edited.",
+    "addItemTitle": "Add an item",
+    "addItemInvalid": "Enter an item name, quantity and price greater than zero"
   },
   "qrScanner": {
     "permissionTitle": "Camera permission",

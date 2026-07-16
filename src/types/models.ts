@@ -97,6 +97,17 @@ export interface Share {
   updatedAt: string;
 }
 
+export interface BillMessageSummary {
+  id: string;
+  title: string | null;
+  amount: number;
+  currency: string;
+  paidByUserId: string;
+  paidByName: string | null;
+  itemCount: number;
+  closedAt: string | null;
+}
+
 export interface ChatMessage {
   id: string;
   groupId: string;
@@ -105,6 +116,8 @@ export interface ChatMessage {
   senderPhoto: string | null;
   text: string | null;
   imageUrl: string | null;
+  billId: string | null;
+  bill: BillMessageSummary | null;
   createdAt: string;
 }
 

@@ -90,6 +90,7 @@
     "tipLabel": "إكرامية",
     "notesTitle": "ملاحظات",
     "editItemsButton": "تعديل الأصناف",
+    "addItemsButton": "إضافة أصناف",
     "closeSplitButton": "إغلاق التوزيع",
     "closeSplitConfirmTitle": "إغلاق هذا التوزيع؟",
     "closeSplitConfirmMessage": "لن يتمكن أحد من تغيير من أخذ أي صنف بعد ذلك.",
@@ -99,7 +100,9 @@
   "editBillItems": {
     "saveButton": "حفظ التغييرات",
     "saveFailed": "تعذر حفظ التغييرات، يرجى المحاولة مرة أخرى",
-    "billClosedMessage": "تم إغلاق توزيع هذه الفاتورة ولا يمكن تعديله بعد الآن."
+    "billClosedMessage": "تم إغلاق توزيع هذه الفاتورة ولا يمكن تعديله بعد الآن.",
+    "addItemTitle": "إضافة صنف",
+    "addItemInvalid": "أدخل اسم الصنف والكمية والسعر بقيمة أكبر من صفر"
   },
   "qrScanner": {
     "permissionTitle": "إذن الكاميرا",

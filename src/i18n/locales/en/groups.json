@@ -82,7 +82,11 @@
     "emptyText": "No messages yet, start the conversation!",
     "messagePlaceholder": "Type a message...",
     "imagePreviewLabel": "📷 Photo",
-    "imageTooLarge": "Image is too large (max 10 MB)"
+    "imageTooLarge": "Image is too large (max 10 MB)",
+    "receiptDefaultTitle": "Receipt",
+    "receiptItemCount": "{{count}} item(s)",
+    "receiptNoItemsYet": "No items added yet",
+    "receiptOpenCta": "View & add items ›"
   },
   "shareToGroup": {
     "subtitle": "Choose a group to share this photo with",

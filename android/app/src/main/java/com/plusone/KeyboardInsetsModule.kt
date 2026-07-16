@@ -27,7 +27,7 @@ class KeyboardInsetsModule(reactContext: ReactApplicationContext) :
   override fun getName(): String = "KeyboardInsetsModule"
 
   private fun attach() {
-    val decorView = currentActivity?.window?.decorView ?: return
+    val decorView = reactApplicationContext.currentActivity?.window?.decorView ?: return
     if (attachedHashCode == decorView.hashCode()) return
     attachedHashCode = decorView.hashCode()
 

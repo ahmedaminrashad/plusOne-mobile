@@ -12,13 +12,16 @@ import {
   Alert,
 } from 'react-native';
 import { launchImageLibrary } from 'react-native-image-picker';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Colors } from '../../constants/colors';
 import { ASSET_BASE_URL } from '../../config';
 import Avatar from '../../components/common/Avatar';
 import { useGetMeQuery } from '../../store/api/usersApi';
 import { useGetGroupMessagesQuery, useSendGroupMessageMutation, useUploadChatImageMutation } from '../../store/api/groupsApi';
 import { ChatMessage } from '../../types/models';
-import { formatRelativeTime } from '../../utils/format';
+import { AppStackParamList } from '../../types/navigation';
+import { formatRelativeTime, formatCurrency } from '../../utils/format';
+import { useKeyboardInsetHeight } from '../../services/keyboardInsets';
 
 // The single implementation of a group's chat (message list + composer), used both
 // by the standalone Chat screen (reached from the share-to-group flow) and embedded
@@ -51,11 +54,13 @@ function MessageBubble({
   isMine,
   showSender,
   onRetry,
+  onOpenReceipt,
 }: {
   item: ChatListItem;
   isMine: boolean;
   showSender: boolean;
   onRetry: (localId: string) => void;
+  onOpenReceipt: (billId: string) => void;
 }) {
   const { t } = useTranslation('groups');
 
@@ -108,19 +113,42 @@ function MessageBubble({
         {!isMine && showSender && (
           <Text style={styles.senderName}>{msg.senderName}</Text>
         )}
-        <View style={[
-          styles.bubble,
-          msg.imageUrl && styles.bubbleImageWrap,
-          isMine ? styles.bubbleMine : styles.bubbleTheirs,
-        ]}>
-          {msg.imageUrl && (
-            <Image source={{ uri: msg.imageUrl }} style={styles.bubbleImage} resizeMode="cover" />
-          )}
-          {!!msg.text && (
-            <Text style={[styles.bubbleText, isMine && styles.bubbleTextMine]}>{msg.text}</Text>
-          )}
-          <Text style={[styles.bubbleTime, isMine && styles.bubbleTimeMine]}>{timeStr}</Text>
-        </View>
+        {msg.bill ? (
+          <TouchableOpacity
+            style={styles.receiptCard}
+            activeOpacity={0.8}
+            onPress={() => onOpenReceipt(msg.bill!.id)}>
+            <View style={styles.receiptIcon}>
+              <Text style={styles.receiptIconText}>🧾</Text>
+            </View>
+            <View style={styles.receiptInfo}>
+              <Text style={styles.receiptTitle} numberOfLines={1}>
+                {msg.bill.title ?? t('chat.receiptDefaultTitle')}
+              </Text>
+              <Text style={styles.receiptMeta}>
+                {msg.bill.itemCount > 0
+                  ? t('chat.receiptItemCount', { count: msg.bill.itemCount })
+                  : t('chat.receiptNoItemsYet')}
+              </Text>
+              <Text style={styles.receiptCta}>{t('chat.receiptOpenCta')}</Text>
+            </View>
+            <Text style={styles.receiptAmount}>{formatCurrency(Number(msg.bill.amount), msg.bill.currency)}</Text>
+          </TouchableOpacity>
+        ) : (
+          <View style={[
+            styles.bubble,
+            msg.imageUrl && styles.bubbleImageWrap,
+            isMine ? styles.bubbleMine : styles.bubbleTheirs,
+          ]}>
+            {msg.imageUrl && (
+              <Image source={{ uri: msg.imageUrl }} style={styles.bubbleImage} resizeMode="cover" />
+            )}
+            {!!msg.text && (
+              <Text style={[styles.bubbleText, isMine && styles.bubbleTextMine]}>{msg.text}</Text>
+            )}
+            <Text style={[styles.bubbleTime, isMine && styles.bubbleTimeMine]}>{timeStr}</Text>
+          </View>
+        )}
       </View>
     </View>
   );
@@ -128,6 +156,8 @@ function MessageBubble({
 
 interface GroupChatPaneProps {
   groupId: string;
+  groupName: string;
+  navigation: NativeStackNavigationProp<AppStackParamList>;
   // A photo shared into PlusOne from another app, handed off once the user picks
   // this group — sent immediately once `me` is available. Only the standalone Chat
   // screen (reached via the share flow) passes this; the embedded tab doesn't.
@@ -135,7 +165,7 @@ interface GroupChatPaneProps {
   onSharedImageConsumed?: () => void;
 }
 
-function GroupChatPane({ groupId, sharedImageUri, onSharedImageConsumed }: GroupChatPaneProps) {
+function GroupChatPane({ groupId, groupName, navigation, sharedImageUri, onSharedImageConsumed }: GroupChatPaneProps) {
   const { t } = useTranslation('groups');
   const { data: me } = useGetMeQuery();
   const [sendGroupMessage] = useSendGroupMessageMutation();
@@ -149,6 +179,7 @@ function GroupChatPane({ groupId, sharedImageUri, onSharedImageConsumed }: Group
   const [pageLimit, setPageLimit] = useState(PAGE_SIZE);
   const [loadingMore, setLoadingMore] = useState(false);
   const listRef = useRef<FlatList>(null);
+  const keyboardInset = useKeyboardInsetHeight();
 
   const {
     data: messages,
@@ -235,6 +266,10 @@ function GroupChatPane({ groupId, sharedImageUri, onSharedImageConsumed }: Group
     });
   }, [doSend, doSendImage]);
 
+  const handleOpenReceipt = useCallback((billId: string) => {
+    navigation.navigate('ViewReceipt', { groupId, groupName, billId });
+  }, [navigation, groupId, groupName]);
+
   if (isLoading) {
     return (
       <View style={styles.centered}>
@@ -257,7 +292,7 @@ function GroupChatPane({ groupId, sharedImageUri, onSharedImageConsumed }: Group
   ];
 
   return (
-    <View style={styles.flex}>
+    <View style={[styles.flex, { paddingBottom: keyboardInset }]}>
       {listData.length === 0 ? (
         <View style={styles.emptyChat}>
           <Text style={styles.emptyChatIcon}>💬</Text>
@@ -271,7 +306,7 @@ function GroupChatPane({ groupId, sharedImageUri, onSharedImageConsumed }: Group
           renderItem={({ item, index }) => {
             if (item.kind === 'pending') {
               return (
-                <MessageBubble item={item} isMine showSender={false} onRetry={handleRetry} />
+                <MessageBubble item={item} isMine showSender={false} onRetry={handleRetry} onOpenReceipt={handleOpenReceipt} />
               );
             }
             const msg = item.message;
@@ -285,6 +320,7 @@ function GroupChatPane({ groupId, sharedImageUri, onSharedImageConsumed }: Group
                 isMine={isMine}
                 showSender={showSender}
                 onRetry={handleRetry}
+                onOpenReceipt={handleOpenReceipt}
               />
             );
           }}
@@ -365,6 +401,31 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   bubbleFailed: { opacity: 0.7, borderWidth: 1, borderColor: Colors.danger + '60' },
+  receiptCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    maxWidth: '90%',
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    padding: 12,
+    gap: 10,
+  },
+  receiptIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 11,
+    backgroundColor: Colors.primary + '15',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  receiptIconText: { fontSize: 18 },
+  receiptInfo: { flex: 1 },
+  receiptTitle: { fontSize: 14, fontWeight: '700', color: Colors.text },
+  receiptMeta: { fontSize: 11, color: Colors.textMuted, marginTop: 2 },
+  receiptCta: { fontSize: 11, color: Colors.primary, fontWeight: '600', marginTop: 3 },
+  receiptAmount: { fontSize: 14, fontWeight: '700', color: Colors.text, marginLeft: 6 },
   bubbleImageWrap: { padding: 4 },
   bubbleImage: { width: 200, height: 200, borderRadius: 12, marginBottom: 4 },
   bubbleText: { fontSize: 15, color: Colors.text, lineHeight: 20 },

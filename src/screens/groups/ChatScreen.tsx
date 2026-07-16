@@ -12,16 +12,18 @@ import GroupChatPane from './GroupChatPane';
 type Props = AppScreenProps<'Chat'>;
 
 function ChatScreen({ route, navigation }: Props) {
-  const { groupId, sharedImageUri } = route.params;
+  const { groupId, groupName, sharedImageUri } = route.params;
 
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior="padding"
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}>
         <GroupChatPane
           groupId={groupId}
+          groupName={groupName}
+          navigation={navigation}
           sharedImageUri={sharedImageUri}
           onSharedImageConsumed={() => navigation.setParams({ sharedImageUri: undefined })}
         />

@@ -210,7 +210,7 @@ function GroupDetailScreen({ route, navigation }: Props) {
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior="padding"
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}>
 
         {/* Tab bar */}
@@ -237,7 +237,7 @@ function GroupDetailScreen({ route, navigation }: Props) {
                 </Text>
               </View>
             ) : (
-              <GroupChatPane groupId={groupId} />
+              <GroupChatPane groupId={groupId} groupName={groupName} navigation={navigation} />
             )}
           </View>
         )}
