@@ -21,6 +21,7 @@ import { clearAuth } from '../../store/slices/authSlice';
 import { baseApi } from '../../store/api/baseApi';
 import { SecureStorage } from '../../utils/storage';
 import { changeLanguage, AppLanguage } from '../../i18n';
+import { resolveAssetUrl } from '../../utils/format';
 
 type Props = SettingsScreenProps<'Settings'>;
 
@@ -119,7 +120,7 @@ function SettingsScreen({ navigation }: Props) {
           style={styles.profileCard}
           onPress={() => navigation.navigate('EditProfile')}
           activeOpacity={0.85}>
-          <Avatar uri={me?.photoUrl} name={me?.displayName ?? 'U'} size={60} />
+          <Avatar uri={resolveAssetUrl(me?.photoUrl)} name={me?.displayName ?? 'U'} size={60} />
           <View style={styles.profileInfo}>
             <Text style={styles.profileName}>{me?.displayName ?? '—'}</Text>
             <Text style={styles.profilePhone}>{me?.phone ?? ''}</Text>

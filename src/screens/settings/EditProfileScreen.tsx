@@ -17,7 +17,8 @@ import { Colors } from '../../constants/colors';
 import Avatar from '../../components/common/Avatar';
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
-import { useGetMeQuery, useUpdateProfileMutation } from '../../store/api/usersApi';
+import { useGetMeQuery, useUpdateProfileMutation, useUploadProfilePhotoMutation } from '../../store/api/usersApi';
+import { resolveAssetUrl } from '../../utils/format';
 
 type Props = SettingsScreenProps<'EditProfile'>;
 
@@ -25,15 +26,21 @@ function EditProfileScreen({ navigation, route }: Props) {
   const { t } = useTranslation('settings');
   const { data: me } = useGetMeQuery();
   const [updateProfile, { isLoading }] = useUpdateProfileMutation();
+  const [uploadProfilePhoto] = useUploadProfilePhotoMutation();
 
   const [displayName, setDisplayName] = useState(me?.displayName ?? '');
   const [instaPayAlias, setInstaPayAlias] = useState(route.params?.prefillInstaPayAlias ?? me?.instaPayAlias ?? '');
-  const [photoUri, setPhotoUri] = useState<string | undefined>(me?.photoUrl ?? undefined);
+  // Only set when the user picks a new photo this session — a local picker URI, as
+  // opposed to `me?.photoUrl` which is a server-relative path. Keeping them separate
+  // means the existing photo is resolved for display but never re-sent unless changed.
+  const [newPhotoUri, setNewPhotoUri] = useState<string | undefined>();
   const [nameError, setNameError] = useState('');
+
+  const displayPhotoUri = newPhotoUri ?? resolveAssetUrl(me?.photoUrl) ?? undefined;
 
   const handlePickPhoto = useCallback(() => {
     launchImageLibrary({ mediaType: 'photo', quality: 0.8 }, (res) => {
-      if (res.assets?.[0]?.uri) setPhotoUri(res.assets[0].uri);
+      if (res.assets?.[0]?.uri) setNewPhotoUri(res.assets[0].uri);
     });
   }, []);
 
@@ -46,13 +53,13 @@ function EditProfileScreen({ navigation, route }: Props) {
       await updateProfile({
         displayName: trimmed,
         instaPayAlias: instaPayAlias.trim() || undefined,
-        photoUrl: photoUri,
       }).unwrap();
+      if (newPhotoUri) await uploadProfilePhoto({ uri: newPhotoUri }).catch(() => {});
       navigation.goBack();
     } catch {
       Alert.alert(t('common:error'), t('editProfile.saveError'));
     }
-  }, [displayName, instaPayAlias, photoUri, updateProfile, navigation, t]);
+  }, [displayName, instaPayAlias, newPhotoUri, updateProfile, uploadProfilePhoto, navigation, t]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -70,7 +77,7 @@ function EditProfileScreen({ navigation, route }: Props) {
         {/* Avatar */}
         <TouchableOpacity style={styles.avatarSection} onPress={handlePickPhoto} activeOpacity={0.8}>
           <View style={styles.avatarRing}>
-            <Avatar uri={photoUri} name={displayName || 'U'} size={80} />
+            <Avatar uri={displayPhotoUri} name={displayName || 'U'} size={80} />
             <View style={styles.cameraBadge}>
               <Text style={styles.cameraBadgeIcon}>📷</Text>
             </View>

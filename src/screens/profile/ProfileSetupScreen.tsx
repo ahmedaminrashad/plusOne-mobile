@@ -17,7 +17,7 @@ import Input from '../../components/common/Input';
 import Avatar from '../../components/common/Avatar';
 import { Colors } from '../../constants/colors';
 import { isValidDisplayName, isValidInstaPayAlias } from '../../utils/validation';
-import { useUpdateProfileMutation } from '../../store/api/usersApi';
+import { useUpdateProfileMutation, useUploadProfilePhotoMutation } from '../../store/api/usersApi';
 import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { setProfileComplete } from '../../store/slices/authSlice';
 import { SecureStorage } from '../../utils/storage';
@@ -33,6 +33,7 @@ function ProfileSetupScreen({ navigation }: Props) {
   const [errors, setErrors] = useState<{ displayName?: string; instaPayAlias?: string }>({});
 
   const [updateProfile, { isLoading }] = useUpdateProfileMutation();
+  const [uploadProfilePhoto] = useUploadProfilePhotoMutation();
 
   const validate = useCallback(() => {
     const next: typeof errors = {};
@@ -49,14 +50,18 @@ function ProfileSetupScreen({ navigation }: Props) {
   const handleSave = useCallback(async () => {
     if (!validate()) return;
     try {
-      await updateProfile({ displayName, photoUrl, instaPayAlias: instaPayAlias || undefined }).unwrap();
+      await updateProfile({ displayName, instaPayAlias: instaPayAlias || undefined }).unwrap();
+      // photoUrl here is always a local picker URI (this screen only runs once, for
+      // first-time setup) — upload it to get a server-resolvable path rather than
+      // storing the local path directly, or the photo would only load on this device.
+      if (photoUrl) await uploadProfilePhoto({ uri: photoUrl }).catch(() => {});
       const stored = await SecureStorage.getTokens();
       if (stored) await SecureStorage.saveTokens(stored.accessToken, stored.refreshToken, true);
       dispatch(setProfileComplete(true));
     } catch {
       Alert.alert(t('common:error'), t('profileSetup.saveFailedMessage'));
     }
-  }, [validate, updateProfile, displayName, photoUrl, instaPayAlias, dispatch]);
+  }, [validate, updateProfile, uploadProfilePhoto, displayName, photoUrl, instaPayAlias, dispatch]);
 
   const handleAddPhoto = useCallback(() => {
     Alert.alert(t('profileSetup.addPhotoTitle'), t('profileSetup.addPhotoMessage'), [

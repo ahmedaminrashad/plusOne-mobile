@@ -20,7 +20,7 @@ import { useGetGroupMembersQuery } from '../../store/api/groupsApi';
 import { useGetMeQuery } from '../../store/api/usersApi';
 import { useCreateBillMutation } from '../../store/api/billsApi';
 import { GroupMember, ParsedReceiptData } from '../../types/models';
-import { formatCurrency } from '../../utils/format';
+import { formatCurrency, resolveAssetUrl } from '../../utils/format';
 import i18n from '../../i18n';
 
 type Props = AppScreenProps<'ReceiptSplit'>;
@@ -331,7 +331,7 @@ function ReceiptSplitScreen({ route, navigation }: Props) {
                   <Text style={styles.summaryAmount}>{formatCurrency(memberTotals[id]!)}</Text>
                   <View style={styles.summaryMember}>
                     <Text style={styles.summaryName}>{getMemberName(m)}</Text>
-                    <Avatar uri={m.user?.photoUrl} name={getMemberName(m)} size={24} />
+                    <Avatar uri={resolveAssetUrl(m.user?.photoUrl)} name={getMemberName(m)} size={24} />
                   </View>
                 </View>
               );
@@ -375,7 +375,7 @@ function ReceiptSplitScreen({ route, navigation }: Props) {
                   key={m.id}
                   style={[styles.payerOption, selected && styles.payerOptionSelected]}
                   onPress={() => { setPaidByUserId(id); setPayerModalVisible(false); }}>
-                  <Avatar uri={m.user?.photoUrl} name={getMemberName(m)} size={36} />
+                  <Avatar uri={resolveAssetUrl(m.user?.photoUrl)} name={getMemberName(m)} size={36} />
                   <Text style={[styles.payerOptionName, selected && styles.payerOptionNameSelected]}>
                     {getMemberName(m)}
                   </Text>

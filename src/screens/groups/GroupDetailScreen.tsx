@@ -20,7 +20,7 @@ import Avatar from '../../components/common/Avatar';
 import Button from '../../components/common/Button';
 import { Colors } from '../../constants/colors';
 import { useGetMeQuery } from '../../store/api/usersApi';
-import { formatDate } from '../../utils/format';
+import { formatDate, resolveAssetUrl } from '../../utils/format';
 import GroupChatPane from './GroupChatPane';
 
 type Props = AppScreenProps<'GroupDetail'>;
@@ -46,7 +46,7 @@ function MemberRow({
   const isPending = member.status === 'pending';
   return (
     <View style={styles.memberRow}>
-      <Avatar uri={member.user?.photoUrl} name={name} size={42} />
+      <Avatar uri={resolveAssetUrl(member.user?.photoUrl)} name={name} size={42} />
       <View style={styles.memberInfo}>
         <View style={styles.memberNameRow}>
           <Text style={styles.memberName}>{name}</Text>

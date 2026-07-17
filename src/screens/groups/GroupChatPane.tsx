@@ -22,7 +22,7 @@ import { useGetMeQuery } from '../../store/api/usersApi';
 import { useGetGroupMessagesQuery, useSendGroupMessageMutation, useUploadChatImageMutation } from '../../store/api/groupsApi';
 import { ChatMessage } from '../../types/models';
 import { AppStackParamList } from '../../types/navigation';
-import { formatRelativeTime, formatCurrency } from '../../utils/format';
+import { formatRelativeTime, formatCurrency, resolveAssetUrl } from '../../utils/format';
 import { useKeyboardInsetHeight } from '../../services/keyboardInsets';
 
 // The single implementation of a group's chat (message list + composer), used both
@@ -105,7 +105,7 @@ function MessageBubble({
       {!isMine && (
         <View style={styles.avatarCol}>
           {showSender ? (
-            <Avatar uri={msg.senderPhoto} name={msg.senderName} size={34} />
+            <Avatar uri={resolveAssetUrl(msg.senderPhoto)} name={msg.senderName} size={34} />
           ) : (
             <View style={styles.avatarSpacer} />
           )}

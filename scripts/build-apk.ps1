@@ -24,6 +24,7 @@ Write-Host "Setting API_BASE_URL = $normalizedUrl"
 $configContent = @"
 // Managed by the run-android skill / scripts/build-apk.ps1 — do not hardcode URLs here manually.
 export const API_BASE_URL = '$normalizedUrl';
+export const ASSET_BASE_URL = API_BASE_URL.replace(/\/api\/v1\/?$/, '');
 "@
 Set-Content -Path $configPath -Value $configContent -Encoding utf8
 

@@ -8,8 +8,21 @@ export const usersApi = baseApi.injectEndpoints({
       providesTags: ['User'],
     }),
 
-    updateProfile: builder.mutation<User, { displayName?: string; photoUrl?: string; instaPayAlias?: string }>({
+    updateProfile: builder.mutation<User, { displayName?: string; instaPayAlias?: string }>({
       query: (body) => ({ url: '/users/me', method: 'PATCH', body }),
+      invalidatesTags: ['User', 'Bill'],
+    }),
+
+    uploadProfilePhoto: builder.mutation<{ url: string }, { uri: string; fileName?: string; mimeType?: string }>({
+      query: ({ uri, fileName, mimeType }) => {
+        const formData = new FormData();
+        formData.append('photo', {
+          uri,
+          name: fileName ?? 'profile-photo.jpg',
+          type: mimeType ?? 'image/jpeg',
+        } as unknown as Blob);
+        return { url: '/users/me/photo', method: 'POST', body: formData };
+      },
       invalidatesTags: ['User', 'Bill'],
     }),
 
@@ -26,6 +39,7 @@ export const usersApi = baseApi.injectEndpoints({
 export const {
   useGetMeQuery,
   useUpdateProfileMutation,
+  useUploadProfilePhotoMutation,
   useSaveFcmTokenMutation,
   useSaveLanguageMutation,
 } = usersApi;

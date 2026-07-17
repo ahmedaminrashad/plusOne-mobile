@@ -25,7 +25,7 @@ import {
 } from '../../store/api/sharesApi';
 import { useGetMeQuery } from '../../store/api/usersApi';
 import { BillLineItem, CaptureMethod } from '../../types/models';
-import { formatCurrency, formatDate } from '../../utils/format';
+import { formatCurrency, formatDate, resolveAssetUrl } from '../../utils/format';
 import { normalizeInstaPayIdentifier, buildInstaPayLink } from '../../utils/instapay';
 
 async function tryOpenInstaPay(url: string): Promise<boolean> {
@@ -282,7 +282,7 @@ function ViewReceiptScreen({ route, navigation }: Props) {
           <Text style={styles.totalAmount}>{formatCurrency(Number(bill.amount), bill.currency)}</Text>
 
           <View style={styles.payerRow}>
-            <Avatar uri={bill.paidBy?.photoUrl} name={payerName} size={28} />
+            <Avatar uri={resolveAssetUrl(bill.paidBy?.photoUrl)} name={payerName} size={28} />
             <Text style={styles.payerText}>{t('viewReceipt.paidByAndDate', { payerName, date })}</Text>
           </View>
 
