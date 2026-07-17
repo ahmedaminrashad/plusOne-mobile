@@ -86,6 +86,19 @@ export const groupsApi = baseApi.injectEndpoints({
         return { url: `/groups/${groupId}/chat-image`, method: 'POST', body: formData };
       },
     }),
+
+    uploadGroupAvatar: builder.mutation<{ url: string }, { groupId: string; uri: string; fileName?: string; mimeType?: string }>({
+      query: ({ groupId, uri, fileName, mimeType }) => {
+        const formData = new FormData();
+        formData.append('image', {
+          uri,
+          name: fileName ?? 'group-avatar.jpg',
+          type: mimeType ?? 'image/jpeg',
+        } as unknown as Blob);
+        return { url: `/groups/${groupId}/avatar`, method: 'POST', body: formData };
+      },
+      invalidatesTags: (_r, _e, { groupId }) => [{ type: 'Group', id: groupId }, 'Group'],
+    }),
   }),
 });
 
@@ -102,4 +115,5 @@ export const {
   useGetGroupMessagesQuery,
   useSendGroupMessageMutation,
   useUploadChatImageMutation,
+  useUploadGroupAvatarMutation,
 } = groupsApi;

@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import { GroupMember } from '../../types/models';
 import Avatar from '../common/Avatar';
 import { Colors } from '../../constants/colors';
+import { resolveAssetUrl } from '../../utils/format';
 
 interface Props {
   invitations: GroupMember[];
@@ -68,7 +69,7 @@ function InvitationPromptModal({ invitations, onAccept, onDecline, onDismiss }: 
           )}
 
           <View style={styles.body}>
-            <Avatar uri={inv.group?.avatarUrl} name={inv.group?.name} size={80} />
+            <Avatar uri={resolveAssetUrl(inv.group?.avatarUrl)} name={inv.group?.name} size={80} />
             <Text style={styles.label}>{t('invitationPrompt.label')}</Text>
             <Text style={styles.groupName} numberOfLines={2}>
               {inv.group?.name}

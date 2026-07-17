@@ -112,36 +112,41 @@ function MessageBubble({
         </View>
       )}
       <View style={styles.bubbleCol}>
-        {!isMine && showSender && (
-          <Text style={styles.senderName}>{msg.senderName}</Text>
-        )}
         {msg.bill ? (
-          <TouchableOpacity
-            style={styles.receiptCard}
-            activeOpacity={0.8}
-            onPress={() => onOpenReceipt(msg.bill!.id)}>
-            <View style={styles.receiptIcon}>
-              <Text style={styles.receiptIconText}>🧾</Text>
-            </View>
-            <View style={styles.receiptInfo}>
-              <Text style={styles.receiptTitle} numberOfLines={1}>
-                {msg.bill.title ?? t('chat.receiptDefaultTitle')}
-              </Text>
-              <Text style={styles.receiptMeta}>
-                {msg.bill.itemCount > 0
-                  ? t('chat.receiptItemCount', { count: msg.bill.itemCount })
-                  : t('chat.receiptNoItemsYet')}
-              </Text>
-              <Text style={styles.receiptCta}>{t('chat.receiptOpenCta')}</Text>
-            </View>
-            <Text style={styles.receiptAmount}>{formatCurrency(Number(msg.bill.amount), msg.bill.currency)}</Text>
-          </TouchableOpacity>
+          <>
+            {!isMine && showSender && (
+              <Text style={styles.senderName}>{msg.senderName}</Text>
+            )}
+            <TouchableOpacity
+              style={styles.receiptCard}
+              activeOpacity={0.8}
+              onPress={() => onOpenReceipt(msg.bill!.id)}>
+              <View style={styles.receiptIcon}>
+                <Text style={styles.receiptIconText}>🧾</Text>
+              </View>
+              <View style={styles.receiptInfo}>
+                <Text style={styles.receiptTitle} numberOfLines={1}>
+                  {msg.bill.title ?? t('chat.receiptDefaultTitle')}
+                </Text>
+                <Text style={styles.receiptMeta}>
+                  {msg.bill.itemCount > 0
+                    ? t('chat.receiptItemCount', { count: msg.bill.itemCount })
+                    : t('chat.receiptNoItemsYet')}
+                </Text>
+                <Text style={styles.receiptCta}>{t('chat.receiptOpenCta')}</Text>
+              </View>
+              <Text style={styles.receiptAmount}>{formatCurrency(Number(msg.bill.amount), msg.bill.currency)}</Text>
+            </TouchableOpacity>
+          </>
         ) : (
           <View style={[
             styles.bubble,
             msg.imageUrl && styles.bubbleImageWrap,
             isMine ? styles.bubbleMine : styles.bubbleTheirs,
           ]}>
+            {!isMine && showSender && (
+              <Text style={styles.senderNameInBubble}>{msg.senderName}</Text>
+            )}
             {msg.imageUrl && (
               <Image source={{ uri: msg.imageUrl }} style={styles.bubbleImage} resizeMode="cover" />
             )}
@@ -388,6 +393,7 @@ const styles = StyleSheet.create({
   avatarSpacer: { width: 34, height: 34 },
   bubbleCol: { flex: 1 },
   senderName: { fontSize: 11, fontWeight: '700', color: Colors.primary, marginBottom: 3, marginLeft: 4 },
+  senderNameInBubble: { fontSize: 12, fontWeight: '700', color: Colors.primary, marginBottom: 2 },
   bubble: {
     maxWidth: '80%',
     alignSelf: 'flex-start',

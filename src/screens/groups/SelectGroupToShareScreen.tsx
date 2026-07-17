@@ -15,6 +15,7 @@ import { useGetGroupsQuery } from '../../store/api/groupsApi';
 import { Group } from '../../types/models';
 import Avatar from '../../components/common/Avatar';
 import { Colors } from '../../constants/colors';
+import { resolveAssetUrl } from '../../utils/format';
 
 type Props = AppScreenProps<'SelectGroupToShare'>;
 
@@ -52,7 +53,7 @@ function SelectGroupToShareScreen({ route, navigation }: Props) {
         keyExtractor={(g) => g.id}
         renderItem={({ item }) => (
           <TouchableOpacity style={styles.row} onPress={() => handlePress(item)} activeOpacity={0.75}>
-            <Avatar uri={item.avatarUrl} name={item.name} size={44} />
+            <Avatar uri={resolveAssetUrl(item.avatarUrl)} name={item.name} size={44} />
             <Text style={styles.rowName} numberOfLines={1}>{item.name}</Text>
             <Text style={styles.chevron}>›</Text>
           </TouchableOpacity>

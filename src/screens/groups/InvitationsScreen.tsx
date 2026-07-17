@@ -20,6 +20,7 @@ import {
 import { GroupMember } from '../../types/models';
 import Avatar from '../../components/common/Avatar';
 import { Colors } from '../../constants/colors';
+import { resolveAssetUrl } from '../../utils/format';
 
 type Props = AppScreenProps<'Invitations'>;
 
@@ -38,7 +39,7 @@ function InvitationCard({
   const group = invitation.group;
   return (
     <View style={styles.card}>
-      <Avatar uri={group?.avatarUrl} name={group?.name} size={48} />
+      <Avatar uri={resolveAssetUrl(group?.avatarUrl)} name={group?.name} size={48} />
       <View style={styles.cardBody}>
         <Text style={styles.groupName} numberOfLines={1}>{group?.name ?? '...'}</Text>
         <Text style={styles.cardSub}>{t('invitations.invitedToJoin')}</Text>

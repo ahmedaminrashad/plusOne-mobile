@@ -1,4 +1,14 @@
 import i18n from '../i18n';
+import { ASSET_BASE_URL } from '../config';
+
+// Server-stored asset paths (e.g. group avatars) are relative — resolve them against
+// the API host. Already-absolute URLs (http/https) and local picker URIs some callers
+// pass for an in-progress preview are returned untouched.
+export function resolveAssetUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  if (/^(https?:|file:|content:)/.test(url)) return url;
+  return `${ASSET_BASE_URL}${url}`;
+}
 
 function locale(): string {
   return i18n.language === 'en' ? 'en-US' : 'ar-EG';

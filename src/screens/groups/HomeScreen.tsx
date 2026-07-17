@@ -24,6 +24,7 @@ import Button from '../../components/common/Button';
 import InvitationPromptModal from '../../components/groups/InvitationPromptModal';
 import { Colors } from '../../constants/colors';
 import { useGetMeQuery } from '../../store/api/usersApi';
+import { resolveAssetUrl } from '../../utils/format';
 
 type Props = AppScreenProps<'Home'>;
 
@@ -42,7 +43,7 @@ function GroupCard({ group, onPress }: { group: Group; onPress: () => void }) {
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.75}>
       <View style={[styles.cardAccent, { backgroundColor: accent }]} />
-      <Avatar uri={group.avatarUrl} name={group.name} size={46} />
+      <Avatar uri={resolveAssetUrl(group.avatarUrl)} name={group.name} size={46} />
       <View style={styles.cardInfo}>
         <Text style={styles.cardName} numberOfLines={1}>{group.name}</Text>
         <Text style={styles.cardMeta}>{t('home.activeMembersCount', { count: activeMembers })}</Text>

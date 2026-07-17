@@ -15,7 +15,7 @@ import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import Avatar from '../../components/common/Avatar';
 import { Colors } from '../../constants/colors';
-import { useCreateGroupMutation } from '../../store/api/groupsApi';
+import { useCreateGroupMutation, useUploadGroupAvatarMutation } from '../../store/api/groupsApi';
 import { GroupCategory } from '../../types/models';
 
 type Props = AppScreenProps<'CreateGroup'>;
@@ -37,6 +37,7 @@ function CreateGroupScreen({ navigation }: Props) {
   const [nameError, setNameError] = useState('');
 
   const [createGroup, { isLoading }] = useCreateGroupMutation();
+  const [uploadGroupAvatar] = useUploadGroupAvatarMutation();
 
   const handlePickPhoto = useCallback(() => {
     launchImageLibrary({ mediaType: 'photo', quality: 0.8 }, (res) => {
@@ -51,12 +52,18 @@ function CreateGroupScreen({ navigation }: Props) {
     setNameError('');
 
     try {
-      const group = await createGroup({ name: trimmed, category, avatarUrl: avatarUri }).unwrap();
+      const group = await createGroup({ name: trimmed, category }).unwrap();
+      // avatarUri is a local device URI (from the image picker) — it only resolves
+      // on this device, so it must be uploaded and turned into a server URL rather
+      // than stored as-is, or the photo would be broken for every other member.
+      if (avatarUri) {
+        await uploadGroupAvatar({ groupId: group.id, uri: avatarUri }).catch(() => {});
+      }
       navigation.replace('GroupDetail', { groupId: group.id, groupName: group.name });
     } catch {
       Alert.alert(t('common:error'), t('createGroup.createError'));
     }
-  }, [name, category, avatarUri, createGroup, navigation, t]);
+  }, [name, category, avatarUri, createGroup, uploadGroupAvatar, navigation, t]);
 
   return (
     <SafeAreaView style={styles.container}>
