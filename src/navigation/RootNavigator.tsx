@@ -72,7 +72,15 @@ export default function RootNavigator() {
     if (data.type === 'invitation') {
       nav.navigate('Groups', { screen: 'Invitations' });
     } else if (data.type === 'member_joined' && data.groupId) {
-      nav.navigate('Groups', { screen: 'GroupDetail', params: { groupId: data.groupId, groupName: '' } });
+      nav.navigate('Groups', {
+        screen: 'GroupDetail',
+        params: { groupId: data.groupId, groupName: data.groupName ?? '' },
+      });
+    } else if (data.type === 'chat_message' && data.groupId) {
+      nav.navigate('Groups', {
+        screen: 'GroupDetail',
+        params: { groupId: data.groupId, groupName: data.groupName ?? '' },
+      });
     } else if (data.type === 'share_assigned' && data.groupId && data.billId) {
       nav.navigate('Groups', {
         screen: 'ViewReceipt',
