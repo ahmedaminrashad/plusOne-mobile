@@ -18,6 +18,7 @@ import {
   onForegroundMessage,
 } from '../services/notifications';
 import { consumePendingSharedText, consumePendingSharedImage } from '../services/shareIntent';
+import { isChatGroupActive } from '../services/activeChat';
 import { extractInstaPayIdentifierFromSharedText } from '../utils/instapay';
 import { TabParamList } from '../types/navigation';
 
@@ -92,6 +93,10 @@ export default function RootNavigator() {
   // surface it ourselves via an alert with a "View" action that reuses the same navigation.
   useEffect(() => {
     const unsub = onForegroundMessage((notification, data) => {
+      // The chat itself already reflects new messages via polling — don't also
+      // pop an alert over the same conversation the user is currently looking at.
+      if (data.type === 'chat_message' && data.groupId && isChatGroupActive(data.groupId)) return;
+
       Alert.alert(
         notification.title ?? t('rootNavigator.newNotificationTitle'),
         notification.body ?? '',

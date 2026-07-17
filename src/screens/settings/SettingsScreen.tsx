@@ -15,7 +15,8 @@ import { SettingsScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
 import Avatar from '../../components/common/Avatar';
 import { useGetMeQuery, useSaveLanguageMutation } from '../../store/api/usersApi';
-import { useAppDispatch } from '../../hooks/useAppDispatch';
+import { useLogoutMutation } from '../../store/api/authApi';
+import { useAppDispatch, useAppSelector } from '../../hooks/useAppDispatch';
 import { clearAuth } from '../../store/slices/authSlice';
 import { baseApi } from '../../store/api/baseApi';
 import { SecureStorage } from '../../utils/storage';
@@ -65,6 +66,8 @@ function SettingsScreen({ navigation }: Props) {
   const [languagePickerVisible, setLanguagePickerVisible] = useState(false);
   const currentLanguage = i18n.language as AppLanguage;
   const [saveLanguage] = useSaveLanguageMutation();
+  const [logout] = useLogoutMutation();
+  const refreshToken = useAppSelector((s) => s.auth.refreshToken);
 
   // Keep the backend in sync with the client's language — needed so push notifications
   // (generated server-side) are sent in the right language. Runs once per screen visit,
@@ -89,13 +92,14 @@ function SettingsScreen({ navigation }: Props) {
         text: t('settings.logoutConfirmButton'),
         style: 'destructive',
         onPress: async () => {
+          if (refreshToken) await logout({ refreshToken }).catch(() => {});
           await SecureStorage.clearTokens();
           dispatch(baseApi.util.resetApiState());
           dispatch(clearAuth());
         },
       },
     ]);
-  }, [dispatch, t]);
+  }, [dispatch, t, logout, refreshToken]);
 
   return (
     <SafeAreaView style={styles.container}>

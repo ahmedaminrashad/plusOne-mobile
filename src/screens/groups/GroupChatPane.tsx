@@ -13,8 +13,10 @@ import {
 } from 'react-native';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useFocusEffect } from '@react-navigation/native';
 import { Colors } from '../../constants/colors';
 import { ASSET_BASE_URL } from '../../config';
+import { setActiveChatGroupId } from '../../services/activeChat';
 import Avatar from '../../components/common/Avatar';
 import { useGetMeQuery } from '../../store/api/usersApi';
 import { useGetGroupMessagesQuery, useSendGroupMessageMutation, useUploadChatImageMutation } from '../../store/api/groupsApi';
@@ -180,6 +182,13 @@ function GroupChatPane({ groupId, groupName, navigation, sharedImageUri, onShare
   const [loadingMore, setLoadingMore] = useState(false);
   const listRef = useRef<FlatList>(null);
   const keyboardInset = useKeyboardInsetHeight();
+
+  useFocusEffect(
+    useCallback(() => {
+      setActiveChatGroupId(groupId);
+      return () => setActiveChatGroupId(null);
+    }, [groupId]),
+  );
 
   const {
     data: messages,
