@@ -1,12 +1,13 @@
 # Builds a standalone, installable release APK with a given backend API URL baked in.
-# Usage: powershell -ExecutionPolicy Bypass -File scripts/build-apk.ps1 -ApiUrl https://f625-41-43-7-53.ngrok-free.app
+# Usage: powershell -ExecutionPolicy Bypass -File scripts/build-apk.ps1
+#        powershell -ExecutionPolicy Bypass -File scripts/build-apk.ps1 -ApiUrl https://f625-41-43-7-53.ngrok-free.app
 #
 # Unlike `npx react-native run-android`, the release APK embeds the JS bundle,
 # so the resulting file can be copied/installed on any device without Metro running.
+# Defaults to the production API — pass -ApiUrl to point at a tunnel/local backend instead.
 
 param(
-    [Parameter(Mandatory = $true)]
-    [string]$ApiUrl
+    [string]$ApiUrl = "https://api.plusone-app.com"
 )
 
 $ErrorActionPreference = "Stop"
