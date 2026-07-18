@@ -139,6 +139,7 @@ function HomeScreen({ navigation }: Props) {
         </View>
       </View>
 
+
       {isError && (
         <Text style={styles.errorBanner}>{t('home.loadError')}</Text>
       )}
