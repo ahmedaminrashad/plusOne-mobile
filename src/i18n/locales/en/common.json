@@ -21,5 +21,8 @@
   "currencyEGP": "EGP",
   "now": "Now",
   "minutesAgo": "{{count}}m ago",
-  "hoursAgo": "{{count}}h ago"
+  "hoursAgo": "{{count}}h ago",
+  "comingSoon": {
+    "message": "This is on its way — check back soon."
+  }
 }

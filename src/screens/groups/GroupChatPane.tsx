@@ -281,7 +281,7 @@ function GroupChatPane({ groupId, groupName, navigation, sharedImageUri, onShare
   }, [doSend, doSendImage]);
 
   const handleOpenReceipt = useCallback((billId: string) => {
-    navigation.navigate('ViewReceipt', { groupId, groupName, billId });
+    navigation.navigate('BillStatus', { groupId, groupName, billId });
   }, [navigation, groupId, groupName]);
 
   if (isLoading) {

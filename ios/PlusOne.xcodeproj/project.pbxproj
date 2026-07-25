@@ -16,6 +16,30 @@
 		AA00000000000000000000B3 /* PlusOneShareExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000A2 /* PlusOneShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		AA00000000000000000000B6 /* ShareIntentModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000B5 /* ShareIntentModule.swift */; };
 		AA00000000000000000000B8 /* ShareIntentModule.m in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000B7 /* ShareIntentModule.m */; };
+		3D7C039861E94766B4712282 /* FigtreeLight-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 944AF53C82634278BE39AD78 /* FigtreeLight-Medium.ttf */; };
+		383039575A1A497FAC08BFD2 /* FigtreeLight-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 944AF53C82634278BE39AD78 /* FigtreeLight-Medium.ttf */; };
+		B75CC4E930424EA9BB1F0648 /* FigtreeLight-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2F85DC8A8182412FAA985992 /* FigtreeLight-Regular.ttf */; };
+		FC115F5EA14D4B8DB8A5B46A /* FigtreeLight-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2F85DC8A8182412FAA985992 /* FigtreeLight-Regular.ttf */; };
+		58EE84B98D2F44D7AE073FC5 /* FigtreeLight-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DBD144A95AC64F5AAF2FD0A0 /* FigtreeLight-SemiBold.ttf */; };
+		E59162A8D5FC47859BDED37E /* FigtreeLight-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DBD144A95AC64F5AAF2FD0A0 /* FigtreeLight-SemiBold.ttf */; };
+		7054AC0214E14792B04A1477 /* IBMPlexSansArabic-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C6CD80CB82DC4CC9BA0799A4 /* IBMPlexSansArabic-Bold.ttf */; };
+		24D6DD3D3F1E498E9066EB33 /* IBMPlexSansArabic-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C6CD80CB82DC4CC9BA0799A4 /* IBMPlexSansArabic-Bold.ttf */; };
+		F111D4702DB544C8A1B4223B /* IBMPlexSansArabic-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A750A155DD4B469CA640CD42 /* IBMPlexSansArabic-Medium.ttf */; };
+		E0BA4FA2DB1E489089567176 /* IBMPlexSansArabic-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A750A155DD4B469CA640CD42 /* IBMPlexSansArabic-Medium.ttf */; };
+		5490F83CE1944487B5CAAF8F /* IBMPlexSansArabic-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1E50E026333E4E02A86DDAF7 /* IBMPlexSansArabic-Regular.ttf */; };
+		A2BD3C3DCD794EB3B9B4A3D2 /* IBMPlexSansArabic-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1E50E026333E4E02A86DDAF7 /* IBMPlexSansArabic-Regular.ttf */; };
+		577181B0D6A949CA93FEDC4E /* IBMPlexSansArabic-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2A2AC036A09E4F30B0A898A1 /* IBMPlexSansArabic-SemiBold.ttf */; };
+		22EA6B5F49A245AAB63A33F7 /* IBMPlexSansArabic-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2A2AC036A09E4F30B0A898A1 /* IBMPlexSansArabic-SemiBold.ttf */; };
+		F8EF007F5C6141DEB4D4A3BF /* Sora-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DFEA0220E5104BA8B5399FC6 /* Sora-Bold.ttf */; };
+		F94F6D789657479E997C95AB /* Sora-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DFEA0220E5104BA8B5399FC6 /* Sora-Bold.ttf */; };
+		E26B3A33783A4B118DCE2EE1 /* Sora-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 299DC16921CA420D867ABDB4 /* Sora-ExtraBold.ttf */; };
+		A2F95513E9E04A88A63E5B89 /* Sora-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 299DC16921CA420D867ABDB4 /* Sora-ExtraBold.ttf */; };
+		D91D23E21D3B4B328A3AF71B /* Sora-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E06DA9B2A9944D9A9F89D88E /* Sora-SemiBold.ttf */; };
+		64B3BF2837274D4A9628F685 /* Sora-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E06DA9B2A9944D9A9F89D88E /* Sora-SemiBold.ttf */; };
+		A92440A83A654548B978FA7F /* SplineSansMono-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 16E0BF00BEAC4C1FAEA27AB5 /* SplineSansMono-Medium.ttf */; };
+		5F970A90381443DD9AAC7550 /* SplineSansMono-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 16E0BF00BEAC4C1FAEA27AB5 /* SplineSansMono-Medium.ttf */; };
+		0970780C5CCC4CF296745C46 /* SplineSansMono-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 9DD4454010884D0291428CAA /* SplineSansMono-Regular.ttf */; };
+		27E99BFAEB3A4608B5FC9DA5 /* SplineSansMono-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 9DD4454010884D0291428CAA /* SplineSansMono-Regular.ttf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -37,6 +61,18 @@
 		AA00000000000000000000B4 /* PlusOne.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = PlusOne.entitlements; path = PlusOne/PlusOne.entitlements; sourceTree = "<group>"; };
 		AA00000000000000000000B5 /* ShareIntentModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ShareIntentModule.swift; path = PlusOne/ShareIntentModule.swift; sourceTree = "<group>"; };
 		AA00000000000000000000B7 /* ShareIntentModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = ShareIntentModule.m; path = PlusOne/ShareIntentModule.m; sourceTree = "<group>"; };
+		944AF53C82634278BE39AD78 /* FigtreeLight-Medium.ttf */ = {isa = PBXFileReference; name = "FigtreeLight-Medium.ttf"; path = "../assets/fonts/FigtreeLight-Medium.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		2F85DC8A8182412FAA985992 /* FigtreeLight-Regular.ttf */ = {isa = PBXFileReference; name = "FigtreeLight-Regular.ttf"; path = "../assets/fonts/FigtreeLight-Regular.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		DBD144A95AC64F5AAF2FD0A0 /* FigtreeLight-SemiBold.ttf */ = {isa = PBXFileReference; name = "FigtreeLight-SemiBold.ttf"; path = "../assets/fonts/FigtreeLight-SemiBold.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		C6CD80CB82DC4CC9BA0799A4 /* IBMPlexSansArabic-Bold.ttf */ = {isa = PBXFileReference; name = "IBMPlexSansArabic-Bold.ttf"; path = "../assets/fonts/IBMPlexSansArabic-Bold.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		A750A155DD4B469CA640CD42 /* IBMPlexSansArabic-Medium.ttf */ = {isa = PBXFileReference; name = "IBMPlexSansArabic-Medium.ttf"; path = "../assets/fonts/IBMPlexSansArabic-Medium.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		1E50E026333E4E02A86DDAF7 /* IBMPlexSansArabic-Regular.ttf */ = {isa = PBXFileReference; name = "IBMPlexSansArabic-Regular.ttf"; path = "../assets/fonts/IBMPlexSansArabic-Regular.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		2A2AC036A09E4F30B0A898A1 /* IBMPlexSansArabic-SemiBold.ttf */ = {isa = PBXFileReference; name = "IBMPlexSansArabic-SemiBold.ttf"; path = "../assets/fonts/IBMPlexSansArabic-SemiBold.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		DFEA0220E5104BA8B5399FC6 /* Sora-Bold.ttf */ = {isa = PBXFileReference; name = "Sora-Bold.ttf"; path = "../assets/fonts/Sora-Bold.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		299DC16921CA420D867ABDB4 /* Sora-ExtraBold.ttf */ = {isa = PBXFileReference; name = "Sora-ExtraBold.ttf"; path = "../assets/fonts/Sora-ExtraBold.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		E06DA9B2A9944D9A9F89D88E /* Sora-SemiBold.ttf */ = {isa = PBXFileReference; name = "Sora-SemiBold.ttf"; path = "../assets/fonts/Sora-SemiBold.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		16E0BF00BEAC4C1FAEA27AB5 /* SplineSansMono-Medium.ttf */ = {isa = PBXFileReference; name = "SplineSansMono-Medium.ttf"; path = "../assets/fonts/SplineSansMono-Medium.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		9DD4454010884D0291428CAA /* SplineSansMono-Regular.ttf */ = {isa = PBXFileReference; name = "SplineSansMono-Regular.ttf"; path = "../assets/fonts/SplineSansMono-Regular.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXContainerItemProxy section */
@@ -133,6 +169,7 @@
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				BBD78D7AC51CEA395F1C20DB /* Pods */,
+				A5FD539D70DC4EE486815BBF /* Resources */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -156,6 +193,26 @@
 			);
 			path = Pods;
 			sourceTree = "<group>";
+		};
+		A5FD539D70DC4EE486815BBF /* Resources */ = {
+			isa = "PBXGroup";
+			children = (
+				944AF53C82634278BE39AD78 /* FigtreeLight-Medium.ttf */,
+				2F85DC8A8182412FAA985992 /* FigtreeLight-Regular.ttf */,
+				DBD144A95AC64F5AAF2FD0A0 /* FigtreeLight-SemiBold.ttf */,
+				C6CD80CB82DC4CC9BA0799A4 /* IBMPlexSansArabic-Bold.ttf */,
+				A750A155DD4B469CA640CD42 /* IBMPlexSansArabic-Medium.ttf */,
+				1E50E026333E4E02A86DDAF7 /* IBMPlexSansArabic-Regular.ttf */,
+				2A2AC036A09E4F30B0A898A1 /* IBMPlexSansArabic-SemiBold.ttf */,
+				DFEA0220E5104BA8B5399FC6 /* Sora-Bold.ttf */,
+				299DC16921CA420D867ABDB4 /* Sora-ExtraBold.ttf */,
+				E06DA9B2A9944D9A9F89D88E /* Sora-SemiBold.ttf */,
+				16E0BF00BEAC4C1FAEA27AB5 /* SplineSansMono-Medium.ttf */,
+				9DD4454010884D0291428CAA /* SplineSansMono-Regular.ttf */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+			path = "";
 		};
 /* End PBXGroup section */
 
@@ -242,6 +299,18 @@
 			files = (
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
+				3D7C039861E94766B4712282 /* FigtreeLight-Medium.ttf in Resources */,
+				B75CC4E930424EA9BB1F0648 /* FigtreeLight-Regular.ttf in Resources */,
+				58EE84B98D2F44D7AE073FC5 /* FigtreeLight-SemiBold.ttf in Resources */,
+				7054AC0214E14792B04A1477 /* IBMPlexSansArabic-Bold.ttf in Resources */,
+				F111D4702DB544C8A1B4223B /* IBMPlexSansArabic-Medium.ttf in Resources */,
+				5490F83CE1944487B5CAAF8F /* IBMPlexSansArabic-Regular.ttf in Resources */,
+				577181B0D6A949CA93FEDC4E /* IBMPlexSansArabic-SemiBold.ttf in Resources */,
+				F8EF007F5C6141DEB4D4A3BF /* Sora-Bold.ttf in Resources */,
+				E26B3A33783A4B118DCE2EE1 /* Sora-ExtraBold.ttf in Resources */,
+				D91D23E21D3B4B328A3AF71B /* Sora-SemiBold.ttf in Resources */,
+				A92440A83A654548B978FA7F /* SplineSansMono-Medium.ttf in Resources */,
+				0970780C5CCC4CF296745C46 /* SplineSansMono-Regular.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -250,6 +319,18 @@
 			buildActionMask = 2147483647;
 			files = (
 				AA00000000000000000000AD /* MainInterface.storyboard in Resources */,
+				383039575A1A497FAC08BFD2 /* FigtreeLight-Medium.ttf in Resources */,
+				FC115F5EA14D4B8DB8A5B46A /* FigtreeLight-Regular.ttf in Resources */,
+				E59162A8D5FC47859BDED37E /* FigtreeLight-SemiBold.ttf in Resources */,
+				24D6DD3D3F1E498E9066EB33 /* IBMPlexSansArabic-Bold.ttf in Resources */,
+				E0BA4FA2DB1E489089567176 /* IBMPlexSansArabic-Medium.ttf in Resources */,
+				A2BD3C3DCD794EB3B9B4A3D2 /* IBMPlexSansArabic-Regular.ttf in Resources */,
+				22EA6B5F49A245AAB63A33F7 /* IBMPlexSansArabic-SemiBold.ttf in Resources */,
+				F94F6D789657479E997C95AB /* Sora-Bold.ttf in Resources */,
+				A2F95513E9E04A88A63E5B89 /* Sora-ExtraBold.ttf in Resources */,
+				64B3BF2837274D4A9628F685 /* Sora-SemiBold.ttf in Resources */,
+				5F970A90381443DD9AAC7550 /* SplineSansMono-Medium.ttf in Resources */,
+				27E99BFAEB3A4608B5FC9DA5 /* SplineSansMono-Regular.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

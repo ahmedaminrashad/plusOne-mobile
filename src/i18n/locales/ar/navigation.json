@@ -6,13 +6,27 @@
     "addBillTitle": "إضافة إيصال",
     "qrScannerTitle": "مسح QR",
     "ocrCaptureTitle": "مسح إيصال ورقي",
-    "viewReceiptTitle": "الإيصال",
     "editBillItemsTitle": "تعديل الأصناف",
-    "selectGroupToShareTitle": "إرسال إلى مجموعة"
+    "selectGroupToShareTitle": "إرسال إلى مجموعة",
+    "allGroupsTitle": "مجموعاتي",
+    "settleUpTitle": "تسوية الحساب",
+    "myCircleTitle": "دائرتي",
+    "remindTitle": "إرسال تذكيرات",
+    "myLedgerTitle": "حسابي",
+    "billsTabTitle": "الفواتير",
+    "activityTabTitle": "النشاط"
   },
   "tabBar": {
-    "groupsLabel": "مجموعاتي",
-    "settingsLabel": "الإعدادات"
+    "homeLabel": "الرئيسية",
+    "billsLabel": "الفواتير",
+    "activityLabel": "النشاط",
+    "profileLabel": "حسابي"
+  },
+  "quickAdd": {
+    "newGroup": "مجموعة جديدة",
+    "newGroupSubtitle": "ابدأ حساب مشترك",
+    "addPlusOne": "إضافة +1",
+    "addPlusOneSubtitle": "ضيف حد لدائرتك"
   },
   "rootNavigator": {
     "newNotificationTitle": "إشعار جديد",

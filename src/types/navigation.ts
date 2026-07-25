@@ -3,7 +3,7 @@ import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { PrefilledBillData } from './models';
 
 export type AuthStackParamList = {
-  Welcome: undefined;
+  Onboarding: undefined;
   PhoneEntry: undefined;
   OTPVerification: { phone: string };
   ProfileSetup: undefined;
@@ -17,12 +17,19 @@ export type AppStackParamList = {
   InviteMembers: { groupId: string };
   Chat: { groupId: string; groupName: string; sharedImageUri?: string };
   SelectGroupToShare: { imageUri: string };
+  AddBillChooser: { groupId: string; groupName: string };
   AddBill: { groupId: string; groupName: string; prefilledData?: PrefilledBillData };
   QRScanner: { groupId: string; groupName: string };
   OCRCapture: { groupId: string; groupName: string };
-  ReceiptSplit: { groupId: string; groupName: string; receiptJson: string };
-  ViewReceipt: { groupId: string; groupName: string; billId: string };
+  AssignItems: { groupId: string; groupName: string; receiptJson: string };
+  BillStatus: { groupId: string; groupName: string; billId: string };
+  PayShare: { groupId: string; groupName: string; billId: string };
   EditBillItems: { groupId: string; groupName: string; billId: string };
+  AllGroups: undefined;
+  SettleUp: undefined;
+  MyCircle: undefined;
+  Remind: undefined;
+  MyLedger: undefined;
 };
 
 export type SettingsStackParamList = {
@@ -33,8 +40,10 @@ export type SettingsStackParamList = {
 };
 
 export type TabParamList = {
-  Groups: undefined;
-  NewGroup: undefined;
+  Home: undefined;
+  Bills: undefined;
+  QuickAdd: undefined;
+  Activity: undefined;
   SettingsTab: undefined;
 };
 

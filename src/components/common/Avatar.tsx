@@ -1,29 +1,25 @@
 import React, { memo } from 'react';
-import { View, Image, Text, StyleSheet, ViewStyle, ImageStyle } from 'react-native';
-import { Colors } from '../../constants/colors';
+import { View, Image, Text, StyleSheet, StyleProp, ViewStyle, ImageStyle } from 'react-native';
+import { Colors, getAvatarColor } from '../../constants/colors';
+import { useTypography } from '../../hooks/useTypography';
 
 interface Props {
   uri?: string | null;
   name?: string | null;
+  seed?: string | null;
   size?: number;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
   imageStyle?: ImageStyle;
 }
 
-function Avatar({ uri, name, size = 44, style, imageStyle }: Props) {
-  const initials = name
-    ? name
-        .split(' ')
-        .map((w) => w[0])
-        .slice(0, 2)
-        .join('')
-        .toUpperCase()
-    : '?';
+function Avatar({ uri, name, seed, size = 44, style, imageStyle }: Props) {
+  const initials = name ? name.trim()[0]?.toUpperCase() ?? '?' : '?';
 
+  const typography = useTypography();
   const fontSize = size * 0.38;
   const containerStyle = [
     styles.placeholder,
-    { width: size, height: size, borderRadius: size / 2 },
+    { width: size, height: size, borderRadius: size / 2, backgroundColor: getAvatarColor(seed ?? name) },
     style,
   ];
 
@@ -35,7 +31,7 @@ function Avatar({ uri, name, size = 44, style, imageStyle }: Props) {
           style={[styles.image, { width: size, height: size, borderRadius: size / 2 } as ImageStyle, imageStyle]}
         />
       ) : (
-        <Text style={[styles.initials, { fontSize }]}>{initials}</Text>
+        <Text style={[typography.labelLarge, styles.initials, { fontSize }]}>{initials}</Text>
       )}
     </View>
   );
@@ -50,5 +46,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  initials: { color: Colors.textOnPrimary, fontWeight: '600' },
+  initials: { color: Colors.textOnPrimary },
 });

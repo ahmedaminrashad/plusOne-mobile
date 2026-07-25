@@ -1,4 +1,16 @@
 {
+  "addBillChooser": {
+    "title": "Add a bill",
+    "subtitle": "to {{groupName}}",
+    "scanQrTitle": "Scan bill QR",
+    "scanQrSubtitle": "E-receipt loads itemized, instantly",
+    "scanQrBadge": "Fastest",
+    "scanReceiptTitle": "Photo the receipt",
+    "scanReceiptSubtitle": "We read it (OCR) — you confirm every line",
+    "manualTitle": "Enter manually",
+    "manualSubtitle": "Itemized, or just the total",
+    "footer": "Whichever way in — splitting works the same after."
+  },
   "createBill": {
     "venueLabel": "Restaurant / Venue",
     "venuePlaceholder": "e.g. Zooba Zamalek (optional)",
@@ -35,6 +47,13 @@
     "amountMustBePositive": "The amount must be greater than zero.",
     "saveFailed": "Couldn't save the bill, please try again later."
   },
+  "assignItems": {
+    "title": "Who took what?",
+    "paidByLabel": "Paid by",
+    "modeByItem": "By item",
+    "modeEqually": "Equally",
+    "saveButton": "Save & request payments"
+  },
   "receiptSplit": {
     "defaultMemberName": "User",
     "unclaimedNote": "No one has been assigned to it yet",
@@ -57,6 +76,31 @@
     "paymentSummaryTitle": "Payment summary",
     "payerQuestionLabel": "Who paid the receipt?",
     "saveButton": "Save receipt"
+  },
+  "billStatus": {
+    "paidCount": "{{paid}}/{{total}} paid",
+    "totalBillLabel": "Total bill",
+    "collectedOf": "{{collected}} collected of {{owed}} owed to {{payer}}",
+    "paidBadge": "Paid ✓",
+    "pendingBadge": "Pending",
+    "linkOpenedBadge": "Link opened",
+    "instaPayMethod": "InstaPay · {{time}}",
+    "cashConfirmedBy": "Cash · confirmed by {{name}}",
+    "payLinkSentBySms": "Pay link sent by SMS",
+    "remindButton": "Remind ({{count}})",
+    "markReceivedButton": "Mark received",
+    "confirmFailed": "Couldn't confirm the payment, please try again"
+  },
+  "payShare": {
+    "title": "Pay your share",
+    "toPayerVenue": "to {{payer}} · {{venue}}",
+    "splitEquallyBetween": "{{currency}} · split equally between {{count}}",
+    "payWithInstaPay": "Pay with InstaPay",
+    "iPaidInCash": "I paid in cash",
+    "cashConfirmTitle": "Mark as paid in cash?",
+    "cashConfirmMessage": "This lets {{payer}} know you paid in cash — they'll confirm before it counts as settled.",
+    "cashNote": "Cash payments are confirmed by {{payer}} before they count as settled.",
+    "instaPayNote": "InstaPay goes directly to {{payer}} — +one never holds funds."
   },
   "viewReceipt": {
     "captureMethodQr": "QR scan",
@@ -136,8 +180,8 @@
     "processingText": "Processing receipt...",
     "processButton": "Process receipt",
     "retakePhotoButton": "Retake photo",
-    "guideHint": "Place the receipt inside the frame",
-    "captureTitle": "Scan a paper receipt",
+    "guideHint": "Fit the whole receipt · avoid shadows",
+    "captureTitle": "Photo the receipt",
     "captureSubtitle": "Take a clear photo of the receipt. The OCR service will automatically extract the items and prices.",
     "captureButton": "📷  Take photo"
   }

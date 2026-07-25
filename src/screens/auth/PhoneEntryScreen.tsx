@@ -2,18 +2,18 @@ import React, { useState, useCallback, memo } from 'react';
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   SafeAreaView,
   KeyboardAvoidingView,
   Platform,
-  TouchableOpacity,
-  Alert,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { AuthScreenProps } from '../../types/navigation';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import { Colors } from '../../constants/colors';
+import { useTypography } from '../../hooks/useTypography';
 import { isValidPhone, formatPhone } from '../../utils/validation';
 import { useSendOtpMutation } from '../../store/api/authApi';
 import { resolveErrorMessage } from '../../utils/errors';
@@ -24,8 +24,9 @@ const COUNTRY_CODE = '+20';
 
 function PhoneEntryScreen({ navigation }: Props) {
   const { t } = useTranslation('auth');
+  const typography = useTypography();
   const [phone, setPhone] = useState('');
-  const [countryCode, setCountryCode] = useState(COUNTRY_CODE);
+  const [countryCode] = useState(COUNTRY_CODE);
   const [error, setError] = useState('');
 
   const [sendOtp, { isLoading }] = useSendOtpMutation();
@@ -53,9 +54,10 @@ function PhoneEntryScreen({ navigation }: Props) {
       <KeyboardAvoidingView
         style={styles.content}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={styles.header}>
-          <Text style={styles.title}>{t('phoneEntry.title')}</Text>
-          <Text style={styles.subtitle}>{t('phoneEntry.subtitle')}</Text>
+        <View style={styles.logoSection}>
+          <Image source={require('../../../assets/PlusOne.png')} style={styles.logo} resizeMode="contain" />
+          <Text style={[typography.headingMedium, styles.appName]}>+one</Text>
+          <Text style={[typography.bodyLarge, styles.tagline]}>{t('phoneEntry.tagline')}</Text>
         </View>
 
         <View style={styles.form}>
@@ -70,17 +72,18 @@ function PhoneEntryScreen({ navigation }: Props) {
             error={error}
             autoFocus
           />
-          <Text style={styles.hint}>
-            {t('phoneEntry.countryCodeHint')}
-          </Text>
+          <Text style={[typography.caption, styles.hint]}>{t('phoneEntry.hint')}</Text>
         </View>
 
-        <Button
-          title={t('common:continue')}
-          onPress={handleContinue}
-          loading={isLoading}
-          disabled={phone.length < 7}
-        />
+        <View style={styles.footer}>
+          <Button
+            title={t('common:continue')}
+            onPress={handleContinue}
+            loading={isLoading}
+            disabled={phone.length < 7}
+          />
+          <Text style={[typography.caption, styles.terms]}>{t('phoneEntry.terms')}</Text>
+        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -91,9 +94,12 @@ export default memo(PhoneEntryScreen);
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   content: { flex: 1, paddingHorizontal: 24, paddingTop: 32, paddingBottom: 24, justifyContent: 'space-between' },
-  header: { gap: 8, marginBottom: 32 },
-  title: { fontSize: 26, fontWeight: '700', color: Colors.text },
-  subtitle: { fontSize: 15, color: Colors.textSecondary, lineHeight: 22 },
-  form: { flex: 1 },
-  hint: { fontSize: 12, color: Colors.textMuted, marginTop: -8, marginBottom: 16 },
+  logoSection: { alignItems: 'center', gap: 8, marginBottom: 24 },
+  logo: { width: 64, height: 64, marginBottom: 4 },
+  appName: { color: Colors.primary },
+  tagline: { color: Colors.textSecondary, textAlign: 'center', marginTop: 4 },
+  form: { flex: 1, justifyContent: 'center' },
+  hint: { color: Colors.textMuted, marginTop: -8 },
+  footer: { gap: 12 },
+  terms: { color: Colors.textMuted, textAlign: 'center' },
 });

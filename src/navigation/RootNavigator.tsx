@@ -70,20 +70,20 @@ export default function RootNavigator() {
     const nav = navRef.current as any;
     if (!nav) return;
     if (data.type === 'invitation') {
-      nav.navigate('Groups', { screen: 'Invitations' });
+      nav.navigate('Home', { screen: 'Invitations' });
     } else if (data.type === 'member_joined' && data.groupId) {
-      nav.navigate('Groups', {
+      nav.navigate('Home', {
         screen: 'GroupDetail',
         params: { groupId: data.groupId, groupName: data.groupName ?? '' },
       });
     } else if (data.type === 'chat_message' && data.groupId) {
-      nav.navigate('Groups', {
+      nav.navigate('Home', {
         screen: 'GroupDetail',
         params: { groupId: data.groupId, groupName: data.groupName ?? '' },
       });
     } else if (data.type === 'share_assigned' && data.groupId && data.billId) {
-      nav.navigate('Groups', {
-        screen: 'ViewReceipt',
+      nav.navigate('Home', {
+        screen: 'PayShare',
         params: { groupId: data.groupId, groupName: data.groupName ?? '', billId: data.billId },
       });
     }
@@ -147,7 +147,7 @@ export default function RootNavigator() {
       consumePendingSharedImage().then((uri) => {
         if (!uri) return;
         const nav = navRef.current as any;
-        nav?.navigate('Groups', { screen: 'SelectGroupToShare', params: { imageUri: uri } });
+        nav?.navigate('Home', { screen: 'SelectGroupToShare', params: { imageUri: uri } });
       });
     };
     checkForSharedImage();

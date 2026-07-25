@@ -1,6 +1,7 @@
 import React, { memo } from 'react';
 import { View, ActivityIndicator, StyleSheet, Modal } from 'react-native';
 import { Colors } from '../../constants/colors';
+import { Radius } from '../../constants/radius';
 
 interface Props {
   visible: boolean;
@@ -30,6 +31,6 @@ const styles = StyleSheet.create({
   box: {
     backgroundColor: Colors.surface,
     padding: 28,
-    borderRadius: 16,
+    borderRadius: Radius.xl,
   },
 });

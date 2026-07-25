@@ -1,0 +1,53 @@
+{
+  "migIndex": 1,
+  "data": [
+    {
+      "path": "assets/fonts/FigtreeLight-Medium.ttf",
+      "sha1": "6556e09a41764a53e021e93f82a873a740dcd008"
+    },
+    {
+      "path": "assets/fonts/FigtreeLight-Regular.ttf",
+      "sha1": "46dae2d91e38d6be717b22bd2de6b0e4071ed3e7"
+    },
+    {
+      "path": "assets/fonts/FigtreeLight-SemiBold.ttf",
+      "sha1": "f16363cccee2c2abb32af11d0a65402550381308"
+    },
+    {
+      "path": "assets/fonts/IBMPlexSansArabic-Bold.ttf",
+      "sha1": "037730e9c284382ff411a083c0987a38421bfbc4"
+    },
+    {
+      "path": "assets/fonts/IBMPlexSansArabic-Medium.ttf",
+      "sha1": "083c618f2d4162ac693ea13a63c64ed27c6c5691"
+    },
+    {
+      "path": "assets/fonts/IBMPlexSansArabic-Regular.ttf",
+      "sha1": "c9c8bb02c8ae2f4836f5adc5ac33abefc195abab"
+    },
+    {
+      "path": "assets/fonts/IBMPlexSansArabic-SemiBold.ttf",
+      "sha1": "5fc0b711bef456726933a2d3e2e2ace6f0a49395"
+    },
+    {
+      "path": "assets/fonts/Sora-Bold.ttf",
+      "sha1": "41e031fd6a0dec811cbc680024e74003846dd2cc"
+    },
+    {
+      "path": "assets/fonts/Sora-ExtraBold.ttf",
+      "sha1": "06573845b6370e7fc05fb851780712cb2210c3c5"
+    },
+    {
+      "path": "assets/fonts/Sora-SemiBold.ttf",
+      "sha1": "d5668fd7b4d769c548ed6a52e4e4e0c0bc08f905"
+    },
+    {
+      "path": "assets/fonts/SplineSansMono-Medium.ttf",
+      "sha1": "f3cbfcda2cfb25d5a8e8886389c5955f321560fc"
+    },
+    {
+      "path": "assets/fonts/SplineSansMono-Regular.ttf",
+      "sha1": "55c03e2eae6c958492e614a2f0ced3a79fa5a518"
+    }
+  ]
+}

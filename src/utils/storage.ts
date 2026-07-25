@@ -5,6 +5,7 @@ import type { AppLanguage } from '../i18n';
 const ACCESS_TOKEN_KEY = 'plusone_access_token';
 const REFRESH_TOKEN_KEY = 'plusone_refresh_token';
 const LANGUAGE_KEY = 'plusone_language';
+const ONBOARDING_SEEN_KEY = 'plusone_onboarding_seen';
 
 export const SecureStorage = {
   async saveTokens(accessToken: string, refreshToken: string, isProfileComplete: boolean): Promise<void> {
@@ -35,5 +36,13 @@ export const AppStorage = {
 
   async setLanguage(language: AppLanguage): Promise<void> {
     await AsyncStorage.setItem(LANGUAGE_KEY, language);
+  },
+
+  async hasSeenOnboarding(): Promise<boolean> {
+    return (await AsyncStorage.getItem(ONBOARDING_SEEN_KEY)) === 'true';
+  },
+
+  async setHasSeenOnboarding(): Promise<void> {
+    await AsyncStorage.setItem(ONBOARDING_SEEN_KEY, 'true');
   },
 };

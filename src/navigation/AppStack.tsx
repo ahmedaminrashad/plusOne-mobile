@@ -8,13 +8,20 @@ import CreateGroupScreen from '../screens/groups/CreateGroupScreen';
 import GroupDetailScreen from '../screens/groups/GroupDetailScreen';
 import InviteMembersScreen from '../screens/groups/InviteMembersScreen';
 import ChatScreen from '../screens/groups/ChatScreen';
+import AddBillChooserScreen from '../screens/groups/AddBillChooserScreen';
 import CreateBillScreen from '../screens/groups/CreateBillScreen';
 import QRScannerScreen from '../screens/groups/QRScannerScreen';
 import OCRCaptureScreen from '../screens/groups/OCRCaptureScreen';
-import ReceiptSplitScreen from '../screens/groups/ReceiptSplitScreen';
-import ViewReceiptScreen from '../screens/groups/ViewReceiptScreen';
+import AssignItemsScreen from '../screens/groups/AssignItemsScreen';
+import BillStatusScreen from '../screens/groups/BillStatusScreen';
+import PayShareScreen from '../screens/groups/PayShareScreen';
 import EditBillItemsScreen from '../screens/groups/EditBillItemsScreen';
 import SelectGroupToShareScreen from '../screens/groups/SelectGroupToShareScreen';
+import AllGroupsScreen from '../screens/groups/AllGroupsScreen';
+import SettleUpScreen from '../screens/groups/SettleUpScreen';
+import MyCircleScreen from '../screens/groups/MyCircleScreen';
+import RemindScreen from '../screens/groups/RemindScreen';
+import MyLedgerScreen from '../screens/groups/MyLedgerScreen';
 import { Colors } from '../constants/colors';
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
@@ -44,6 +51,7 @@ export default function AppStack() {
         component={ChatScreen}
         options={({ route }) => ({ title: route.params.groupName })}
       />
+      <Stack.Screen name="AddBillChooser" component={AddBillChooserScreen} options={{ headerShown: false }} />
       <Stack.Screen
         name="AddBill"
         component={CreateBillScreen}
@@ -60,15 +68,12 @@ export default function AppStack() {
         options={{ title: t('appStack.ocrCaptureTitle') }}
       />
       <Stack.Screen
-        name="ReceiptSplit"
-        component={ReceiptSplitScreen}
-        options={({ route }) => ({ title: route.params.groupName })}
+        name="AssignItems"
+        component={AssignItemsScreen}
+        options={{ headerShown: false }}
       />
-      <Stack.Screen
-        name="ViewReceipt"
-        component={ViewReceiptScreen}
-        options={{ title: t('appStack.viewReceiptTitle') }}
-      />
+      <Stack.Screen name="BillStatus" component={BillStatusScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="PayShare" component={PayShareScreen} options={{ headerShown: false }} />
       <Stack.Screen
         name="EditBillItems"
         component={EditBillItemsScreen}
@@ -79,6 +84,11 @@ export default function AppStack() {
         component={SelectGroupToShareScreen}
         options={{ title: t('appStack.selectGroupToShareTitle') }}
       />
+      <Stack.Screen name="AllGroups" component={AllGroupsScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="SettleUp" component={SettleUpScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="MyCircle" component={MyCircleScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Remind" component={RemindScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="MyLedger" component={MyLedgerScreen} options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 }

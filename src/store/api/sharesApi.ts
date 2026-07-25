@@ -1,5 +1,10 @@
 import { baseApi } from './baseApi';
-import { Share } from '../../types/models';
+import { Share, ShareMethod, Bill, Group } from '../../types/models';
+
+export interface MyShare extends Share {
+  bill: Bill | null;
+  group: Group | null;
+}
 
 export const sharesApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -7,19 +12,39 @@ export const sharesApi = baseApi.injectEndpoints({
       query: (billId) => `/shares/bill/${billId}`,
       providesTags: (result, error, billId) => [{ type: 'Share', id: billId }],
     }),
-    payShare: builder.mutation<Share, string>({
-      query: (shareId) => ({ url: `/shares/${shareId}/pay`, method: 'POST' }),
-      invalidatesTags: (result) => (result ? [{ type: 'Share', id: result.billId }] : []),
+    getMyShares: builder.query<MyShare[], void>({
+      query: () => '/shares/mine',
+      providesTags: ['Share'],
+    }),
+    payShare: builder.mutation<Share, { shareId: string; method?: ShareMethod }>({
+      query: ({ shareId, method }) => ({ url: `/shares/${shareId}/pay`, method: 'POST', body: { method } }),
+      invalidatesTags: (result) => (result ? [{ type: 'Share', id: result.billId }, 'Share'] : ['Share']),
     }),
     cancelShareInitiation: builder.mutation<Share, string>({
       query: (shareId) => ({ url: `/shares/${shareId}/cancel-initiation`, method: 'POST' }),
-      invalidatesTags: (result) => (result ? [{ type: 'Share', id: result.billId }] : []),
+      invalidatesTags: (result) => (result ? [{ type: 'Share', id: result.billId }, 'Share'] : ['Share']),
+    }),
+    confirmShare: builder.mutation<Share, string>({
+      query: (shareId) => ({ url: `/shares/${shareId}/confirm`, method: 'POST' }),
+      invalidatesTags: (result) => (result ? [{ type: 'Share', id: result.billId }, 'Share'] : ['Share']),
+    }),
+    sendShareReminder: builder.mutation<{ sent: boolean; rateLimited: boolean }, string>({
+      query: (shareId) => ({ url: `/shares/${shareId}/remind`, method: 'POST' }),
+      invalidatesTags: ['Share'],
+    }),
+    remindAllPending: builder.mutation<{ sent: number; skipped: number }, string>({
+      query: (billId) => ({ url: `/shares/bill/${billId}/remind-all`, method: 'POST' }),
+      invalidatesTags: ['Share'],
     }),
   }),
 });
 
 export const {
   useGetBillSharesQuery,
+  useGetMySharesQuery,
   usePayShareMutation,
   useCancelShareInitiationMutation,
+  useConfirmShareMutation,
+  useSendShareReminderMutation,
+  useRemindAllPendingMutation,
 } = sharesApi;

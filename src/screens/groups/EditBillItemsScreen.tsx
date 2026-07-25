@@ -14,6 +14,8 @@ import {
 import { useTranslation } from 'react-i18next';
 import { AppScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
+import { Radius } from '../../constants/radius';
+import { useTypography } from '../../hooks/useTypography';
 import Button from '../../components/common/Button';
 import { useGetGroupMembersQuery } from '../../store/api/groupsApi';
 import { useGetBillDetailQuery, useUpdateBillItemsMutation } from '../../store/api/billsApi';
@@ -48,6 +50,7 @@ function MemberChip({
   selected: boolean;
   onToggle: () => void;
 }) {
+  const typography = useTypography();
   const name = getMemberName(member);
   return (
     <TouchableOpacity
@@ -55,11 +58,11 @@ function MemberChip({
       onPress={onToggle}
       activeOpacity={0.7}>
       <View style={[styles.chipAvatar, selected && styles.chipAvatarSelected]}>
-        <Text style={[styles.chipInitial, selected && styles.chipInitialSelected]}>
+        <Text style={[typography.labelMedium, styles.chipInitial, selected && styles.chipInitialSelected]}>
           {name.charAt(0).toUpperCase()}
         </Text>
       </View>
-      <Text style={[styles.chipName, selected && styles.chipNameSelected]} numberOfLines={1}>
+      <Text style={[typography.labelSmall, styles.chipName, selected && styles.chipNameSelected]} numberOfLines={1}>
         {name.split(' ')[0]}
       </Text>
     </TouchableOpacity>
@@ -78,18 +81,19 @@ function ItemRow({
   onPriceChange: (itemId: string, price: string) => void;
 }) {
   const { t } = useTranslation('billing');
+  const typography = useTypography();
   const subtotal = parseNum(item.price) * item.qty;
   const unclaimed = item.claimedBy.length === 0;
   return (
     <View style={[styles.itemCard, unclaimed && styles.itemCardUnclaimed]}>
       <View style={styles.itemHeader}>
-        <Text style={styles.itemSubtotal}>{formatCurrency(subtotal)}</Text>
+        <Text style={[typography.amountMedium, styles.itemSubtotal]}>{formatCurrency(subtotal)}</Text>
         <View style={styles.itemNameBlock}>
-          <Text style={styles.itemName}>{item.name}</Text>
+          <Text style={[typography.labelLarge, styles.itemName]}>{item.name}</Text>
           <View style={styles.priceRow}>
-            {item.qty > 1 && <Text style={styles.itemQty}>{item.qty} ×</Text>}
+            {item.qty > 1 && <Text style={[typography.bodySmall, styles.itemQty]}>{item.qty} ×</Text>}
             <TextInput
-              style={styles.priceInput}
+              style={[typography.bodySmall, styles.priceInput]}
               value={item.price}
               onChangeText={(v) => onPriceChange(item.id, v)}
               keyboardType="decimal-pad"
@@ -108,9 +112,9 @@ function ItemRow({
           />
         ))}
       </ScrollView>
-      {unclaimed && <Text style={styles.unclaimedNote}>{t('receiptSplit.unclaimedNote')}</Text>}
+      {unclaimed && <Text style={[typography.caption, styles.unclaimedNote]}>{t('receiptSplit.unclaimedNote')}</Text>}
       {item.claimedBy.length > 1 && (
-        <Text style={styles.splitNote}>
+        <Text style={[typography.caption, styles.splitNote]}>
           {t('receiptSplit.perPersonShare', { amount: formatCurrency(subtotal / item.claimedBy.length) })}
         </Text>
       )}
@@ -120,6 +124,7 @@ function ItemRow({
 
 function EditBillItemsScreen({ route, navigation }: Props) {
   const { t } = useTranslation('billing');
+  const typography = useTypography();
   const { billId } = route.params;
 
   const { data: bill, isLoading } = useGetBillDetailQuery(billId);
@@ -290,7 +295,7 @@ function EditBillItemsScreen({ route, navigation }: Props) {
       <SafeAreaView style={styles.container}>
         <View style={styles.emptyState}>
           <Text style={styles.emptyIcon}>🔒</Text>
-          <Text style={styles.emptyText}>{t('editBillItems.billClosedMessage')}</Text>
+          <Text style={[typography.bodyLarge, styles.emptyText]}>{t('editBillItems.billClosedMessage')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -300,25 +305,25 @@ function EditBillItemsScreen({ route, navigation }: Props) {
 
   const ListHeader = (
     <View style={styles.receiptHeader}>
-      <Text style={styles.totalLabel}>{t('receiptSplit.grandTotalLabel')}</Text>
-      <Text style={styles.totalAmount}>{formatCurrency(Number(bill.amount), bill.currency)}</Text>
-      <Text style={styles.sectionTitle}>{t('receiptSplit.chooseItemsHint')}</Text>
+      <Text style={[typography.caption, styles.totalLabel]}>{t('receiptSplit.grandTotalLabel')}</Text>
+      <Text style={[typography.amountLarge, styles.totalAmount]}>{formatCurrency(Number(bill.amount), bill.currency)}</Text>
+      <Text style={[typography.labelMedium, styles.sectionTitle]}>{t('receiptSplit.chooseItemsHint')}</Text>
     </View>
   );
 
   const ListFooter = (
     <View style={styles.addItemPanel}>
-      <Text style={styles.addItemTitle}>{t('editBillItems.addItemTitle')}</Text>
+      <Text style={[typography.labelMedium, styles.addItemTitle]}>{t('editBillItems.addItemTitle')}</Text>
       <View style={styles.addItemRow}>
         <TextInput
-          style={[styles.addItemInput, styles.addItemInputName]}
+          style={[typography.bodyMedium, styles.addItemInput, styles.addItemInputName]}
           placeholder={t('createBill.itemNamePlaceholder')}
           placeholderTextColor={Colors.textMuted}
           value={newItemName}
           onChangeText={setNewItemName}
         />
         <TextInput
-          style={[styles.addItemInput, styles.addItemInputQty]}
+          style={[typography.bodyMedium, styles.addItemInput, styles.addItemInputQty]}
           placeholder={t('createBill.qtyPlaceholder')}
           placeholderTextColor={Colors.textMuted}
           value={newItemQty}
@@ -326,7 +331,7 @@ function EditBillItemsScreen({ route, navigation }: Props) {
           keyboardType="number-pad"
         />
         <TextInput
-          style={[styles.addItemInput, styles.addItemInputPrice]}
+          style={[typography.bodyMedium, styles.addItemInput, styles.addItemInputPrice]}
           placeholder={t('createBill.pricePlaceholder')}
           placeholderTextColor={Colors.textMuted}
           value={newItemPrice}
@@ -355,13 +360,13 @@ function EditBillItemsScreen({ route, navigation }: Props) {
       <View style={styles.bottomPanel}>
         {summaryRows.length > 0 && (
           <View style={styles.summarySection}>
-            <Text style={styles.summaryTitle}>{t('receiptSplit.paymentSummaryTitle')}</Text>
+            <Text style={[typography.labelMedium, styles.summaryTitle]}>{t('receiptSplit.paymentSummaryTitle')}</Text>
             {summaryRows.map((m) => {
               const id = getMemberId(m);
               return (
                 <View key={m.id} style={styles.summaryRow}>
-                  <Text style={styles.summaryAmount}>{formatCurrency(memberTotals[id]!)}</Text>
-                  <Text style={styles.summaryName}>{getMemberName(m)}</Text>
+                  <Text style={[typography.labelLarge, styles.summaryAmount]}>{formatCurrency(memberTotals[id]!)}</Text>
+                  <Text style={[typography.bodyMedium, styles.summaryName]}>{getMemberName(m)}</Text>
                 </View>
               );
             })}
@@ -388,18 +393,18 @@ const styles = StyleSheet.create({
 
   emptyState: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
   emptyIcon: { fontSize: 48, marginBottom: 12 },
-  emptyText: { fontSize: 15, color: Colors.textMuted, textAlign: 'center' },
+  emptyText: { color: Colors.textMuted, textAlign: 'center' },
 
   receiptHeader: { padding: 20, alignItems: 'center', backgroundColor: Colors.surface, marginBottom: 12 },
-  totalLabel: { fontSize: 12, color: Colors.textMuted, marginTop: 8 },
-  totalAmount: { fontSize: 32, fontWeight: '800', color: Colors.primary },
-  sectionTitle: { fontSize: 13, color: Colors.textSecondary, marginTop: 12, fontWeight: '600' },
+  totalLabel: { color: Colors.textMuted, marginTop: 8 },
+  totalAmount: { color: Colors.primary },
+  sectionTitle: { color: Colors.textSecondary, marginTop: 12 },
 
   itemCard: {
     backgroundColor: Colors.surface,
     marginHorizontal: 16,
     marginBottom: 10,
-    borderRadius: 14,
+    borderRadius: Radius.lg,
     padding: 14,
     shadowColor: '#000',
     shadowOpacity: 0.04,
@@ -410,17 +415,16 @@ const styles = StyleSheet.create({
   itemCardUnclaimed: { borderWidth: 1.5, borderColor: Colors.warning + '55' },
   itemHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 },
   itemNameBlock: { flex: 1, alignItems: 'flex-end' },
-  itemName: { fontSize: 15, fontWeight: '600', color: Colors.text, textAlign: 'right' },
-  itemQty: { fontSize: 12, color: Colors.textMuted },
-  itemSubtotal: { fontSize: 16, fontWeight: '700', color: Colors.text, marginLeft: 8 },
+  itemName: { color: Colors.text, textAlign: 'right' },
+  itemQty: { color: Colors.textMuted },
+  itemSubtotal: { color: Colors.text, marginLeft: 8 },
   priceRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
   priceInput: {
-    fontSize: 12,
     color: Colors.text,
     backgroundColor: Colors.background,
     borderWidth: 1,
     borderColor: Colors.border,
-    borderRadius: 6,
+    borderRadius: Radius.sm,
     paddingHorizontal: 6,
     paddingVertical: 2,
     minWidth: 56,
@@ -432,49 +436,48 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 20,
+    borderRadius: Radius.pill,
     backgroundColor: Colors.background,
     borderWidth: 1.5,
     borderColor: Colors.border,
     minWidth: 56,
   },
-  chipSelected: { backgroundColor: Colors.primary + '15', borderColor: Colors.primary },
+  chipSelected: { backgroundColor: Colors.tint, borderColor: Colors.primary },
   chipAvatar: {
     width: 28,
     height: 28,
-    borderRadius: 14,
+    borderRadius: Radius.pill,
     backgroundColor: Colors.border,
     justifyContent: 'center',
     alignItems: 'center',
   },
   chipAvatarSelected: { backgroundColor: Colors.primary },
-  chipInitial: { fontSize: 13, fontWeight: '700', color: Colors.textSecondary },
+  chipInitial: { color: Colors.textSecondary },
   chipInitialSelected: { color: '#fff' },
-  chipName: { fontSize: 11, color: Colors.textSecondary, fontWeight: '500' },
-  chipNameSelected: { color: Colors.primary, fontWeight: '700' },
+  chipName: { color: Colors.textSecondary },
+  chipNameSelected: { color: Colors.primary },
 
-  unclaimedNote: { fontSize: 11, color: Colors.warning, textAlign: 'right', marginTop: 6 },
-  splitNote: { fontSize: 11, color: Colors.textMuted, textAlign: 'right', marginTop: 4 },
+  unclaimedNote: { color: Colors.warning, textAlign: 'right', marginTop: 6 },
+  splitNote: { color: Colors.textMuted, textAlign: 'right', marginTop: 4 },
 
   addItemPanel: {
     backgroundColor: Colors.surface,
     marginHorizontal: 16,
     marginTop: 4,
     marginBottom: 10,
-    borderRadius: 14,
+    borderRadius: Radius.lg,
     padding: 14,
     borderWidth: 1.5,
     borderColor: Colors.border,
     borderStyle: 'dashed',
   },
-  addItemTitle: { fontSize: 13, fontWeight: '700', color: Colors.textSecondary, textAlign: 'right', marginBottom: 8 },
+  addItemTitle: { color: Colors.textSecondary, textAlign: 'right', marginBottom: 8 },
   addItemRow: { flexDirection: 'row', gap: 6, alignItems: 'center' },
   addItemInput: {
     backgroundColor: Colors.background,
-    borderRadius: 10,
+    borderRadius: Radius.md,
     paddingHorizontal: 10,
     paddingVertical: 8,
-    fontSize: 13,
     color: Colors.text,
   },
   addItemInputName: { flex: 2 },
@@ -483,7 +486,7 @@ const styles = StyleSheet.create({
   addItemBtn: {
     width: 36,
     height: 36,
-    borderRadius: 10,
+    borderRadius: Radius.md,
     backgroundColor: Colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
@@ -504,10 +507,10 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.borderLight,
     gap: 8,
   },
-  summaryTitle: { fontSize: 13, fontWeight: '700', color: Colors.textSecondary, textAlign: 'right', marginBottom: 4 },
+  summaryTitle: { color: Colors.textSecondary, textAlign: 'right', marginBottom: 4 },
   summaryRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  summaryName: { fontSize: 14, color: Colors.text, fontWeight: '500' },
-  summaryAmount: { fontSize: 15, fontWeight: '700', color: Colors.primary },
+  summaryName: { color: Colors.text },
+  summaryAmount: { color: Colors.primary },
 
   saveBtn: { marginHorizontal: 16, marginTop: 4 },
 });

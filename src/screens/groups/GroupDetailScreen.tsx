@@ -19,12 +19,14 @@ import { GroupMember, MemberRole, Bill } from '../../types/models';
 import Avatar from '../../components/common/Avatar';
 import Button from '../../components/common/Button';
 import { Colors } from '../../constants/colors';
+import { Radius } from '../../constants/radius';
 import { useGetMeQuery } from '../../store/api/usersApi';
 import { formatDate, resolveAssetUrl } from '../../utils/format';
 import GroupChatPane from './GroupChatPane';
+import GroupLedgerScreen from './GroupLedgerScreen';
 
 type Props = AppScreenProps<'GroupDetail'>;
-type Tab = 'chat' | 'bills' | 'members';
+type Tab = 'chat' | 'bills' | 'ledger' | 'members';
 
 // ──────────────────────────────────────────────────────────────
 // Member row
@@ -131,16 +133,8 @@ function GroupDetailScreen({ route, navigation }: Props) {
 
   // ── Bills actions ───────────────────────────────────────────
 
-  const handleScanQR = useCallback(() => {
-    navigation.navigate('QRScanner', { groupId, groupName });
-  }, [groupId, groupName, navigation]);
-
-  const handleScanOCR = useCallback(() => {
-    navigation.navigate('OCRCapture', { groupId, groupName });
-  }, [groupId, groupName, navigation]);
-
   const handleAddBill = useCallback(() => {
-    navigation.navigate('AddBill', { groupId, groupName });
+    navigation.navigate('AddBillChooser', { groupId, groupName });
   }, [groupId, groupName, navigation]);
 
   const handleDeleteBill = useCallback(
@@ -215,13 +209,16 @@ function GroupDetailScreen({ route, navigation }: Props) {
 
         {/* Tab bar */}
         <View style={styles.tabs}>
-          {(['chat', 'bills', 'members'] as Tab[]).map((tab) => (
+          {(['chat', 'bills', 'ledger', 'members'] as Tab[]).map((tab) => (
             <TouchableOpacity
               key={tab}
               style={[styles.tab, activeTab === tab && styles.tabActive]}
               onPress={() => setActiveTab(tab)}>
               <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
-                {tab === 'chat' ? t('groupDetail.tabChat') : tab === 'bills' ? t('groupDetail.tabBills') : t('groupDetail.tabMembers')}
+                {tab === 'chat' ? t('groupDetail.tabChat')
+                  : tab === 'bills' ? t('groupDetail.tabBills')
+                  : tab === 'ledger' ? t('groupDetail.tabLedger')
+                  : t('groupDetail.tabMembers')}
               </Text>
             </TouchableOpacity>
           ))}
@@ -246,20 +243,11 @@ function GroupDetailScreen({ route, navigation }: Props) {
         {activeTab === 'bills' && (
           <View style={styles.flex}>
             <View style={styles.billActions}>
-              <TouchableOpacity style={styles.billActionBtn} onPress={handleScanQR} activeOpacity={0.8}>
-                <Text style={styles.billActionIcon}>📷</Text>
-                <Text style={styles.billActionText}>{t('groupDetail.scanQR')}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.billActionBtn} onPress={handleScanOCR} activeOpacity={0.8}>
-                <Text style={styles.billActionIcon}>🖨</Text>
-                <Text style={styles.billActionText}>{t('groupDetail.scanReceipt')}</Text>
-              </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.billActionBtn, styles.billActionBtnPrimary]}
+                style={styles.billActionBtnPrimary}
                 onPress={handleAddBill}
                 activeOpacity={0.8}>
-                <Text style={styles.billActionIcon}>✏️</Text>
-                <Text style={[styles.billActionText, styles.billActionTextPrimary]}>{t('groupDetail.manualEntry')}</Text>
+                <Text style={styles.billActionTextPrimary}>{t('groupDetail.addBillCta')}</Text>
               </TouchableOpacity>
             </View>
 
@@ -279,7 +267,7 @@ function GroupDetailScreen({ route, navigation }: Props) {
                   <BillCard
                     bill={item}
                     canDelete={item.paidByUserId === me?.id || isAdmin}
-                    onPress={() => navigation.navigate('ViewReceipt', { groupId, groupName, billId: item.id })}
+                    onPress={() => navigation.navigate('BillStatus', { groupId, groupName, billId: item.id })}
                     onDelete={() => handleDeleteBill(item)}
                   />
                 )}
@@ -288,6 +276,9 @@ function GroupDetailScreen({ route, navigation }: Props) {
             )}
           </View>
         )}
+
+        {/* ── Tab (ledger) tab ─────────────────────────────── */}
+        {activeTab === 'ledger' && <GroupLedgerScreen groupId={groupId} />}
 
         {/* ── Members tab ──────────────────────────────────── */}
         {activeTab === 'members' && (
@@ -339,23 +330,15 @@ const styles = StyleSheet.create({
   pendingChatText: { fontSize: 14, color: Colors.textSecondary, textAlign: 'center' },
 
   // Bills
-  billActions: { flexDirection: 'row', gap: 8, padding: 12, paddingBottom: 6 },
-  billActionBtn: {
-    flex: 1,
-    flexDirection: 'row',
+  billActions: { padding: 12, paddingBottom: 6 },
+  billActionBtnPrimary: {
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
-    paddingVertical: 10,
-    borderRadius: 10,
-    backgroundColor: Colors.surface,
-    borderWidth: 1.5,
-    borderColor: Colors.border,
+    paddingVertical: 14,
+    borderRadius: Radius.pill,
+    backgroundColor: Colors.primary,
   },
-  billActionBtnPrimary: { backgroundColor: Colors.primary, borderColor: Colors.primary },
-  billActionIcon: { fontSize: 14 },
-  billActionText: { fontSize: 12, fontWeight: '600', color: Colors.text },
-  billActionTextPrimary: { color: Colors.textOnPrimary },
+  billActionTextPrimary: { color: Colors.textOnPrimary, fontSize: 14, fontWeight: '700' },
 
   billCard: {
     flexDirection: 'row',

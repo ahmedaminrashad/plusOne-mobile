@@ -1,4 +1,16 @@
 {
+  "addBillChooser": {
+    "title": "إضافة فاتورة",
+    "subtitle": "لـ {{groupName}}",
+    "scanQrTitle": "مسح QR الفاتورة",
+    "scanQrSubtitle": "الفاتورة الإلكترونية بتتحمل بالتفصيل، فورًا",
+    "scanQrBadge": "الأسرع",
+    "scanReceiptTitle": "صوّر الإيصال",
+    "scanReceiptSubtitle": "بنقراه (OCR) — وانت تأكد كل سطر",
+    "manualTitle": "إدخال يدوي",
+    "manualSubtitle": "بالتفصيل، أو الإجمالي بس",
+    "footer": "أي طريقة تدخل بيها — التقسيم بيشتغل نفس الطريقة بعد كده."
+  },
   "createBill": {
     "venueLabel": "المطعم / المحل",
     "venuePlaceholder": "مثال: زوبا الزمالك (اختياري)",
@@ -35,6 +47,13 @@
     "amountMustBePositive": "يجب أن يكون المبلغ أكبر من صفر.",
     "saveFailed": "تعذر حفظ الفاتورة، حاول مرة أخرى لاحقاً."
   },
+  "assignItems": {
+    "title": "مين ياخد إيه؟",
+    "paidByLabel": "مين دفع",
+    "modeByItem": "حسب الصنف",
+    "modeEqually": "بالتساوي",
+    "saveButton": "حفظ وطلب الدفع"
+  },
   "receiptSplit": {
     "defaultMemberName": "مستخدم",
     "unclaimedNote": "لم يُختر لها أحد بعد",
@@ -57,6 +76,31 @@
     "paymentSummaryTitle": "ملخص الدفع",
     "payerQuestionLabel": "من دفع الإيصال؟",
     "saveButton": "حفظ الإيصال"
+  },
+  "billStatus": {
+    "paidCount": "دفع {{paid}}/{{total}}",
+    "totalBillLabel": "إجمالي الفاتورة",
+    "collectedOf": "اتجمع {{collected}} من {{owed}} مستحقة لـ {{payer}}",
+    "paidBadge": "مدفوع ✓",
+    "pendingBadge": "معلّق",
+    "linkOpenedBadge": "الرابط اتفتح",
+    "instaPayMethod": "InstaPay · {{time}}",
+    "cashConfirmedBy": "كاش · أكّدها {{name}}",
+    "payLinkSentBySms": "اتبعت رابط الدفع بـ SMS",
+    "remindButton": "تذكير ({{count}})",
+    "markReceivedButton": "تأكيد الاستلام",
+    "confirmFailed": "تعذر تأكيد الدفع، حاول مرة أخرى"
+  },
+  "payShare": {
+    "title": "ادفع حصتك",
+    "toPayerVenue": "لـ {{payer}} · {{venue}}",
+    "splitEquallyBetween": "{{currency}} · مقسومة بالتساوي بين {{count}}",
+    "payWithInstaPay": "ادفع بـ InstaPay",
+    "iPaidInCash": "دفعت كاش",
+    "cashConfirmTitle": "تأكيد الدفع كاش؟",
+    "cashConfirmMessage": "هنبلّغ {{payer}} إنك دفعت كاش — هيأكد الاستلام قبل ما تتسجل كمدفوعة.",
+    "cashNote": "الدفع كاش بيتأكد من {{payer}} قبل ما يتسجل كمدفوع.",
+    "instaPayNote": "InstaPay بيروح على طول لـ {{payer}} — +one مايمسكش الفلوس أبدًا."
   },
   "viewReceipt": {
     "captureMethodQr": "مسح QR",
@@ -136,8 +180,8 @@
     "processingText": "جارٍ معالجة الإيصال...",
     "processButton": "معالجة الإيصال",
     "retakePhotoButton": "التقاط صورة جديدة",
-    "guideHint": "ضع الإيصال داخل الإطار",
-    "captureTitle": "مسح إيصال ورقي",
+    "guideHint": "خلي الإيصال كله في الإطار · ابعد عن الضل",
+    "captureTitle": "صوّر الإيصال",
     "captureSubtitle": "التقط صورة واضحة للإيصال. ستستخرج خدمة OCR البنود والأسعار تلقائياً.",
     "captureButton": "📷  التقاط صورة"
   }

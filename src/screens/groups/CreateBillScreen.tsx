@@ -16,6 +16,8 @@ import {
 import { useTranslation } from 'react-i18next';
 import { AppScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
+import { Radius } from '../../constants/radius';
+import { useTypography } from '../../hooks/useTypography';
 import Button from '../../components/common/Button';
 import { useCreateBillMutation } from '../../store/api/billsApi';
 import { useGetGroupMembersQuery } from '../../store/api/groupsApi';
@@ -48,17 +50,18 @@ function AmountTypeToggle({
   onChange: (v: TaxServiceType) => void;
 }) {
   const { t } = useTranslation('billing');
+  const typography = useTypography();
   return (
     <View style={styles.toggle}>
       <TouchableOpacity
         style={[styles.toggleBtn, value === 'percent' && styles.toggleBtnActive]}
         onPress={() => onChange('percent')}>
-        <Text style={[styles.toggleText, value === 'percent' && styles.toggleTextActive]}>%</Text>
+        <Text style={[typography.labelLarge, styles.toggleText, value === 'percent' && styles.toggleTextActive]}>%</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={[styles.toggleBtn, value === 'amount' && styles.toggleBtnActive]}
         onPress={() => onChange('amount')}>
-        <Text style={[styles.toggleText, value === 'amount' && styles.toggleTextActive]}>{t('common:currencyEGP')}</Text>
+        <Text style={[typography.labelLarge, styles.toggleText, value === 'amount' && styles.toggleTextActive]}>{t('common:currencyEGP')}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -66,6 +69,7 @@ function AmountTypeToggle({
 
 function CreateBillScreen({ route, navigation }: Props) {
   const { t } = useTranslation('billing');
+  const typography = useTypography();
   const inputAlign = useInputTextAlign();
   const { groupId, groupName, prefilledData } = route.params;
   const isPreview = !!prefilledData;
@@ -188,7 +192,7 @@ function CreateBillScreen({ route, navigation }: Props) {
       sourceRef: prefilledData?.sourceRef,
     };
 
-    navigation.navigate('ReceiptSplit', {
+    navigation.navigate('AssignItems', {
       groupId,
       groupName,
       receiptJson: JSON.stringify(receiptData),
@@ -207,12 +211,12 @@ function CreateBillScreen({ route, navigation }: Props) {
         <TouchableOpacity
           style={[styles.payerRow, isSelected && styles.payerRowSelected]}
           onPress={() => { setPaidByUserId(item.userId!); setPayerPickerVisible(false); }}>
-          <Text style={[styles.payerRowName, isSelected && styles.payerRowNameSelected]}>{name}</Text>
+          <Text style={[typography.bodyLarge, styles.payerRowName, isSelected && styles.payerRowNameSelected]}>{name}</Text>
           {isSelected && <Text style={styles.checkmark}>✓</Text>}
         </TouchableOpacity>
       );
     },
-    [paidByUserId],
+    [paidByUserId, typography],
   );
 
   return (
@@ -220,16 +224,16 @@ function CreateBillScreen({ route, navigation }: Props) {
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         {isPreview && (
           <View style={styles.previewBanner}>
-            <Text style={styles.previewBannerText}>
+            <Text style={[typography.labelMedium, styles.previewBannerText]}>
               {prefilledData?.captureMethod === 'qr' ? t('createBill.qrPreviewBanner') : t('createBill.ocrPreviewBanner')}
             </Text>
           </View>
         )}
 
         {/* Venue */}
-        <Text style={styles.sectionLabel}>{t('createBill.venueLabel')}</Text>
+        <Text style={[typography.labelMedium, styles.sectionLabel]}>{t('createBill.venueLabel')}</Text>
         <TextInput
-          style={styles.input}
+          style={[typography.bodyLarge, styles.input]}
           value={venueName}
           onChangeText={setVenueName}
           placeholder={t('createBill.venuePlaceholder')}
@@ -243,20 +247,20 @@ function CreateBillScreen({ route, navigation }: Props) {
           <TouchableOpacity
             style={[styles.modeBtn, !isLumpSum && styles.modeBtnActive]}
             onPress={() => setIsLumpSum(false)}>
-            <Text style={[styles.modeBtnText, !isLumpSum && styles.modeBtnTextActive]}>{t('createBill.itemizedModeLabel')}</Text>
+            <Text style={[typography.labelMedium, styles.modeBtnText, !isLumpSum && styles.modeBtnTextActive]}>{t('createBill.itemizedModeLabel')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.modeBtn, isLumpSum && styles.modeBtnActive]}
             onPress={() => setIsLumpSum(true)}>
-            <Text style={[styles.modeBtnText, isLumpSum && styles.modeBtnTextActive]}>{t('createBill.lumpSumModeLabel')}</Text>
+            <Text style={[typography.labelMedium, styles.modeBtnText, isLumpSum && styles.modeBtnTextActive]}>{t('createBill.lumpSumModeLabel')}</Text>
           </TouchableOpacity>
         </View>
 
         {isLumpSum ? (
           <>
-            <Text style={styles.sectionLabel}>{t('createBill.lumpSumAmountLabel')}</Text>
+            <Text style={[typography.labelMedium, styles.sectionLabel]}>{t('createBill.lumpSumAmountLabel')}</Text>
             <TextInput
-              style={styles.input}
+              style={[typography.bodyLarge, styles.input]}
               value={lumpSumTotal}
               onChangeText={setLumpSumTotal}
               placeholder={t('createBill.amountPlaceholderZero')}
@@ -264,25 +268,25 @@ function CreateBillScreen({ route, navigation }: Props) {
               keyboardType="decimal-pad"
               textAlign={inputAlign}
             />
-            <Text style={styles.lumpSumNote}>{t('createBill.lumpSumNote')}</Text>
+            <Text style={[typography.caption, styles.lumpSumNote]}>{t('createBill.lumpSumNote')}</Text>
           </>
         ) : (
           <>
             {/* Items */}
             <View style={styles.sectionHeader}>
               <TouchableOpacity onPress={addItem} style={styles.addItemBtn}>
-                <Text style={styles.addItemBtnText}>{t('createBill.addItemButton')}</Text>
+                <Text style={[typography.labelMedium, styles.addItemBtnText]}>{t('createBill.addItemButton')}</Text>
               </TouchableOpacity>
-              <Text style={styles.sectionLabel}>{t('createBill.itemsLabel')}</Text>
+              <Text style={[typography.labelMedium, styles.sectionLabel]}>{t('createBill.itemsLabel')}</Text>
             </View>
 
             {items.map((item, index) => (
               <View key={item.id} style={styles.itemRow}>
                 <View style={styles.itemFields}>
                   <View style={styles.itemNameRow}>
-                    <Text style={styles.itemIndex}>{index + 1}</Text>
+                    <Text style={[typography.labelMedium, styles.itemIndex]}>{index + 1}</Text>
                     <TextInput
-                      style={[styles.input, styles.itemNameInput]}
+                      style={[typography.bodyLarge, styles.input, styles.itemNameInput]}
                       value={item.name}
                       onChangeText={(v) => updateItem(item.id, 'name', v)}
                       placeholder={t('createBill.itemNamePlaceholder')}
@@ -293,7 +297,7 @@ function CreateBillScreen({ route, navigation }: Props) {
                   </View>
                   <View style={styles.itemPriceRow}>
                     <TextInput
-                      style={[styles.input, styles.itemPriceInput]}
+                      style={[typography.bodyLarge, styles.input, styles.itemPriceInput]}
                       value={item.unitPrice}
                       onChangeText={(v) => updateItem(item.id, 'unitPrice', v)}
                       placeholder={t('createBill.pricePlaceholder')}
@@ -303,7 +307,7 @@ function CreateBillScreen({ route, navigation }: Props) {
                     />
                     <Text style={styles.multiplySign}>×</Text>
                     <TextInput
-                      style={[styles.input, styles.itemQtyInput]}
+                      style={[typography.bodyLarge, styles.input, styles.itemQtyInput]}
                       value={item.qty}
                       onChangeText={(v) => updateItem(item.id, 'qty', v.replace(/[^0-9]/g, ''))}
                       placeholder={t('createBill.qtyPlaceholder')}
@@ -323,15 +327,15 @@ function CreateBillScreen({ route, navigation }: Props) {
 
             {/* Subtotal */}
             <View style={styles.subtotalRow}>
-              <Text style={styles.subtotalAmt}>{formatCurrency(subtotal)}</Text>
-              <Text style={styles.subtotalLabel}>{t('createBill.subtotalLabel')}</Text>
+              <Text style={[typography.labelLarge, styles.subtotalAmt]}>{formatCurrency(subtotal)}</Text>
+              <Text style={[typography.labelMedium, styles.subtotalLabel]}>{t('createBill.subtotalLabel')}</Text>
             </View>
 
             {/* Tax */}
-            <Text style={styles.sectionLabel}>{t('createBill.taxLabel')}</Text>
+            <Text style={[typography.labelMedium, styles.sectionLabel]}>{t('createBill.taxLabel')}</Text>
             <View style={styles.amountTypeRow}>
               <TextInput
-                style={[styles.input, styles.flex1]}
+                style={[typography.bodyLarge, styles.input, styles.flex1]}
                 value={taxValue}
                 onChangeText={setTaxValue}
                 placeholder={taxType === 'percent' ? t('createBill.taxPlaceholderPercent') : t('createBill.taxPlaceholderAmount')}
@@ -343,10 +347,10 @@ function CreateBillScreen({ route, navigation }: Props) {
             </View>
 
             {/* Service */}
-            <Text style={styles.sectionLabel}>{t('createBill.serviceLabel')}</Text>
+            <Text style={[typography.labelMedium, styles.sectionLabel]}>{t('createBill.serviceLabel')}</Text>
             <View style={styles.amountTypeRow}>
               <TextInput
-                style={[styles.input, styles.flex1]}
+                style={[typography.bodyLarge, styles.input, styles.flex1]}
                 value={serviceValue}
                 onChangeText={setServiceValue}
                 placeholder={serviceType === 'percent' ? t('createBill.servicePlaceholderPercent') : t('createBill.servicePlaceholderAmount')}
@@ -358,10 +362,10 @@ function CreateBillScreen({ route, navigation }: Props) {
             </View>
 
             {/* Tip */}
-            <Text style={styles.sectionLabel}>{t('createBill.tipLabel')}</Text>
+            <Text style={[typography.labelMedium, styles.sectionLabel]}>{t('createBill.tipLabel')}</Text>
             <View style={styles.amountTypeRow}>
               <TextInput
-                style={[styles.input, styles.flex1]}
+                style={[typography.bodyLarge, styles.input, styles.flex1]}
                 value={tipValue}
                 onChangeText={setTipValue}
                 placeholder={tipType === 'percent' ? t('createBill.tipPlaceholderPercent') : t('createBill.tipPlaceholderAmount')}
@@ -374,14 +378,14 @@ function CreateBillScreen({ route, navigation }: Props) {
 
             {/* Grand total */}
             <View style={styles.grandTotalBox}>
-              <Text style={styles.grandTotalAmt}>{formatCurrency(calculatedTotal)}</Text>
-              <Text style={styles.grandTotalLabel}>{t('createBill.grandTotalLabel')}</Text>
+              <Text style={[typography.amountMedium, styles.grandTotalAmt]}>{formatCurrency(calculatedTotal)}</Text>
+              <Text style={[typography.labelMedium, styles.grandTotalLabel]}>{t('createBill.grandTotalLabel')}</Text>
             </View>
 
             {/* Override */}
-            <Text style={styles.sectionLabel}>{t('createBill.overrideLabel')}</Text>
+            <Text style={[typography.labelMedium, styles.sectionLabel]}>{t('createBill.overrideLabel')}</Text>
             <TextInput
-              style={styles.input}
+              style={[typography.bodyLarge, styles.input]}
               value={grandTotalOverride}
               onChangeText={setGrandTotalOverride}
               placeholder={t('createBill.overridePlaceholder')}
@@ -390,7 +394,7 @@ function CreateBillScreen({ route, navigation }: Props) {
               textAlign={inputAlign}
             />
             {totalMismatch && (
-              <Text style={styles.mismatchWarning}>
+              <Text style={[typography.caption, styles.mismatchWarning]}>
                 {t('createBill.mismatchWarning')}
               </Text>
             )}
@@ -398,10 +402,10 @@ function CreateBillScreen({ route, navigation }: Props) {
         )}
 
         {/* Payer */}
-        <Text style={styles.sectionLabel}>{t('createBill.payerLabel')}</Text>
+        <Text style={[typography.labelMedium, styles.sectionLabel]}>{t('createBill.payerLabel')}</Text>
         <TouchableOpacity style={styles.pickerBtn} onPress={() => setPayerPickerVisible(true)}>
           <Text style={styles.pickerArrow}>▼</Text>
-          <Text style={styles.pickerText}>{payerName}</Text>
+          <Text style={[typography.bodyLarge, styles.pickerText]}>{payerName}</Text>
         </TouchableOpacity>
 
         <Button
@@ -423,7 +427,7 @@ function CreateBillScreen({ route, navigation }: Props) {
           activeOpacity={1}
           onPress={() => setPayerPickerVisible(false)}>
           <View style={styles.modalSheet}>
-            <Text style={styles.modalTitle}>{t('createBill.payerModalTitle')}</Text>
+            <Text style={[typography.headingSmall, styles.modalTitle]}>{t('createBill.payerModalTitle')}</Text>
             <FlatList
               data={activeMembers}
               keyExtractor={(m) => m.id}
@@ -444,23 +448,17 @@ const styles = StyleSheet.create({
   scroll: { padding: 20, paddingBottom: 48 },
 
   previewBanner: {
-    backgroundColor: Colors.primary + '18',
-    borderRadius: 10,
+    backgroundColor: Colors.tint,
+    borderRadius: Radius.md,
     paddingHorizontal: 14,
     paddingVertical: 10,
     marginBottom: 16,
     borderWidth: 1,
     borderColor: Colors.primary + '40',
   },
-  previewBannerText: { color: Colors.primary, fontSize: 13, fontWeight: '600', textAlign: 'right' },
+  previewBannerText: { color: Colors.primary, textAlign: 'right' },
 
-  sectionLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: Colors.textSecondary,
-    marginBottom: 6,
-    textAlign: 'right',
-  },
+  sectionLabel: { color: Colors.textSecondary, marginBottom: 6, textAlign: 'right' },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -469,12 +467,11 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: Colors.surface,
-    borderRadius: 12,
+    borderRadius: Radius.lg,
     borderWidth: 1,
     borderColor: Colors.border,
     paddingHorizontal: 14,
     paddingVertical: Platform.OS === 'ios' ? 13 : 10,
-    fontSize: 15,
     color: Colors.text,
     marginBottom: 12,
   },
@@ -485,38 +482,38 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 16,
     backgroundColor: Colors.surface,
-    borderRadius: 12,
+    borderRadius: Radius.lg,
     padding: 4,
     borderWidth: 1,
     borderColor: Colors.border,
   },
-  modeBtn: { flex: 1, paddingVertical: 8, borderRadius: 10, alignItems: 'center' },
+  modeBtn: { flex: 1, paddingVertical: 8, borderRadius: Radius.md, alignItems: 'center' },
   modeBtnActive: { backgroundColor: Colors.primary },
-  modeBtnText: { fontSize: 13, fontWeight: '600', color: Colors.textSecondary },
+  modeBtnText: { color: Colors.textSecondary },
   modeBtnTextActive: { color: Colors.textOnPrimary },
 
-  lumpSumNote: { fontSize: 12, color: Colors.textMuted, textAlign: 'right', marginBottom: 8 },
+  lumpSumNote: { color: Colors.textMuted, textAlign: 'right', marginBottom: 8 },
 
   addItemBtn: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: Radius.sm,
     borderWidth: 1.5,
     borderColor: Colors.primary,
     borderStyle: 'dashed',
   },
-  addItemBtnText: { fontSize: 13, color: Colors.primary, fontWeight: '600' },
+  addItemBtnText: { color: Colors.primary },
 
   itemRow: { marginBottom: 6 },
   itemFields: {
     backgroundColor: Colors.surface,
-    borderRadius: 12,
+    borderRadius: Radius.lg,
     borderWidth: 1,
     borderColor: Colors.border,
     padding: 10,
   },
   itemNameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
-  itemIndex: { fontSize: 13, color: Colors.textMuted, fontWeight: '700', minWidth: 20, textAlign: 'center' },
+  itemIndex: { color: Colors.textMuted, minWidth: 20, textAlign: 'center' },
   itemNameInput: { flex: 1, marginBottom: 0 },
   itemPriceRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   itemPriceInput: { flex: 2, marginBottom: 0 },
@@ -533,26 +530,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     marginBottom: 12,
   },
-  subtotalLabel: { fontSize: 13, color: Colors.textSecondary, fontWeight: '600' },
-  subtotalAmt: { fontSize: 15, fontWeight: '700', color: Colors.text },
+  subtotalLabel: { color: Colors.textSecondary },
+  subtotalAmt: { color: Colors.text },
 
   amountTypeRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
   toggle: {
     flexDirection: 'row',
     backgroundColor: Colors.surface,
-    borderRadius: 10,
+    borderRadius: Radius.md,
     borderWidth: 1,
     borderColor: Colors.border,
     overflow: 'hidden',
   },
   toggleBtn: { paddingHorizontal: 12, paddingVertical: 10 },
   toggleBtnActive: { backgroundColor: Colors.primary },
-  toggleText: { fontSize: 13, fontWeight: '700', color: Colors.textSecondary },
+  toggleText: { color: Colors.textSecondary },
   toggleTextActive: { color: Colors.textOnPrimary },
 
   grandTotalBox: {
-    backgroundColor: Colors.primary + '12',
-    borderRadius: 14,
+    backgroundColor: Colors.tint,
+    borderRadius: Radius.lg,
     paddingVertical: 14,
     paddingHorizontal: 18,
     flexDirection: 'row',
@@ -562,23 +559,23 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.primary + '30',
   },
-  grandTotalLabel: { fontSize: 14, fontWeight: '600', color: Colors.primary },
-  grandTotalAmt: { fontSize: 22, fontWeight: '800', color: Colors.primary },
+  grandTotalLabel: { color: Colors.primary },
+  grandTotalAmt: { color: Colors.primary },
 
-  mismatchWarning: { fontSize: 12, color: Colors.warning, textAlign: 'right', marginBottom: 8 },
+  mismatchWarning: { color: Colors.warning, textAlign: 'right', marginBottom: 8 },
 
   pickerBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.surface,
-    borderRadius: 12,
+    borderRadius: Radius.lg,
     borderWidth: 1,
     borderColor: Colors.border,
     paddingHorizontal: 14,
     paddingVertical: 14,
     marginBottom: 20,
   },
-  pickerText: { flex: 1, fontSize: 15, color: Colors.text, textAlign: 'right' },
+  pickerText: { flex: 1, color: Colors.text, textAlign: 'right' },
   pickerArrow: { fontSize: 12, color: Colors.textMuted },
 
   continueBtn: { marginTop: 4 },
@@ -587,15 +584,13 @@ const styles = StyleSheet.create({
   modalOverlay: { flex: 1, backgroundColor: Colors.overlay, justifyContent: 'flex-end' },
   modalSheet: {
     backgroundColor: Colors.surface,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: Radius.xl,
+    borderTopRightRadius: Radius.xl,
     paddingTop: 20,
     paddingBottom: 40,
     maxHeight: '60%',
   },
   modalTitle: {
-    fontSize: 17,
-    fontWeight: '700',
     color: Colors.text,
     textAlign: 'center',
     marginBottom: 12,
@@ -609,8 +604,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
   },
-  payerRowSelected: { backgroundColor: Colors.primary + '10' },
-  payerRowName: { flex: 1, fontSize: 16, color: Colors.text, textAlign: 'right' },
-  payerRowNameSelected: { color: Colors.primary, fontWeight: '600' },
+  payerRowSelected: { backgroundColor: Colors.tint },
+  payerRowName: { flex: 1, color: Colors.text, textAlign: 'right' },
+  payerRowNameSelected: { color: Colors.primary },
   checkmark: { fontSize: 18, color: Colors.primary, marginLeft: 8 },
 });

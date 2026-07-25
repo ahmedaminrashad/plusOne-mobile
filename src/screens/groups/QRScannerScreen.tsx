@@ -14,6 +14,8 @@ import { useTranslation } from 'react-i18next';
 import { Camera } from 'react-native-camera-kit';
 import { AppScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
+import { Radius } from '../../constants/radius';
+import { useTypography } from '../../hooks/useTypography';
 import { useParseQrBillMutation } from '../../store/api/billsApi';
 import { PrefilledBillData } from '../../types/models';
 
@@ -21,6 +23,7 @@ type Props = AppScreenProps<'QRScanner'>;
 
 function QRScannerScreen({ route, navigation }: Props) {
   const { t } = useTranslation('billing');
+  const typography = useTypography();
   const { groupId, groupName } = route.params;
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [parsing, setParsing] = useState(false);
@@ -142,13 +145,13 @@ function QRScannerScreen({ route, navigation }: Props) {
     return (
       <SafeAreaView style={styles.permissionScreen}>
         <Text style={styles.permIcon}>📷</Text>
-        <Text style={styles.permTitle}>{t('qrScanner.permissionRequiredTitle')}</Text>
-        <Text style={styles.permSub}>{t('qrScanner.permissionRequiredSub')}</Text>
+        <Text style={[typography.headingMedium, styles.permTitle]}>{t('qrScanner.permissionRequiredTitle')}</Text>
+        <Text style={[typography.bodyMedium, styles.permSub]}>{t('qrScanner.permissionRequiredSub')}</Text>
         <TouchableOpacity style={styles.manualBtn} onPress={() => navigation.replace('AddBill', { groupId, groupName })}>
-          <Text style={styles.manualBtnText}>{t('qrScanner.manualEntryButton')}</Text>
+          <Text style={[typography.labelLarge, styles.manualBtnText]}>{t('qrScanner.manualEntryButton')}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Text style={styles.backBtnText}>{t('common:back')}</Text>
+          <Text style={[typography.bodyMedium, styles.backBtnText]}>{t('common:back')}</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
@@ -162,7 +165,7 @@ function QRScannerScreen({ route, navigation }: Props) {
         onReadCode={handleReadCode}
         showFrame
         laserColor="transparent"
-        frameColor={Colors.primary}
+        frameColor={Colors.accent}
       />
 
       <View style={styles.overlay}>
@@ -181,25 +184,25 @@ function QRScannerScreen({ route, navigation }: Props) {
           {parsing ? (
             <>
               <ActivityIndicator size="large" color="#fff" />
-              <Text style={styles.parsingText}>{t('qrScanner.analyzingText')}</Text>
+              <Text style={[typography.bodyMedium, styles.parsingText]}>{t('qrScanner.analyzingText')}</Text>
             </>
           ) : (
-            <Text style={styles.hint}>{t('qrScanner.scanHint')}</Text>
+            <Text style={[typography.bodyMedium, styles.hint]}>{t('qrScanner.scanHint')}</Text>
           )}
           <TouchableOpacity
             style={styles.testBtn}
             onPress={handleTestEta}
             disabled={parsing}
             activeOpacity={0.75}>
-            <Text style={styles.testBtnText}>{t('qrScanner.testEtaButton')}</Text>
+            <Text style={[typography.labelMedium, styles.testBtnText]}>{t('qrScanner.testEtaButton')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.manualEntryBtn}
             onPress={() => navigation.replace('AddBill', { groupId, groupName })}>
-            <Text style={styles.manualEntryText}>{t('qrScanner.manualEntryButton')}</Text>
+            <Text style={[typography.labelLarge, styles.manualEntryText]}>{t('qrScanner.manualEntryButton')}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.cancelBtn} onPress={() => navigation.goBack()}>
-            <Text style={styles.cancelText}>{t('common:cancel')}</Text>
+            <Text style={[typography.labelLarge, styles.cancelText]}>{t('common:cancel')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -225,18 +228,18 @@ const styles = StyleSheet.create({
     padding: 32,
   },
   permIcon: { fontSize: 52 },
-  permTitle: { fontSize: 18, fontWeight: '700', color: Colors.text },
-  permSub: { fontSize: 14, color: Colors.textSecondary, textAlign: 'center' },
+  permTitle: { color: Colors.text },
+  permSub: { color: Colors.textSecondary, textAlign: 'center' },
   manualBtn: {
     marginTop: 12,
     paddingHorizontal: 32,
     paddingVertical: 14,
     backgroundColor: Colors.primary,
-    borderRadius: 12,
+    borderRadius: Radius.pill,
   },
-  manualBtnText: { color: '#fff', fontWeight: '600', fontSize: 16 },
+  manualBtnText: { color: '#fff' },
   backBtn: { paddingHorizontal: 32, paddingVertical: 12 },
-  backBtnText: { color: Colors.textSecondary, fontSize: 15 },
+  backBtnText: { color: Colors.textSecondary },
 
   overlay: { ...StyleSheet.absoluteFillObject, flexDirection: 'column' },
   overlayTop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)' },
@@ -244,34 +247,34 @@ const styles = StyleSheet.create({
   overlaySide: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)' },
   overlayBottom: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', paddingTop: 28, gap: 16 },
   scanWindow: { width: WINDOW, height: WINDOW },
-  corner: { position: 'absolute', width: CORNER, height: CORNER, borderColor: Colors.primary },
+  corner: { position: 'absolute', width: CORNER, height: CORNER, borderColor: Colors.accent },
   cornerTL: { top: 0, left: 0, borderTopWidth: THICKNESS, borderLeftWidth: THICKNESS },
   cornerTR: { top: 0, right: 0, borderTopWidth: THICKNESS, borderRightWidth: THICKNESS },
   cornerBL: { bottom: 0, left: 0, borderBottomWidth: THICKNESS, borderLeftWidth: THICKNESS },
   cornerBR: { bottom: 0, right: 0, borderBottomWidth: THICKNESS, borderRightWidth: THICKNESS },
-  hint: { color: '#fff', fontSize: 14, textAlign: 'center', paddingHorizontal: 32, opacity: 0.9 },
-  parsingText: { color: '#fff', fontSize: 14, opacity: 0.9 },
+  hint: { color: '#fff', textAlign: 'center', paddingHorizontal: 32, opacity: 0.9 },
+  parsingText: { color: '#fff', opacity: 0.9 },
   testBtn: {
     paddingHorizontal: 24,
     paddingVertical: 9,
-    borderRadius: 20,
-    backgroundColor: 'rgba(99,102,241,0.75)',
+    borderRadius: Radius.pill,
+    backgroundColor: 'rgba(224,162,62,0.85)',
   },
-  testBtnText: { color: '#fff', fontSize: 13, fontWeight: '600' },
+  testBtnText: { color: '#fff' },
   manualEntryBtn: {
     paddingHorizontal: 32,
     paddingVertical: 10,
-    borderRadius: 20,
+    borderRadius: Radius.pill,
     borderWidth: 1.5,
     borderColor: 'rgba(255,255,255,0.6)',
   },
-  manualEntryText: { color: '#fff', fontSize: 14, fontWeight: '600' },
+  manualEntryText: { color: '#fff' },
   cancelBtn: {
     paddingHorizontal: 40,
     paddingVertical: 12,
-    borderRadius: 24,
+    borderRadius: Radius.pill,
     borderWidth: 1.5,
     borderColor: 'rgba(255,255,255,0.5)',
   },
-  cancelText: { color: '#fff', fontSize: 15, fontWeight: '600' },
+  cancelText: { color: '#fff' },
 });

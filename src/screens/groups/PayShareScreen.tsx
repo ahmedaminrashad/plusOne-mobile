@@ -1,0 +1,296 @@
+import React, { useMemo, memo, useCallback, useEffect, useRef } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  SafeAreaView,
+  ActivityIndicator,
+  Alert,
+  Linking,
+  AppState,
+  AppStateStatus,
+} from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { useFocusEffect } from '@react-navigation/native';
+import { AppScreenProps } from '../../types/navigation';
+import { Colors } from '../../constants/colors';
+import { Radius } from '../../constants/radius';
+import { useTypography } from '../../hooks/useTypography';
+import Avatar from '../../components/common/Avatar';
+import Button from '../../components/common/Button';
+import { useGetBillDetailQuery } from '../../store/api/billsApi';
+import { usePayShareMutation, useCancelShareInitiationMutation } from '../../store/api/sharesApi';
+import { useGetMeQuery } from '../../store/api/usersApi';
+import { formatCurrency, resolveAssetUrl } from '../../utils/format';
+import { normalizeInstaPayIdentifier, buildInstaPayLink } from '../../utils/instapay';
+
+type Props = AppScreenProps<'PayShare'>;
+
+async function tryOpenInstaPay(url: string): Promise<boolean> {
+  try {
+    await Linking.openURL(url);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function PayShareScreen({ route, navigation }: Props) {
+  const { t } = useTranslation('billing');
+  const typography = useTypography();
+  const { groupId, groupName, billId } = route.params;
+  const { data: bill, isLoading, refetch } = useGetBillDetailQuery(billId);
+  const { data: me } = useGetMeQuery();
+  const [payShare, { isLoading: isPaying }] = usePayShareMutation();
+  const [cancelInitiation] = useCancelShareInitiationMutation();
+
+  useFocusEffect(useCallback(() => { refetch(); }, [refetch]));
+
+  const myShare = useMemo(() => bill?.shares.find((s) => s.ownerUserId === me?.id), [bill?.shares, me?.id]);
+  const payerName = bill?.paidBy?.displayName ?? t('viewReceipt.creatorFallback');
+
+  const subtotal = useMemo(
+    () => (bill?.lineItems ?? []).reduce((sum, it) => sum + it.qty * it.unitPrice, 0),
+    [bill?.lineItems],
+  );
+  const chargesAmt = useMemo(() => {
+    if (!bill) return 0;
+    const tax = bill.tax != null ? (bill.taxType === 'percent' ? subtotal * bill.tax / 100 : bill.tax) : 0;
+    const service = bill.service != null ? (bill.serviceType === 'percent' ? subtotal * bill.service / 100 : bill.service) : 0;
+    return tax + service;
+  }, [bill, subtotal]);
+
+  const shareAmount = myShare ? myShare.amountPiastres / 100 : 0;
+  const shareRatio = Number(bill?.amount ?? 0) > 0 ? shareAmount / Number(bill!.amount) : 0;
+  const foodPortion = subtotal * shareRatio;
+  const chargesPortion = chargesAmt * shareRatio;
+
+  const awaitingReturnRef = useRef(false);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (state: AppStateStatus) => {
+      if (state !== 'active' || !awaitingReturnRef.current) return;
+      awaitingReturnRef.current = false;
+      if (!myShare || myShare.status !== 'initiated') return;
+
+      Alert.alert(
+        t('viewReceipt.paymentConfirmTitle'),
+        t('viewReceipt.paymentConfirmMessage', { amount: formatCurrency(myShare.amountPiastres / 100, myShare.currency) }),
+        [
+          {
+            text: t('viewReceipt.noCancelButton'),
+            style: 'cancel',
+            onPress: async () => {
+              try { await cancelInitiation(myShare.id).unwrap(); } catch { /* already reconciled */ }
+            },
+          },
+          { text: t('viewReceipt.yesPaidButton') },
+        ],
+      );
+    });
+    return () => subscription.remove();
+  }, [myShare, cancelInitiation, t]);
+
+  const showManualCopyFallback = useCallback(
+    (alias: string, amountText: string, currency: string, shareId: string) => {
+      Alert.alert(
+        t('viewReceipt.instaPayTitle'),
+        t('viewReceipt.manualPayInstructions', { amount: formatCurrency(Number(amountText), currency), alias }),
+        [
+          { text: t('common:cancel'), style: 'cancel' },
+          {
+            text: t('viewReceipt.paidButton'),
+            onPress: async () => {
+              try {
+                await payShare({ shareId }).unwrap();
+              } catch {
+                Alert.alert(t('common:error'), t('viewReceipt.markPaidFailed'));
+              }
+            },
+          },
+        ],
+      );
+    },
+    [payShare, t],
+  );
+
+  const handlePayInstaPay = useCallback(async () => {
+    if (!myShare || !bill) return;
+    const rawAlias = bill.paidBy?.instaPayAlias;
+    if (!rawAlias) {
+      Alert.alert(t('viewReceipt.noAliasTitle'), t('viewReceipt.noAliasMessage', { name: payerName }));
+      return;
+    }
+    const alias = normalizeInstaPayIdentifier(rawAlias);
+    const amountText = (myShare.amountPiastres / 100).toFixed(2);
+    const shareId = myShare.id;
+    const currency = myShare.currency;
+
+    Alert.alert(
+      t('viewReceipt.instaPayTitle'),
+      t('viewReceipt.payInstructions', { alias, amount: formatCurrency(Number(amountText), currency) }),
+      [
+        { text: t('common:cancel'), style: 'cancel' },
+        {
+          text: t('common:continue'),
+          onPress: async () => {
+            const link = buildInstaPayLink(alias);
+            const opened = await tryOpenInstaPay(link);
+            if (!opened) {
+              showManualCopyFallback(alias, amountText, currency, shareId);
+              return;
+            }
+            awaitingReturnRef.current = true;
+            try {
+              await payShare({ shareId }).unwrap();
+            } catch { /* idempotency conflicts reconciled on resume */ }
+          },
+        },
+      ],
+    );
+  }, [myShare, bill, payerName, showManualCopyFallback, payShare, t]);
+
+  const handlePayCash = useCallback(() => {
+    if (!myShare) return;
+    Alert.alert(
+      t('payShare.cashConfirmTitle'),
+      t('payShare.cashConfirmMessage', { payer: payerName }),
+      [
+        { text: t('common:cancel'), style: 'cancel' },
+        {
+          text: t('common:confirm'),
+          onPress: async () => {
+            try {
+              await payShare({ shareId: myShare.id, method: 'cash' }).unwrap();
+            } catch {
+              Alert.alert(t('common:error'), t('viewReceipt.markPaidFailed'));
+            }
+          },
+        },
+      ],
+    );
+  }, [myShare, payerName, payShare, t]);
+
+  if (isLoading || !bill) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <ActivityIndicator color={Colors.primary} style={styles.loader} />
+      </SafeAreaView>
+    );
+  }
+
+  const displayName = bill.venueName ?? bill.title ?? t('viewReceipt.defaultBillName');
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.headerRow}>
+        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={12}>
+          <Text style={[typography.headingLarge, styles.back]}>‹</Text>
+        </TouchableOpacity>
+        <Text style={[typography.headingLarge, styles.title]}>{t('payShare.title')}</Text>
+      </View>
+
+      <View style={styles.content}>
+        <View style={styles.payerRow}>
+          <Avatar uri={resolveAssetUrl(bill.paidBy?.photoUrl)} name={payerName} size={32} />
+          <Text style={[typography.bodyMedium, styles.payerText]}>
+            {t('payShare.toPayerVenue', { payer: payerName, venue: displayName })} · {groupName}
+          </Text>
+        </View>
+
+        {myShare?.status === 'settled' ? (
+          <View style={styles.statusCard}>
+            <Text style={[typography.headingMedium, styles.settledText]}>{t('viewReceipt.shareSettled')}</Text>
+          </View>
+        ) : myShare?.status === 'initiated' ? (
+          <View style={styles.statusCard}>
+            <Text style={[typography.bodyLarge, styles.pendingText]}>
+              {t('viewReceipt.awaitingConfirmation', { payerName, amount: formatCurrency(myShare.amountPiastres / 100, myShare.currency) })}
+            </Text>
+          </View>
+        ) : myShare ? (
+          <>
+            <Text style={[typography.labelMedium, styles.yourShareLabel]}>{t('viewReceipt.yourShareLabel')}</Text>
+            <Text style={[typography.amountLarge, styles.shareAmount]}>{formatCurrency(shareAmount)}</Text>
+            <Text style={[typography.bodyMedium, styles.splitCaption]}>
+              {t('payShare.splitEquallyBetween', {
+                currency: myShare.currency,
+                count: (bill.shares?.filter((s) => s.status !== 'cancelled').length ?? 1),
+              })}
+            </Text>
+
+            {(foodPortion > 0 || chargesPortion > 0) && (
+              <View style={styles.breakdownCard}>
+                {foodPortion > 0 && (
+                  <View style={styles.breakdownRow}>
+                    <Text style={[typography.labelLarge, styles.breakdownAmt]}>{formatCurrency(foodPortion)}</Text>
+                    <Text style={[typography.bodyMedium, styles.breakdownLabel]}>{t('viewReceipt.itemsTitle')}</Text>
+                  </View>
+                )}
+                {chargesPortion > 0 && (
+                  <View style={styles.breakdownRow}>
+                    <Text style={[typography.labelLarge, styles.breakdownAmt]}>{formatCurrency(chargesPortion)}</Text>
+                    <Text style={[typography.bodyMedium, styles.breakdownLabel]}>
+                      {t('viewReceipt.taxLabel')} + {t('viewReceipt.serviceLabel')}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            )}
+
+            <Button title={t('payShare.payWithInstaPay')} onPress={handlePayInstaPay} loading={isPaying} style={styles.payBtn} />
+            <Button title={t('payShare.iPaidInCash')} onPress={handlePayCash} variant="outline" style={styles.cashBtn} />
+
+            <Text style={[typography.caption, styles.footerNote]}>{t('payShare.cashNote', { payer: payerName })}</Text>
+            <Text style={[typography.caption, styles.footerNote]}>{t('payShare.instaPayNote', { payer: payerName })}</Text>
+          </>
+        ) : null}
+      </View>
+    </SafeAreaView>
+  );
+}
+
+export default memo(PayShareScreen);
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: Colors.background },
+  loader: { flex: 1 },
+  headerRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 8 },
+  back: { color: Colors.accent },
+  title: { color: Colors.text },
+  content: { padding: 20, alignItems: 'center' },
+
+  payerRow: { flexDirection: 'row', alignItems: 'center', gap: 10, alignSelf: 'stretch', marginBottom: 20 },
+  payerText: { color: Colors.textSecondary, flex: 1 },
+
+  yourShareLabel: { color: Colors.textMuted, letterSpacing: 0.5 },
+  shareAmount: { color: Colors.text, marginTop: 6 },
+  splitCaption: { color: Colors.textMuted, marginTop: 4, marginBottom: 16 },
+
+  breakdownCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.lg,
+    padding: 14,
+    alignSelf: 'stretch',
+    marginBottom: 20,
+    gap: 8,
+  },
+  breakdownRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  breakdownAmt: { color: Colors.text },
+  breakdownLabel: { color: Colors.textSecondary },
+
+  payBtn: { alignSelf: 'stretch', marginBottom: 10 },
+  cashBtn: { alignSelf: 'stretch', marginBottom: 16 },
+  footerNote: { color: Colors.textMuted, textAlign: 'center', marginBottom: 4 },
+
+  statusCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.xl,
+    padding: 24,
+    alignSelf: 'stretch',
+    alignItems: 'center',
+  },
+  settledText: { color: Colors.success },
+  pendingText: { color: Colors.warning, textAlign: 'center' },
+});

@@ -1,0 +1,41 @@
+import React, { memo } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { Colors } from '../../constants/colors';
+import { useTypography } from '../../hooks/useTypography';
+
+interface Props {
+  title: string;
+  onBack?: () => void;
+}
+
+function ComingSoonScreen({ title, onBack }: Props) {
+  const { t } = useTranslation('common');
+  const typography = useTypography();
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.headerRow}>
+        {onBack && (
+          <TouchableOpacity onPress={onBack} hitSlop={12}>
+            <Text style={[typography.headingLarge, styles.back]}>‹</Text>
+          </TouchableOpacity>
+        )}
+        <Text style={[typography.headingLarge, styles.title]}>{title}</Text>
+      </View>
+      <View style={styles.body}>
+        <Text style={[typography.bodyLarge, styles.message]}>{t('comingSoon.message')}</Text>
+      </View>
+    </SafeAreaView>
+  );
+}
+
+export default memo(ComingSoonScreen);
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: Colors.background },
+  headerRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingTop: 12 },
+  back: { color: Colors.accent },
+  title: { color: Colors.text },
+  body: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32 },
+  message: { color: Colors.textSecondary, textAlign: 'center' },
+});

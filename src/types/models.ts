@@ -77,7 +77,7 @@ export interface Bill {
 }
 
 export type ShareStatus = 'pending' | 'initiated' | 'settled' | 'cancelled' | 'failed';
-export type ShareMethod = 'instapay' | 'card';
+export type ShareMethod = 'instapay' | 'cash';
 
 export interface Share {
   id: string;
@@ -138,7 +138,7 @@ export interface PrefilledBillData {
   sourceRef?: string;
 }
 
-/** Extended receipt format passed to ReceiptSplit screen */
+/** Extended receipt format passed to the AssignItems screen */
 export interface ParsedReceiptData {
   storeName?: string;
   venueName?: string;

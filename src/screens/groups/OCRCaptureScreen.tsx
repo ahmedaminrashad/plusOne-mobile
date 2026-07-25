@@ -15,6 +15,8 @@ import { useTranslation } from 'react-i18next';
 import { launchCamera } from 'react-native-image-picker';
 import { AppScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
+import { Radius } from '../../constants/radius';
+import { useTypography } from '../../hooks/useTypography';
 import { API_BASE_URL } from '../../config';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
@@ -24,6 +26,7 @@ type Props = AppScreenProps<'OCRCapture'>;
 
 function OCRCaptureScreen({ route, navigation }: Props) {
   const { t } = useTranslation('billing');
+  const typography = useTypography();
   const { groupId, groupName } = route.params;
   const [capturedUri, setCapturedUri] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
@@ -141,20 +144,20 @@ function OCRCaptureScreen({ route, navigation }: Props) {
             {processing ? (
               <View style={styles.processingRow}>
                 <ActivityIndicator color={Colors.primary} />
-                <Text style={styles.processingText}>{t('ocrCapture.processingText')}</Text>
+                <Text style={[typography.bodyLarge, styles.processingText]}>{t('ocrCapture.processingText')}</Text>
               </View>
             ) : (
               <>
                 <TouchableOpacity style={styles.primaryBtn} onPress={handleProcess}>
-                  <Text style={styles.primaryBtnText}>{t('ocrCapture.processButton')}</Text>
+                  <Text style={[typography.labelLarge, styles.primaryBtnText]}>{t('ocrCapture.processButton')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.secondaryBtn} onPress={() => setCapturedUri(null)}>
-                  <Text style={styles.secondaryBtnText}>{t('ocrCapture.retakePhotoButton')}</Text>
+                  <Text style={[typography.labelLarge, styles.secondaryBtnText]}>{t('ocrCapture.retakePhotoButton')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.linkBtn}
                   onPress={() => navigation.replace('AddBill', { groupId, groupName })}>
-                  <Text style={styles.linkBtnText}>{t('ocrCapture.manualEntryButton')}</Text>
+                  <Text style={[typography.labelLarge, styles.linkBtnText]}>{t('ocrCapture.manualEntryButton')}</Text>
                 </TouchableOpacity>
               </>
             )}
@@ -167,20 +170,20 @@ function OCRCaptureScreen({ route, navigation }: Props) {
             <View style={[styles.guideCorner, styles.guideTR]} />
             <View style={[styles.guideCorner, styles.guideBL]} />
             <View style={[styles.guideCorner, styles.guideBR]} />
-            <Text style={styles.guideHint}>{t('ocrCapture.guideHint')}</Text>
+            <Text style={[typography.bodySmall, styles.guideHint]}>{t('ocrCapture.guideHint')}</Text>
           </View>
           <View style={styles.captureActions}>
-            <Text style={styles.captureTitle}>{t('ocrCapture.captureTitle')}</Text>
-            <Text style={styles.captureSub}>
+            <Text style={[typography.headingLarge, styles.captureTitle]}>{t('ocrCapture.captureTitle')}</Text>
+            <Text style={[typography.bodyLarge, styles.captureSub]}>
               {t('ocrCapture.captureSubtitle')}
             </Text>
             <TouchableOpacity style={styles.captureBtn} onPress={handleCapture}>
-              <Text style={styles.captureBtnText}>{t('ocrCapture.captureButton')}</Text>
+              <Text style={[typography.labelLarge, styles.captureBtnText]}>{t('ocrCapture.captureButton')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.linkBtn}
               onPress={() => navigation.replace('AddBill', { groupId, groupName })}>
-              <Text style={styles.linkBtnText}>{t('ocrCapture.manualEntryButton')}</Text>
+              <Text style={[typography.labelLarge, styles.linkBtnText]}>{t('ocrCapture.manualEntryButton')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -206,25 +209,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  guideCorner: { position: 'absolute', width: CORNER_SIZE, height: CORNER_SIZE, borderColor: Colors.primary },
+  guideCorner: { position: 'absolute', width: CORNER_SIZE, height: CORNER_SIZE, borderColor: Colors.accent },
   guideTL: { top: 0, left: 0, borderTopWidth: CORNER_W, borderLeftWidth: CORNER_W },
   guideTR: { top: 0, right: 0, borderTopWidth: CORNER_W, borderRightWidth: CORNER_W },
   guideBL: { bottom: 0, left: 0, borderBottomWidth: CORNER_W, borderLeftWidth: CORNER_W },
   guideBR: { bottom: 0, right: 0, borderBottomWidth: CORNER_W, borderRightWidth: CORNER_W },
-  guideHint: { fontSize: 13, color: Colors.textMuted, textAlign: 'center' },
+  guideHint: { color: Colors.textMuted, textAlign: 'center' },
 
   captureActions: { alignItems: 'center', gap: 12, width: '100%' },
-  captureTitle: { fontSize: 20, fontWeight: '700', color: Colors.text },
-  captureSub: { fontSize: 14, color: Colors.textSecondary, textAlign: 'center', lineHeight: 20 },
+  captureTitle: { color: Colors.text },
+  captureSub: { color: Colors.textSecondary, textAlign: 'center' },
   captureBtn: {
     backgroundColor: Colors.primary,
-    borderRadius: 14,
+    borderRadius: Radius.pill,
     paddingVertical: 14,
     paddingHorizontal: 40,
     width: '100%',
     alignItems: 'center',
   },
-  captureBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  captureBtnText: { color: '#fff' },
 
   previewContainer: { flex: 1 },
   previewImage: { flex: 1, backgroundColor: '#000' },
@@ -236,22 +239,22 @@ const styles = StyleSheet.create({
     borderTopColor: Colors.border,
   },
   processingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, paddingVertical: 12 },
-  processingText: { fontSize: 15, color: Colors.textSecondary },
+  processingText: { color: Colors.textSecondary },
   primaryBtn: {
     backgroundColor: Colors.primary,
-    borderRadius: 12,
+    borderRadius: Radius.pill,
     paddingVertical: 14,
     alignItems: 'center',
   },
-  primaryBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  primaryBtnText: { color: '#fff' },
   secondaryBtn: {
-    borderRadius: 12,
+    borderRadius: Radius.pill,
     paddingVertical: 12,
     alignItems: 'center',
     borderWidth: 1.5,
     borderColor: Colors.border,
   },
-  secondaryBtnText: { color: Colors.text, fontSize: 15, fontWeight: '600' },
+  secondaryBtnText: { color: Colors.text },
   linkBtn: { alignItems: 'center', paddingVertical: 8 },
-  linkBtnText: { color: Colors.primary, fontSize: 14, fontWeight: '600' },
+  linkBtnText: { color: Colors.primary },
 });
