@@ -19,6 +19,7 @@ import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
 import { useGetMeQuery, useUpdateProfileMutation, useUploadProfilePhotoMutation } from '../../store/api/usersApi';
 import { resolveAssetUrl } from '../../utils/format';
+import { CameraIcon } from '../../components/icons';
 
 type Props = SettingsScreenProps<'EditProfile'>;
 
@@ -79,7 +80,7 @@ function EditProfileScreen({ navigation, route }: Props) {
           <View style={styles.avatarRing}>
             <Avatar uri={displayPhotoUri} name={displayName || 'U'} size={80} />
             <View style={styles.cameraBadge}>
-              <Text style={styles.cameraBadgeIcon}>📷</Text>
+              <CameraIcon size={15} color={Colors.textOnPrimary} />
             </View>
           </View>
           <Text style={styles.changePhotoText}>{t('editProfile.changePhoto')}</Text>
@@ -154,7 +155,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
     borderWidth: 2, borderColor: Colors.background,
   },
-  cameraBadgeIcon: { fontSize: 14 },
   changePhotoText: { fontSize: 13, color: Colors.secondary, fontWeight: '600' },
 
   readOnlyField: {

@@ -24,6 +24,7 @@ import { usePayShareMutation, useCancelShareInitiationMutation } from '../../sto
 import { useGetMeQuery } from '../../store/api/usersApi';
 import { formatCurrency, resolveAssetUrl } from '../../utils/format';
 import { normalizeInstaPayIdentifier, buildInstaPayLink } from '../../utils/instapay';
+import { ChevronLeftIcon } from '../../components/icons';
 
 type Props = AppScreenProps<'PayShare'>;
 
@@ -186,7 +187,7 @@ function PayShareScreen({ route, navigation }: Props) {
     <SafeAreaView style={styles.container}>
       <View style={styles.headerRow}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} hitSlop={12}>
-          <Text style={styles.backBtnText}>‹</Text>
+          <ChevronLeftIcon size={20} color={Colors.text} />
         </TouchableOpacity>
         <Text style={[typography.headingLarge, styles.title]}>{t('payShare.title')}</Text>
       </View>
@@ -273,7 +274,6 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 1,
   },
-  backBtnText: { fontSize: 20, color: Colors.text },
   title: { color: Colors.text },
   content: { padding: 20, alignItems: 'center' },
 

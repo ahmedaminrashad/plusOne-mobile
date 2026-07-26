@@ -9,6 +9,7 @@ import { useGetGroupsQuery } from '../../store/api/groupsApi';
 import { GroupLedgerResponse } from '../../store/api/ledgerApi';
 import GroupLedgerCollector from '../../components/groups/GroupLedgerCollector';
 import { formatCurrency, formatDate } from '../../utils/format';
+import { ChevronLeftIcon, ChevronRightIcon, ReceiptIcon } from '../../components/icons';
 
 type Props = AppScreenProps<'MyLedger'>;
 
@@ -72,20 +73,22 @@ function MyLedgerScreen({ navigation }: Props) {
 
       <View style={styles.headerRow}>
         <TouchableOpacity style={styles.backChip} onPress={() => navigation.goBack()} hitSlop={12}>
-          <Text style={[typography.headingMedium, styles.back]}>‹</Text>
+          <ChevronLeftIcon size={18} color={Colors.text} />
         </TouchableOpacity>
         <View style={styles.titleBlock}>
           <Text style={[typography.headingMedium, styles.title]}>{t('navigation:appStack.myLedgerTitle')}</Text>
           <Text style={[typography.bodySmall, styles.subtitle]}>{t('myLedger.allGroupsSubtitle')}</Text>
         </View>
         <View style={styles.monthChip}>
-          <Text style={[typography.labelMedium, styles.monthChipText]}>‹ {monthLabel} ›</Text>
+          <ChevronLeftIcon size={14} color={Colors.text} />
+          <Text style={[typography.labelMedium, styles.monthChipText]}>{monthLabel}</Text>
+          <ChevronRightIcon size={14} color={Colors.text} />
         </View>
       </View>
 
       {rows.length === 0 ? (
         <View style={styles.empty}>
-          <Text style={styles.emptyIcon}>🧾</Text>
+          <ReceiptIcon size={40} color={Colors.textSecondary} />
           <Text style={[typography.headingMedium, styles.emptyTitle]}>{t('myLedger.emptyTitle')}</Text>
           <Text style={[typography.bodyMedium, styles.emptySubtitle]}>{t('myLedger.emptySubtitle')}</Text>
         </View>
@@ -176,11 +179,13 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
-  back: { color: Colors.text },
   titleBlock: { flex: 1 },
   title: { color: Colors.text },
   subtitle: { color: Colors.textSecondary, marginTop: 1 },
   monthChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
     borderRadius: Radius.md,
     backgroundColor: Colors.surface,
     paddingHorizontal: 10,
@@ -194,7 +199,6 @@ const styles = StyleSheet.create({
   monthChipText: { color: Colors.text },
 
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 8 },
-  emptyIcon: { fontSize: 44, marginBottom: 8 },
   emptyTitle: { color: Colors.text },
   emptySubtitle: { color: Colors.textSecondary, textAlign: 'center' },
 

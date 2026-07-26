@@ -25,6 +25,7 @@ import { useGetMeQuery } from '../../store/api/usersApi';
 import { GroupMember, TaxServiceType, ParsedReceiptData } from '../../types/models';
 import { formatCurrency } from '../../utils/format';
 import { useInputTextAlign } from '../../utils/rtl';
+import { CheckIcon, CloseIcon, ChevronDownIcon } from '../../components/icons';
 
 type Props = AppScreenProps<'AddBill'>;
 
@@ -212,7 +213,11 @@ function CreateBillScreen({ route, navigation }: Props) {
           style={[styles.payerRow, isSelected && styles.payerRowSelected]}
           onPress={() => { setPaidByUserId(item.userId!); setPayerPickerVisible(false); }}>
           <Text style={[typography.bodyLarge, styles.payerRowName, isSelected && styles.payerRowNameSelected]}>{name}</Text>
-          {isSelected && <Text style={styles.checkmark}>✓</Text>}
+          {isSelected && (
+            <View style={styles.checkmark}>
+              <CheckIcon size={16} color={Colors.primary} strokeWidth={2} />
+            </View>
+          )}
         </TouchableOpacity>
       );
     },
@@ -308,7 +313,7 @@ function CreateBillScreen({ route, navigation }: Props) {
                 </View>
                 {items.length > 1 && (
                   <TouchableOpacity onPress={() => removeItem(item.id)} style={styles.removeItemBtn}>
-                    <Text style={styles.removeItemText}>✕</Text>
+                    <CloseIcon size={14} color={Colors.danger} strokeWidth={2} />
                   </TouchableOpacity>
                 )}
               </View>
@@ -397,7 +402,7 @@ function CreateBillScreen({ route, navigation }: Props) {
         {/* Payer */}
         <Text style={[typography.labelMedium, styles.sectionLabel]}>{t('createBill.payerLabel')}</Text>
         <TouchableOpacity style={styles.pickerBtn} onPress={() => setPayerPickerVisible(true)}>
-          <Text style={styles.pickerArrow}>▼</Text>
+          <ChevronDownIcon size={14} color={Colors.textMuted} strokeWidth={2} />
           <Text style={[typography.bodyLarge, styles.pickerText]}>{payerName}</Text>
         </TouchableOpacity>
 
@@ -527,7 +532,6 @@ const styles = StyleSheet.create({
   },
   itemQtyInput: { color: Colors.text, padding: 0, minWidth: 20, textAlign: 'center' },
   removeItemBtn: { padding: 4 },
-  removeItemText: { fontSize: 14, color: Colors.danger },
 
   subtotalRow: {
     flexDirection: 'row',
@@ -583,7 +587,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   pickerText: { flex: 1, color: Colors.text, textAlign: 'right' },
-  pickerArrow: { fontSize: 12, color: Colors.textMuted },
 
   continueBtn: { marginTop: 4 },
   continueBtnDisabled: { opacity: 0.5 },
@@ -614,5 +617,5 @@ const styles = StyleSheet.create({
   payerRowSelected: { backgroundColor: Colors.tint },
   payerRowName: { flex: 1, color: Colors.text, textAlign: 'right' },
   payerRowNameSelected: { color: Colors.primary },
-  checkmark: { fontSize: 18, color: Colors.primary, marginLeft: 8 },
+  checkmark: { marginLeft: 8 },
 });

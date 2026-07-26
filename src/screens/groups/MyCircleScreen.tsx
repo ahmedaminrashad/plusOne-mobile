@@ -19,6 +19,7 @@ import { useTypography } from '../../hooks/useTypography';
 import { useInputTextAlign } from '../../utils/rtl';
 import Avatar from '../../components/common/Avatar';
 import Button from '../../components/common/Button';
+import { PeopleIcon, ChevronLeftIcon, SearchIcon, CloseIcon, AddPersonIcon } from '../../components/icons';
 import { useGetMyCircleQuery, useAddFriendMutation, useRemoveFriendMutation, Friend } from '../../store/api/friendsApi';
 
 type Props = AppScreenProps<'MyCircle'>;
@@ -97,7 +98,7 @@ function MyCircleScreen({ navigation }: Props) {
         </Text>
       </View>
       <TouchableOpacity onPress={() => handleRemove(item)} hitSlop={10} style={styles.removeBtn}>
-        <Text style={styles.removeIcon}>✕</Text>
+        <CloseIcon size={14} color={Colors.textMuted} />
       </TouchableOpacity>
     </View>
   );
@@ -114,7 +115,7 @@ function MyCircleScreen({ navigation }: Props) {
     <SafeAreaView style={styles.container}>
       <View style={styles.headerRow}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} hitSlop={12}>
-          <Text style={[typography.headingLarge, styles.back]}>‹</Text>
+          <ChevronLeftIcon size={20} color={Colors.text} />
         </TouchableOpacity>
         <Text style={[typography.headingLarge, styles.title]}>{t('navigation:appStack.myCircleTitle')}</Text>
         <View style={styles.countPill}>
@@ -123,7 +124,7 @@ function MyCircleScreen({ navigation }: Props) {
       </View>
 
       <View style={styles.searchBar}>
-        <Text style={styles.searchIcon}>🔍</Text>
+        <SearchIcon size={16} color={Colors.textMuted} />
         <TextInput
           style={[typography.bodyMedium, styles.searchInput]}
           placeholder={t('myCircle.searchPlaceholder')}
@@ -135,7 +136,7 @@ function MyCircleScreen({ navigation }: Props) {
 
       <View style={styles.growCard}>
         <View style={styles.growIconWrap}>
-          <Text style={styles.growIcon}>🤝</Text>
+          <AddPersonIcon size={16} color={Colors.textOnPrimary} />
         </View>
         <View style={styles.growInfo}>
           <Text style={[typography.labelLarge, styles.growTitle]}>{t('myCircle.growTitle')}</Text>
@@ -148,7 +149,9 @@ function MyCircleScreen({ navigation }: Props) {
 
       {members.length === 0 ? (
         <View style={styles.empty}>
-          <Text style={styles.emptyIcon}>👥</Text>
+          <View style={styles.emptyIcon}>
+            <PeopleIcon size={40} color={Colors.textMuted} />
+          </View>
           <Text style={[typography.headingMedium, styles.emptyTitle]}>{t('myCircle.emptyTitle')}</Text>
           <Text style={[typography.bodyMedium, styles.emptySubtitle]}>{t('myCircle.emptySubtitle')}</Text>
         </View>
@@ -206,7 +209,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     justifyContent: 'center', alignItems: 'center',
   },
-  back: { color: Colors.text },
   title: { color: Colors.text, flex: 1 },
   countPill: { borderRadius: Radius.pill, paddingHorizontal: 10, paddingVertical: 4, backgroundColor: Colors.tint },
   countPillText: { color: Colors.primary },
@@ -216,7 +218,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface, borderRadius: Radius.pill,
     marginHorizontal: 16, marginTop: 8, paddingHorizontal: 16, height: 38, gap: 8,
   },
-  searchIcon: { fontSize: 15 },
   searchInput: { flex: 1, color: Colors.text, padding: 0 },
 
   growCard: {
@@ -229,7 +230,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.accent,
     justifyContent: 'center', alignItems: 'center',
   },
-  growIcon: { fontSize: 14 },
   growInfo: { flex: 1 },
   growTitle: { color: Colors.text },
   growSubtitle: { color: Colors.warningDark, marginTop: 2 },
@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
   growBtnText: { color: Colors.textOnPrimary },
 
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 8 },
-  emptyIcon: { fontSize: 44, marginBottom: 8 },
+  emptyIcon: { marginBottom: 8 },
   emptyTitle: { color: Colors.text },
   emptySubtitle: { color: Colors.textSecondary, textAlign: 'center' },
 
@@ -261,8 +261,7 @@ const styles = StyleSheet.create({
   statusPillActiveText: { color: Colors.secondaryDark },
   statusPillPending: { backgroundColor: Colors.warningTint },
   statusPillPendingText: { color: Colors.warningDark },
-  removeBtn: { marginLeft: 2 },
-  removeIcon: { fontSize: 15, color: Colors.textMuted, padding: 6 },
+  removeBtn: { marginLeft: 2, padding: 6 },
 
   modalOverlay: { flex: 1, backgroundColor: Colors.overlay, justifyContent: 'center', padding: 24 },
   modalCard: { backgroundColor: Colors.surface, borderRadius: Radius.xl, padding: 20 },

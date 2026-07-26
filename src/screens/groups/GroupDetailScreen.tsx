@@ -26,6 +26,7 @@ import { useGetMeQuery } from '../../store/api/usersApi';
 import { formatDate, formatCurrency, resolveAssetUrl } from '../../utils/format';
 import GroupChatPane from './GroupChatPane';
 import GroupLedgerScreen from './GroupLedgerScreen';
+import { ChevronLeftIcon, TrashIcon, ReceiptIcon } from '../../components/icons';
 
 type Props = AppScreenProps<'GroupDetail'>;
 type Tab = 'chat' | 'bills' | 'ledger' | 'members';
@@ -126,7 +127,7 @@ function BillCard({
         </View>
         {canDelete && (
           <TouchableOpacity onPress={onDelete} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} style={styles.billDeleteBtn}>
-            <Text style={styles.billDelete}>🗑</Text>
+            <TrashIcon size={16} color={Colors.danger} />
           </TouchableOpacity>
         )}
       </View>
@@ -284,7 +285,7 @@ function GroupDetailScreen({ route, navigation }: Props) {
         {/* Header — back button, group name + member count, avatar stack */}
         <View style={styles.header}>
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} hitSlop={8}>
-            <Text style={[typography.headingMedium, styles.backBtnText]}>‹</Text>
+            <ChevronLeftIcon size={20} color={Colors.text} />
           </TouchableOpacity>
           <View style={styles.headerTitleBlock}>
             <Text style={[typography.headingSmall, styles.headerTitle]} numberOfLines={1}>{groupName}</Text>
@@ -347,7 +348,7 @@ function GroupDetailScreen({ route, navigation }: Props) {
               <ActivityIndicator color={Colors.primary} style={styles.loader} />
             ) : !bills?.length ? (
               <View style={styles.emptyBills}>
-                <Text style={styles.emptyBillsIcon}>🧾</Text>
+                <ReceiptIcon size={44} color={Colors.textMuted} />
                 <Text style={[typography.headingMedium, styles.emptyBillsTitle]}>{t('groupDetail.emptyBillsTitle')}</Text>
                 <Text style={[typography.bodyMedium, styles.emptyBillsSubtitle]}>{t('groupDetail.emptyBillsSubtitle')}</Text>
               </View>
@@ -425,7 +426,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     justifyContent: 'center', alignItems: 'center',
   },
-  backBtnText: { color: Colors.text },
   headerTitleBlock: { flex: 1 },
   headerTitle: { color: Colors.text },
   headerSubtitle: { color: Colors.textSecondary, marginTop: 2 },
@@ -487,7 +487,6 @@ const styles = StyleSheet.create({
   billAmount: { color: Colors.text },
   billCurrency: { color: Colors.textSecondary, marginTop: 1 },
   billDeleteBtn: { marginLeft: 8 },
-  billDelete: { fontSize: 15 },
   billSeparator: { height: 1, backgroundColor: Colors.borderLight, marginVertical: 12 },
   billStatusRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   billStatusMuted: { color: Colors.textSecondary },
@@ -516,7 +515,6 @@ const styles = StyleSheet.create({
   addBillFabText: { color: Colors.textOnPrimary },
 
   emptyBills: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 10, paddingHorizontal: 32 },
-  emptyBillsIcon: { fontSize: 48 },
   emptyBillsTitle: { color: Colors.text },
   emptyBillsSubtitle: { color: Colors.textSecondary, textAlign: 'center' },
 

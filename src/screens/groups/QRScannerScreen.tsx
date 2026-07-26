@@ -18,6 +18,7 @@ import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
 import { useParseQrBillMutation } from '../../store/api/billsApi';
 import { PrefilledBillData } from '../../types/models';
+import { CameraIcon } from '../../components/icons';
 
 type Props = AppScreenProps<'QRScanner'>;
 
@@ -144,7 +145,7 @@ function QRScannerScreen({ route, navigation }: Props) {
   if (!hasPermission) {
     return (
       <SafeAreaView style={styles.permissionScreen}>
-        <Text style={styles.permIcon}>📷</Text>
+        <CameraIcon size={50} color={Colors.textMuted} />
         <Text style={[typography.headingMedium, styles.permTitle]}>{t('qrScanner.permissionRequiredTitle')}</Text>
         <Text style={[typography.bodyMedium, styles.permSub]}>{t('qrScanner.permissionRequiredSub')}</Text>
         <TouchableOpacity style={styles.manualBtn} onPress={() => navigation.replace('AddBill', { groupId, groupName })}>
@@ -233,7 +234,6 @@ const styles = StyleSheet.create({
     gap: 12,
     padding: 32,
   },
-  permIcon: { fontSize: 52 },
   permTitle: { color: Colors.text },
   permSub: { color: Colors.textSecondary, textAlign: 'center' },
   manualBtn: {

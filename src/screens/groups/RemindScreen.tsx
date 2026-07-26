@@ -6,6 +6,7 @@ import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
 import Avatar from '../../components/common/Avatar';
+import { ChevronLeftIcon, BellIcon, CheckIcon } from '../../components/icons';
 import { useGetMySharesQuery, useSendShareReminderMutation } from '../../store/api/sharesApi';
 import { useGetMeQuery } from '../../store/api/usersApi';
 import { formatCurrency } from '../../utils/format';
@@ -68,14 +69,14 @@ function RemindScreen({ navigation }: Props) {
     <SafeAreaView style={styles.container}>
       <View style={styles.headerRow}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} hitSlop={12}>
-          <Text style={[typography.headingLarge, styles.back]}>‹</Text>
+          <ChevronLeftIcon size={20} color={Colors.text} />
         </TouchableOpacity>
         <Text style={[typography.headingLarge, styles.title]}>{t('remind.title')}</Text>
       </View>
 
       {rows.length === 0 ? (
         <View style={styles.empty}>
-          <Text style={styles.emptyIcon}>🔔</Text>
+          <BellIcon size={40} color={Colors.textSecondary} />
           <Text style={[typography.headingMedium, styles.emptyTitle]}>{t('remind.emptyTitle')}</Text>
           <Text style={[typography.bodyMedium, styles.emptySubtitle]}>{t('remind.emptySubtitle')}</Text>
         </View>
@@ -97,7 +98,7 @@ function RemindScreen({ navigation }: Props) {
                   </View>
                   <Text style={[typography.amountMedium, styles.rowAmount]}>{formatCurrency(item.amountPiastres / 100)}</Text>
                   <View style={[styles.checkbox, isSelected && styles.checkboxChecked]}>
-                    {isSelected && <Text style={styles.checkmark}>✓</Text>}
+                    {isSelected && <CheckIcon size={13} color={Colors.textOnPrimary} strokeWidth={2.5} />}
                   </View>
                 </TouchableOpacity>
               );
@@ -152,11 +153,9 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     justifyContent: 'center', alignItems: 'center',
   },
-  back: { color: Colors.text },
   title: { color: Colors.text },
 
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 8 },
-  emptyIcon: { fontSize: 44, marginBottom: 8 },
   emptyTitle: { color: Colors.text },
   emptySubtitle: { color: Colors.textSecondary, textAlign: 'center' },
 
@@ -187,7 +186,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
   },
   checkboxChecked: { backgroundColor: Colors.primary, borderColor: Colors.primary },
-  checkmark: { color: Colors.textOnPrimary, fontSize: 12, fontWeight: 'bold' },
 
   previewCard: { marginTop: 16 },
   previewHeader: { color: Colors.textSecondary, marginBottom: 4 },

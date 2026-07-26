@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { SettingsScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
 import { useGetMeQuery } from '../../store/api/usersApi';
+import { ClockIcon } from '../../components/icons';
 
 type Props = SettingsScreenProps<'PaymentMethods'>;
 
@@ -71,7 +72,7 @@ function PaymentMethodsScreen({ navigation }: Props) {
         {/* Coming soon */}
         <Text style={styles.sectionTitle}>{t('paymentMethods.otherMethodsTitle')}</Text>
         <View style={styles.comingSoonCard}>
-          <Text style={styles.comingSoonIcon}>🚧</Text>
+          <ClockIcon size={36} color={Colors.textMuted} />
           <Text style={styles.comingSoonTitle}>{t('paymentMethods.comingSoonTitle')}</Text>
           <Text style={styles.comingSoonSub}>{t('paymentMethods.comingSoonSubtitle')}</Text>
         </View>
@@ -162,7 +163,6 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: Colors.border,
   },
-  comingSoonIcon: { fontSize: 36 },
   comingSoonTitle: { fontSize: 16, fontWeight: '700', color: Colors.textSecondary },
   comingSoonSub: {
     fontSize: 13, color: Colors.textMuted,

@@ -2,6 +2,7 @@ import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
+  Image,
   TouchableOpacity,
   Pressable,
   StyleSheet,
@@ -17,6 +18,7 @@ import ActivityScreen from '../screens/groups/ActivityScreen';
 import { Colors } from '../constants/colors';
 import { Radius } from '../constants/radius';
 import { useTypography } from '../hooks/useTypography';
+import { HomeIcon, ReceiptIcon, ActivityIcon, PersonIcon, PeopleIcon, AddPersonIcon } from '../components/icons';
 
 const Tab = createBottomTabNavigator<TabParamList>();
 
@@ -61,7 +63,7 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
           <View style={styles.menu}>
             <TouchableOpacity style={styles.menuCard} onPress={handleNewGroup} activeOpacity={0.75}>
               <View style={[styles.menuIconWrap, { backgroundColor: Colors.tint }]}>
-                <Text style={styles.menuIconText}>👥</Text>
+                <PeopleIcon size={20} color={Colors.primary} />
               </View>
               <View style={styles.menuCardText}>
                 <Text style={[typography.labelLarge, styles.menuItemTitle]}>{t('quickAdd.newGroup')}</Text>
@@ -70,7 +72,7 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
             </TouchableOpacity>
             <TouchableOpacity style={[styles.menuCard, styles.menuCardSecond]} onPress={handleAddPlusOne} activeOpacity={0.75}>
               <View style={[styles.menuIconWrap, { backgroundColor: Colors.warningTint }]}>
-                <Text style={styles.menuIconText}>👤</Text>
+                <AddPersonIcon size={20} color={Colors.warningDark} />
               </View>
               <View style={styles.menuCardText}>
                 <Text style={[typography.labelLarge, styles.menuItemTitle]}>{t('quickAdd.addPlusOne')}</Text>
@@ -84,37 +86,49 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
       <View style={styles.tabBarWrap}>
         <View style={styles.tabBar}>
           <TouchableOpacity style={styles.tabItem} onPress={handleHomePress} activeOpacity={0.7}>
-            <Text style={[styles.tabIconText, homeActive && styles.tabIconTextActive]}>⌂</Text>
-            <Text style={[typography.labelSmall, styles.tabLabel, homeActive && styles.tabLabelActive]}>{t('tabBar.homeLabel')}</Text>
-            {homeActive && <View style={styles.tabDot} />}
+            <View style={[styles.tabItemInner, homeActive && styles.tabItemInnerActive]}>
+              <HomeIcon size={20} color={homeActive ? Colors.navActive : Colors.navInactive} />
+              <Text style={[typography.labelSmall, styles.tabLabel, homeActive && styles.tabLabelActive]}>{t('tabBar.homeLabel')}</Text>
+            </View>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.tabItem} onPress={handleBillsPress} activeOpacity={0.7}>
-            <Text style={[styles.tabIconText, billsActive && styles.tabIconTextActive]}>▤</Text>
-            <Text style={[typography.labelSmall, styles.tabLabel, billsActive && styles.tabLabelActive]}>{t('tabBar.billsLabel')}</Text>
-            {billsActive && <View style={styles.tabDot} />}
+            <View style={[styles.tabItemInner, billsActive && styles.tabItemInnerActive]}>
+              <ReceiptIcon size={20} color={billsActive ? Colors.navActive : Colors.navInactive} />
+              <Text style={[typography.labelSmall, styles.tabLabel, billsActive && styles.tabLabelActive]}>{t('tabBar.billsLabel')}</Text>
+            </View>
           </TouchableOpacity>
 
           {/* Spacer under the raised FAB */}
           <View style={styles.fabSpacer} />
 
           <TouchableOpacity style={styles.tabItem} onPress={handleActivityPress} activeOpacity={0.7}>
-            <Text style={[styles.tabIconText, activityActive && styles.tabIconTextActive]}>◔</Text>
-            <Text style={[typography.labelSmall, styles.tabLabel, activityActive && styles.tabLabelActive]}>{t('tabBar.activityLabel')}</Text>
-            {activityActive && <View style={styles.tabDot} />}
+            <View style={[styles.tabItemInner, activityActive && styles.tabItemInnerActive]}>
+              <ActivityIcon size={20} color={activityActive ? Colors.navActive : Colors.navInactive} />
+              <Text style={[typography.labelSmall, styles.tabLabel, activityActive && styles.tabLabelActive]}>{t('tabBar.activityLabel')}</Text>
+            </View>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.tabItem} onPress={handleProfilePress} activeOpacity={0.7}>
-            <Text style={[styles.tabIconText, profileActive && styles.tabIconTextActive]}>☺</Text>
-            <Text style={[typography.labelSmall, styles.tabLabel, profileActive && styles.tabLabelActive]}>{t('tabBar.profileLabel')}</Text>
-            {profileActive && <View style={styles.tabDot} />}
+            <View style={[styles.tabItemInner, profileActive && styles.tabItemInnerActive]}>
+              <PersonIcon size={20} color={profileActive ? Colors.navActive : Colors.navInactive} />
+              <Text style={[typography.labelSmall, styles.tabLabel, profileActive && styles.tabLabelActive]}>{t('tabBar.profileLabel')}</Text>
+            </View>
           </TouchableOpacity>
         </View>
 
-        {/* FAB — raised, punched through the bar's top edge */}
+        {/* FAB — raised, punched through the bar's top edge. Uses the real
+            brand mark (teal disc with a plus cut through it) rather than a
+            plain "+" glyph — matches Figma's tab-bar FAB exactly. Rotating
+            it 45° doubles as the "close menu" (×) state. */}
         <View style={styles.fabRing} pointerEvents="box-none">
-          <TouchableOpacity style={styles.fab} onPress={handleFabPress} activeOpacity={0.85}>
-            <Text style={styles.fabIcon}>{menuOpen ? '×' : '+'}</Text>
+          <TouchableOpacity style={styles.fabTouchable} onPress={handleFabPress} activeOpacity={0.85} hitSlop={8}>
+            <Image
+              source={require('../../assets/PlusOne.png')}
+              tintColor={Colors.navActive}
+              resizeMode="contain"
+              style={[styles.fabMark, menuOpen && styles.fabMarkRotated]}
+            />
           </TouchableOpacity>
         </View>
       </View>
@@ -172,18 +186,20 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 3,
   },
-  tabIconText: { fontSize: 18, color: Colors.navInactive },
-  tabIconTextActive: { color: Colors.navActive },
+  tabItemInner: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 3,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: Radius.pill,
+  },
+  tabItemInnerActive: {
+    backgroundColor: Colors.tint,
+  },
   tabLabel: { color: Colors.navInactive },
   tabLabelActive: { color: Colors.navActive },
-  tabDot: {
-    position: 'absolute',
-    bottom: 6,
-    width: 4, height: 4, borderRadius: 2,
-    backgroundColor: Colors.navActive,
-  },
 
   // FAB spacer — keeps the two flanking tab items from crowding the raised FAB
   fabSpacer: { width: FAB_SIZE + 10 },
@@ -197,18 +213,18 @@ const styles = StyleSheet.create({
     width: FAB_SIZE, height: FAB_SIZE, borderRadius: FAB_SIZE / 2,
     backgroundColor: Colors.navFabRing,
     justifyContent: 'center', alignItems: 'center',
-  },
-  fab: {
-    width: FAB_INNER_SIZE, height: FAB_INNER_SIZE, borderRadius: FAB_INNER_SIZE / 2,
-    backgroundColor: Colors.navActive,
-    justifyContent: 'center', alignItems: 'center',
-    shadowColor: Colors.navActive,
-    shadowOpacity: 0.4,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
     shadowOffset: { width: 0, height: 4 },
     shadowRadius: 8,
     elevation: 6,
   },
-  fabIcon: { fontSize: 24, color: '#fff', lineHeight: 28 },
+  fabTouchable: {
+    width: FAB_INNER_SIZE, height: FAB_INNER_SIZE,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  fabMark: { width: FAB_INNER_SIZE, height: FAB_INNER_SIZE },
+  fabMarkRotated: { transform: [{ rotate: '45deg' }] },
 
   // Quick-add floating menu — two separate cards (Figma: "New group" + "Add a +1"),
   // not one box with an internal divider.
@@ -241,7 +257,6 @@ const styles = StyleSheet.create({
     width: 36, height: 36, borderRadius: Radius.md,
     justifyContent: 'center', alignItems: 'center',
   },
-  menuIconText: { fontSize: 18 },
   menuCardText: { flex: 1 },
   menuItemTitle: { color: Colors.text },
   menuItemSubtitle: { color: Colors.textSecondary, marginTop: 1 },

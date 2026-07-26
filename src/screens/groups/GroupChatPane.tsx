@@ -25,6 +25,7 @@ import { ChatMessage } from '../../types/models';
 import { AppStackParamList } from '../../types/navigation';
 import { formatDate, formatCurrency } from '../../utils/format';
 import { useKeyboardInsetHeight } from '../../services/keyboardInsets';
+import { ReceiptIcon, ChatBubbleIcon, PaperclipIcon, SendIcon, WarningIcon } from '../../components/icons';
 
 // The single implementation of a group's chat (message list + composer), used both
 // by the standalone Chat screen (reached from the share-to-group flow) and embedded
@@ -106,9 +107,12 @@ function MessageBubble({
               {!!pending.text && (
                 <Text style={[typography.bodyMedium, styles.bubbleText, styles.bubbleTextMine]}>{pending.text}</Text>
               )}
-              <Text style={[typography.labelSmall, styles.bubbleTime, styles.bubbleTimeMine, pending.failed && styles.bubbleTimeFailed]}>
-                {pending.failed ? '⚠ ' : ''}{timeStr}
-              </Text>
+              <View style={styles.bubbleTimeRow}>
+                {pending.failed && <WarningIcon size={11} color={Colors.danger} strokeWidth={2} />}
+                <Text style={[typography.labelSmall, styles.bubbleTime, styles.bubbleTimeMine, pending.failed && styles.bubbleTimeFailed]}>
+                  {timeStr}
+                </Text>
+              </View>
             </View>
           </TouchableOpacity>
         </View>
@@ -135,7 +139,7 @@ function MessageBubble({
             activeOpacity={0.8}
             onPress={() => onOpenReceipt(msg.bill!.id)}>
             <View style={styles.receiptIcon}>
-              <Text style={styles.receiptIconText}>🧾</Text>
+              <ReceiptIcon size={18} color={Colors.primary} />
             </View>
             <View style={styles.receiptInfo}>
               <Text style={[typography.labelLarge, styles.receiptTitle]} numberOfLines={1}>
@@ -332,7 +336,7 @@ function GroupChatPane({ groupId, groupName, navigation, sharedImageUri, onShare
     <View style={[styles.flex, { paddingBottom: keyboardInset }]}>
       {listData.length === 0 ? (
         <View style={styles.emptyChat}>
-          <Text style={styles.emptyChatIcon}>💬</Text>
+          <ChatBubbleIcon size={48} color={Colors.textSecondary} />
           <Text style={styles.emptyChatText}>{t('chat.emptyText')}</Text>
         </View>
       ) : (
@@ -391,7 +395,7 @@ function GroupChatPane({ groupId, groupName, navigation, sharedImageUri, onShare
           style={styles.attachBtn}
           onPress={handlePickImage}
           activeOpacity={0.8}>
-          <Text style={styles.attachIcon}>📎</Text>
+          <PaperclipIcon size={18} color={Colors.primary} />
         </TouchableOpacity>
         <TextInput
           style={[typography.bodyMedium, styles.input]}
@@ -407,7 +411,7 @@ function GroupChatPane({ groupId, groupName, navigation, sharedImageUri, onShare
           onPress={handleSend}
           disabled={!text.trim()}
           activeOpacity={0.8}>
-          <Text style={styles.sendIcon}>▶</Text>
+          <SendIcon size={18} color={Colors.textOnPrimary} />
         </TouchableOpacity>
       </View>
     </View>
@@ -473,7 +477,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  receiptIconText: { fontSize: 16 },
   receiptInfo: { flex: 1 },
   receiptTitle: { color: Colors.text },
   receiptMeta: { color: Colors.textSecondary, marginTop: 2 },
@@ -491,7 +494,8 @@ const styles = StyleSheet.create({
   bubbleImage: { width: 200, height: 200, borderRadius: 12, marginBottom: 4 },
   bubbleText: { color: Colors.text },
   bubbleTextMine: { color: Colors.textOnPrimary },
-  bubbleTime: { color: Colors.textMuted, marginTop: 4, textAlign: 'right' },
+  bubbleTimeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 3, marginTop: 4 },
+  bubbleTime: { color: Colors.textMuted, textAlign: 'right' },
   bubbleTimeMine: { color: 'rgba(255,255,255,0.7)' },
   bubbleTimeFailed: { color: Colors.danger },
 
@@ -531,7 +535,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   sendBtnDisabled: { backgroundColor: Colors.border },
-  sendIcon: { color: Colors.textOnPrimary, fontSize: 16 },
   // No Figma reference for the image-attach entry point (not shown in the mockup),
   // but it's real, working functionality (chat image upload) — kept, restyled to
   // fit the app's tint-chip convention instead of the old flat-gray circle.
@@ -543,9 +546,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  attachIcon: { fontSize: 18, color: Colors.primary },
-
   emptyChat: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12 },
-  emptyChatIcon: { fontSize: 52 },
   emptyChatText: { fontSize: 15, color: Colors.textSecondary, textAlign: 'center' },
 });

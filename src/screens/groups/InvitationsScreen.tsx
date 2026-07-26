@@ -19,6 +19,7 @@ import {
 } from '../../store/api/groupsApi';
 import { GroupMember } from '../../types/models';
 import Avatar from '../../components/common/Avatar';
+import { MailIcon } from '../../components/icons';
 import { Colors } from '../../constants/colors';
 import { resolveAssetUrl } from '../../utils/format';
 
@@ -91,7 +92,7 @@ function InvitationsScreen({ navigation }: Props) {
 
   const renderEmpty = () => (
     <View style={styles.empty}>
-      <Text style={styles.emptyIcon}>📬</Text>
+      <MailIcon size={48} color={Colors.textMuted} />
       <Text style={styles.emptyTitle}>{t('invitations.emptyTitle')}</Text>
       <Text style={styles.emptySubtitle}>{t('invitations.emptySubtitle')}</Text>
     </View>
@@ -171,7 +172,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     gap: 12,
   },
-  emptyIcon: { fontSize: 56 },
   emptyTitle: { fontSize: 20, fontWeight: '700', color: Colors.text, textAlign: 'center' },
   emptySubtitle: {
     fontSize: 14,

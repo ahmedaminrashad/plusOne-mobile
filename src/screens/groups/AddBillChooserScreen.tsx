@@ -5,6 +5,7 @@ import { AppScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
+import { ChevronLeftIcon, QrCodeIcon, CameraIcon, EditIcon } from '../../components/icons';
 
 type Props = AppScreenProps<'AddBillChooser'>;
 
@@ -16,7 +17,7 @@ function AddBillChooserScreen({ route, navigation }: Props) {
   const options = [
     {
       key: 'qr',
-      icon: '⬜',
+      icon: QrCodeIcon,
       iconBg: Colors.primary,
       iconColor: '#fff',
       title: t('addBillChooser.scanQrTitle'),
@@ -27,7 +28,7 @@ function AddBillChooserScreen({ route, navigation }: Props) {
     },
     {
       key: 'ocr',
-      icon: '📷',
+      icon: CameraIcon,
       iconBg: Colors.tint,
       iconColor: Colors.primary,
       title: t('addBillChooser.scanReceiptTitle'),
@@ -36,7 +37,7 @@ function AddBillChooserScreen({ route, navigation }: Props) {
     },
     {
       key: 'manual',
-      icon: '+',
+      icon: EditIcon,
       iconBg: Colors.tint,
       iconColor: Colors.primary,
       title: t('addBillChooser.manualTitle'),
@@ -49,7 +50,7 @@ function AddBillChooserScreen({ route, navigation }: Props) {
     <SafeAreaView style={styles.container}>
       <View style={styles.headerRow}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} hitSlop={12}>
-          <Text style={[typography.headingLarge, styles.back]}>‹</Text>
+          <ChevronLeftIcon size={20} color={Colors.text} />
         </TouchableOpacity>
         <View>
           <Text style={[typography.headingLarge, styles.title]}>{t('addBillChooser.title')}</Text>
@@ -67,7 +68,7 @@ function AddBillChooserScreen({ route, navigation }: Props) {
             onPress={opt.onPress}
             activeOpacity={0.75}>
             <View style={[styles.optionIconWrap, { backgroundColor: opt.iconBg }]}>
-              <Text style={[styles.optionIcon, { color: opt.iconColor }]}>{opt.icon}</Text>
+              <opt.icon size={22} color={opt.iconColor} />
             </View>
             <View style={styles.optionInfo}>
               <Text style={[typography.headingSmall, styles.optionTitle]}>{opt.title}</Text>
@@ -98,7 +99,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     borderWidth: 1, borderColor: Colors.borderLight,
   },
-  back: { color: Colors.text },
   title: { color: Colors.text },
   subtitle: { color: Colors.textSecondary, marginTop: 2 },
 
@@ -118,7 +118,6 @@ const styles = StyleSheet.create({
     width: 50, height: 50, borderRadius: 16,
     justifyContent: 'center', alignItems: 'center',
   },
-  optionIcon: { fontSize: 22, fontWeight: '700' },
   optionInfo: { flex: 1 },
   optionTitle: { color: Colors.text },
   optionSubtitle: { color: Colors.textSecondary, marginTop: 2 },

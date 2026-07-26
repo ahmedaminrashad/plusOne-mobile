@@ -15,6 +15,7 @@ import {
 import { useGetMeQuery } from '../../store/api/usersApi';
 import { Share } from '../../types/models';
 import { formatCurrency, formatTime, resolveAssetUrl } from '../../utils/format';
+import { ChevronLeftIcon } from '../../components/icons';
 
 type Props = AppScreenProps<'BillStatus'>;
 
@@ -145,7 +146,7 @@ function BillStatusScreen({ route, navigation }: Props) {
     <SafeAreaView style={styles.container}>
       <View style={styles.headerRow}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} hitSlop={12}>
-          <Text style={styles.backBtnText}>‹</Text>
+          <ChevronLeftIcon size={20} color={Colors.text} />
         </TouchableOpacity>
         <Text style={[typography.headingLarge, styles.title]} numberOfLines={1}>{displayName}</Text>
         <View style={styles.paidCountBadge}>
@@ -247,7 +248,6 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 1,
   },
-  backBtnText: { fontSize: 20, color: Colors.text },
   title: { flex: 1, color: Colors.text },
   paidCountBadge: { backgroundColor: Colors.warningTint, borderRadius: Radius.pill, paddingHorizontal: 10, paddingVertical: 4 },
   paidCountText: { color: Colors.warningDark },

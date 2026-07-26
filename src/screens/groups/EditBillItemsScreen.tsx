@@ -23,6 +23,7 @@ import { useGetBillDetailQuery, useUpdateBillItemsMutation } from '../../store/a
 import { GroupMember } from '../../types/models';
 import { formatCurrency, resolveAssetUrl } from '../../utils/format';
 import i18n from '../../i18n';
+import { LockIcon } from '../../components/icons';
 
 type Props = AppScreenProps<'EditBillItems'>;
 
@@ -292,7 +293,7 @@ function EditBillItemsScreen({ route, navigation }: Props) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.emptyState}>
-          <Text style={styles.emptyIcon}>🔒</Text>
+          <LockIcon size={44} color={Colors.textMuted} />
           <Text style={[typography.bodyLarge, styles.emptyText]}>{t('editBillItems.billClosedMessage')}</Text>
         </View>
       </SafeAreaView>
@@ -391,8 +392,7 @@ const styles = StyleSheet.create({
   list: { paddingBottom: 8 },
   loader: { flex: 1 },
 
-  emptyState: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  emptyIcon: { fontSize: 48, marginBottom: 12 },
+  emptyState: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 12 },
   emptyText: { color: Colors.textMuted, textAlign: 'center' },
 
   receiptHeader: { padding: 20, alignItems: 'center', backgroundColor: Colors.surface, marginBottom: 12 },

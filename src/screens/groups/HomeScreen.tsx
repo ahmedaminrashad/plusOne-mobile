@@ -24,6 +24,7 @@ import GroupBalanceCollector from '../../components/groups/GroupBalanceCollector
 import Button from '../../components/common/Button';
 import Avatar from '../../components/common/Avatar';
 import InvitationPromptModal from '../../components/groups/InvitationPromptModal';
+import { PeopleIcon, BellIcon, SearchIcon, ReceiptIcon, PersonIcon } from '../../components/icons';
 import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
@@ -91,7 +92,7 @@ function HomeScreen({ navigation }: Props) {
   const renderEmpty = () => (
     <View style={styles.empty}>
       <View style={styles.emptyIconWrap}>
-        <Text style={styles.emptyIcon}>👥</Text>
+        <PeopleIcon size={44} color={Colors.primary} />
       </View>
       <Text style={[typography.headingMedium, styles.emptyTitle]}>{t('home.emptyTitle')}</Text>
       <Text style={[typography.bodyMedium, styles.emptySubtitle]}>{t('home.emptySubtitle')}</Text>
@@ -121,13 +122,13 @@ function HomeScreen({ navigation }: Props) {
                 style={styles.headerIconBtn}
                 onPress={() => navigation.navigate('Invitations')}
                 activeOpacity={0.7}>
-                <Text style={styles.headerIconText}>🔔</Text>
+                <BellIcon size={20} color={Colors.text} />
                 {pendingCount > 0 && <View style={styles.badgeDot} />}
               </TouchableOpacity>
             </View>
 
             <View style={styles.searchBar}>
-              <Text style={styles.searchIcon}>🔍</Text>
+              <SearchIcon size={16} color={Colors.textMuted} />
               <TextInput
                 style={[typography.bodyMedium, styles.searchInput]}
                 placeholder={t('home.searchPlaceholder')}
@@ -156,14 +157,14 @@ function HomeScreen({ navigation }: Props) {
 
             <View style={styles.tileRow}>
               {[
-                { label: t('home.tileNewGroup'), icon: '👥', onPress: () => navigation.navigate('CreateGroup'), bg: Colors.tint },
-                { label: t('home.tileMyCircle'), icon: '👤', onPress: () => navigation.navigate('MyCircle'), bg: Colors.warningTint },
-                { label: t('home.tileRemind'), icon: '🔔', onPress: () => navigation.navigate('Remind'), bg: Colors.successTint },
-                { label: t('home.tileMyLedger'), icon: '🧾', onPress: () => navigation.navigate('MyLedger'), bg: Colors.tileMyTab },
+                { label: t('home.tileNewGroup'), Icon: PeopleIcon, iconColor: Colors.primary, onPress: () => navigation.navigate('CreateGroup'), bg: Colors.tint },
+                { label: t('home.tileMyCircle'), Icon: PersonIcon, iconColor: Colors.warningDark, onPress: () => navigation.navigate('MyCircle'), bg: Colors.warningTint },
+                { label: t('home.tileRemind'), Icon: BellIcon, iconColor: Colors.secondaryDark, onPress: () => navigation.navigate('Remind'), bg: Colors.successTint },
+                { label: t('home.tileMyLedger'), Icon: ReceiptIcon, iconColor: Colors.text, onPress: () => navigation.navigate('MyLedger'), bg: Colors.tileMyTab },
               ].map((tile) => (
                 <TouchableOpacity key={tile.label} style={styles.tile} onPress={tile.onPress} activeOpacity={0.75}>
                   <View style={[styles.tileIconWrap, { backgroundColor: tile.bg }]}>
-                    <Text style={styles.tileIcon}>{tile.icon}</Text>
+                    <tile.Icon size={26} color={tile.iconColor} />
                   </View>
                   <Text style={[typography.labelMedium, styles.tileLabel]}>{tile.label}</Text>
                 </TouchableOpacity>
@@ -228,7 +229,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     justifyContent: 'center', alignItems: 'center',
   },
-  headerIconText: { fontSize: 16, lineHeight: 20 },
   badgeDot: {
     position: 'absolute', top: 5, right: 5,
     width: 7, height: 7, borderRadius: 3.5,
@@ -244,7 +244,6 @@ const styles = StyleSheet.create({
     height: 39,
     gap: 8,
   },
-  searchIcon: { fontSize: 15 },
   searchInput: { flex: 1, color: Colors.text, padding: 0 },
 
   // ── Hero balance card — self-contained inset card, not a banner ──
@@ -275,7 +274,6 @@ const styles = StyleSheet.create({
     width: 56, height: 56, borderRadius: Radius.lg,
     justifyContent: 'center', alignItems: 'center',
   },
-  tileIcon: { fontSize: 22 },
   tileLabel: { color: Colors.text, textAlign: 'center' },
 
   // ── Section header ──
@@ -302,7 +300,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
     marginBottom: 4,
   },
-  emptyIcon: { fontSize: 42 },
   emptyTitle: { color: Colors.text, textAlign: 'center' },
   emptySubtitle: { color: Colors.textSecondary, textAlign: 'center' },
   emptyCta: { marginTop: 8, width: '100%' },

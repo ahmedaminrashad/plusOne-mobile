@@ -15,6 +15,7 @@ import Input from '../../components/common/Input';
 import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
+import { ChevronLeftIcon } from '../../components/icons';
 import { useCreateGroupMutation } from '../../store/api/groupsApi';
 import { GroupCategory } from '../../types/models';
 
@@ -56,7 +57,7 @@ function CreateGroupScreen({ navigation }: Props) {
     <SafeAreaView style={styles.container}>
       <View style={styles.headerRow}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} hitSlop={12}>
-          <Text style={[typography.bodyLarge, styles.backBtnText]}>‹</Text>
+          <ChevronLeftIcon size={20} color={Colors.text} />
         </TouchableOpacity>
         <Text style={[typography.headingMedium, styles.title]}>{t('navigation:appStack.createGroupTitle')}</Text>
       </View>
@@ -115,7 +116,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.borderLight,
     justifyContent: 'center', alignItems: 'center',
   },
-  backBtnText: { color: Colors.text },
   title: { color: Colors.text },
 
   scroll: { padding: 16, paddingTop: 0 },

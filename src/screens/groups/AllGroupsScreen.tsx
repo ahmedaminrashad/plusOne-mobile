@@ -16,6 +16,7 @@ import GroupBalanceCollector from '../../components/groups/GroupBalanceCollector
 import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
+import { ChevronLeftIcon, SearchIcon } from '../../components/icons';
 
 type Props = AppScreenProps<'AllGroups'>;
 
@@ -87,7 +88,7 @@ function AllGroupsScreen({ navigation }: Props) {
       <View style={styles.headerRow}>
         <View style={styles.headerLeft}>
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} hitSlop={12}>
-            <Text style={[typography.bodyLarge, styles.backBtnText]}>‹</Text>
+            <ChevronLeftIcon size={20} color={Colors.text} />
           </TouchableOpacity>
           <Text style={[typography.headingMedium, styles.title]}>{t('navigation:appStack.allGroupsTitle')}</Text>
         </View>
@@ -99,7 +100,7 @@ function AllGroupsScreen({ navigation }: Props) {
       </View>
 
       <View style={styles.searchBar}>
-        <Text style={styles.searchIcon}>🔍</Text>
+        <SearchIcon size={16} color={Colors.textMuted} />
         <TextInput
           style={[typography.bodyMedium, styles.searchInput]}
           placeholder={t('allGroups.searchPlaceholder')}
@@ -157,7 +158,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.borderLight,
     justifyContent: 'center', alignItems: 'center',
   },
-  backBtnText: { color: Colors.text },
   title: { color: Colors.text },
   countPill: {
     backgroundColor: Colors.tint, borderRadius: Radius.pill,
@@ -170,7 +170,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 16, marginTop: 14, paddingHorizontal: 16, height: 38, gap: 8,
     borderWidth: 1, borderColor: Colors.borderLight,
   },
-  searchIcon: { fontSize: 15 },
   searchInput: { flex: 1, color: Colors.text, padding: 0 },
   filterRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 16, marginTop: 10 },
   filterChip: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: Radius.pill },

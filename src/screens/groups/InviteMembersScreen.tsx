@@ -15,6 +15,7 @@ import Input from '../../components/common/Input';
 import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
+import { CloseIcon } from '../../components/icons';
 import { isValidPhone, formatPhone } from '../../utils/validation';
 import { useInviteMembersMutation } from '../../store/api/groupsApi';
 
@@ -105,7 +106,7 @@ function InviteMembersScreen({ route, navigation }: Props) {
               <View style={styles.phoneTag}>
                 <Text style={[typography.labelMedium, styles.phoneTagText]}>{item}</Text>
                 <TouchableOpacity onPress={() => handleRemovePhone(item)}>
-                  <Text style={styles.removeTag}>✕</Text>
+                  <CloseIcon size={12} color={Colors.primary} />
                 </TouchableOpacity>
               </View>
             )}
@@ -146,6 +147,5 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: Colors.primaryLight,
   },
   phoneTagText: { color: Colors.primary },
-  removeTag: { fontSize: 12, color: Colors.primary, fontWeight: '700' },
   footer: { padding: 24, paddingTop: 0 },
 });

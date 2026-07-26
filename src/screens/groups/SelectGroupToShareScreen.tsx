@@ -14,6 +14,7 @@ import { AppScreenProps } from '../../types/navigation';
 import { useGetGroupsQuery } from '../../store/api/groupsApi';
 import { Group } from '../../types/models';
 import Avatar from '../../components/common/Avatar';
+import { PeopleIcon, ChevronRightIcon } from '../../components/icons';
 import { Colors } from '../../constants/colors';
 import { resolveAssetUrl } from '../../utils/format';
 
@@ -55,7 +56,7 @@ function SelectGroupToShareScreen({ route, navigation }: Props) {
           <TouchableOpacity style={styles.row} onPress={() => handlePress(item)} activeOpacity={0.75}>
             <Avatar uri={resolveAssetUrl(item.avatarUrl)} name={item.name} size={44} />
             <Text style={styles.rowName} numberOfLines={1}>{item.name}</Text>
-            <Text style={styles.chevron}>›</Text>
+            <ChevronRightIcon size={18} color={Colors.textMuted} />
           </TouchableOpacity>
         )}
         contentContainerStyle={
@@ -63,7 +64,9 @@ function SelectGroupToShareScreen({ route, navigation }: Props) {
         }
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyIcon}>👥</Text>
+            <View style={styles.emptyIcon}>
+              <PeopleIcon size={40} color={Colors.textMuted} />
+            </View>
             <Text style={styles.emptyTitle}>{t('shareToGroup.emptyTitle')}</Text>
             <Text style={styles.emptySubtitle}>{t('shareToGroup.emptySubtitle')}</Text>
           </View>
@@ -103,7 +106,6 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   rowName: { flex: 1, fontSize: 15, fontWeight: '600', color: Colors.text },
-  chevron: { fontSize: 22, color: Colors.textMuted },
 
   errorBanner: {
     backgroundColor: '#FEF2F2', color: '#B91C1C',
@@ -116,7 +118,7 @@ const styles = StyleSheet.create({
     flex: 1, justifyContent: 'center', alignItems: 'center',
     paddingHorizontal: 32, gap: 8,
   },
-  emptyIcon: { fontSize: 42, marginBottom: 4 },
+  emptyIcon: { marginBottom: 4 },
   emptyTitle: { fontSize: 18, fontWeight: '700', color: Colors.text, textAlign: 'center' },
   emptySubtitle: { fontSize: 14, color: Colors.textSecondary, textAlign: 'center', lineHeight: 20 },
 });

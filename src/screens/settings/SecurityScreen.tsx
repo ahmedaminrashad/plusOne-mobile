@@ -13,11 +13,12 @@ import {
 import { useTranslation } from 'react-i18next';
 import { SettingsScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
+import { IconProps, BellIcon, FingerprintIcon, ShieldLockIcon, PhoneIcon } from '../../components/icons';
 
 type Props = SettingsScreenProps<'SecuritySettings'>;
 
 interface ToggleRowProps {
-  icon: string;
+  icon: React.ComponentType<IconProps>;
   title: string;
   subtitle: string;
   value: boolean;
@@ -25,11 +26,11 @@ interface ToggleRowProps {
   accentColor?: string;
 }
 
-function ToggleRow({ icon, title, subtitle, value, onToggle, accentColor }: ToggleRowProps) {
+function ToggleRow({ icon: Icon, title, subtitle, value, onToggle, accentColor }: ToggleRowProps) {
   return (
     <View style={styles.toggleRow}>
       <View style={[styles.toggleIcon, { backgroundColor: (accentColor ?? Colors.primary) + '18' }]}>
-        <Text style={styles.toggleIconText}>{icon}</Text>
+        <Icon size={18} color={accentColor ?? Colors.primary} />
       </View>
       <View style={styles.toggleInfo}>
         <Text style={styles.toggleTitle}>{title}</Text>
@@ -94,7 +95,7 @@ function SecurityScreen({ navigation }: Props) {
 
         <View style={styles.card}>
           <ToggleRow
-            icon={"🔔"}
+            icon={BellIcon}
             title={t('security.loginAlertsTitle')}
             subtitle={t('security.loginAlertsSubtitle')}
             value={loginAlerts}
@@ -103,7 +104,7 @@ function SecurityScreen({ navigation }: Props) {
           />
           <View style={styles.divider} />
           <ToggleRow
-            icon={"🖐️"}
+            icon={FingerprintIcon}
             title={t('security.biometricsTitle')}
             subtitle={t('security.biometricsSubtitle')}
             value={biometrics}
@@ -112,7 +113,7 @@ function SecurityScreen({ navigation }: Props) {
           />
           <View style={styles.divider} />
           <ToggleRow
-            icon={"🔐"}
+            icon={ShieldLockIcon}
             title={t('security.twoFactorTitle')}
             subtitle={t('security.twoFactorSubtitle')}
             value={twoFactor}
@@ -124,7 +125,7 @@ function SecurityScreen({ navigation }: Props) {
         <Text style={styles.sectionTitle}>{t('security.activeSessionsTitle')}</Text>
         <View style={styles.card}>
           <View style={styles.sessionRow}>
-            <Text style={styles.sessionDeviceIcon}>{"📱"}</Text>
+            <PhoneIcon size={20} color={Colors.textSecondary} />
             <View style={styles.sessionInfo}>
               <Text style={styles.sessionDevice}>{t('security.thisDevice')}</Text>
               <Text style={styles.sessionTime}>{t('security.activeNow')}</Text>
@@ -192,7 +193,6 @@ const styles = StyleSheet.create({
     width: 40, height: 40, borderRadius: 12,
     justifyContent: 'center', alignItems: 'center',
   },
-  toggleIconText: { fontSize: 16, color: Colors.textSecondary },
   toggleInfo: { flex: 1 },
   toggleTitle: { fontSize: 15, fontWeight: '600', color: Colors.text },
   toggleSubtitle: { fontSize: 12, color: Colors.textMuted, marginTop: 2 },
@@ -206,7 +206,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center',
     padding: 16, gap: 12,
   },
-  sessionDeviceIcon: { fontSize: 22 },
   sessionInfo: { flex: 1 },
   sessionDevice: { fontSize: 15, fontWeight: '600', color: Colors.text },
   sessionTime: { fontSize: 12, color: Colors.textMuted, marginTop: 2 },

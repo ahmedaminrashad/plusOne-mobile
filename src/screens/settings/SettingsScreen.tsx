@@ -22,11 +22,12 @@ import { baseApi } from '../../store/api/baseApi';
 import { SecureStorage } from '../../utils/storage';
 import { changeLanguage, AppLanguage } from '../../i18n';
 import { resolveAssetUrl } from '../../utils/format';
+import { PersonIcon, CardIcon, LockIcon, GlobeIcon, HelpIcon, LogoutIcon, CheckIcon, ChevronRightIcon } from '../../components/icons';
 
 type Props = SettingsScreenProps<'Settings'>;
 
 interface SettingsRowProps {
-  icon: string;
+  icon: React.ReactNode;
   label: string;
   onPress?: () => void;
   danger?: boolean;
@@ -38,12 +39,12 @@ function SettingsRow({ icon, label, onPress, danger, chevron = true, value }: Se
   return (
     <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.7}>
       <View style={[styles.rowIcon, danger && styles.rowIconDanger]}>
-        <Text style={styles.rowIconText}>{icon}</Text>
+        {icon}
       </View>
       <Text style={[styles.rowLabel, danger && styles.rowLabelDanger]}>{label}</Text>
       <View style={styles.rowRight}>
         {value ? <Text style={styles.rowValue}>{value}</Text> : null}
-        {chevron && <Text style={[styles.rowChevron, danger && styles.rowChevronDanger]}>›</Text>}
+        {chevron && <ChevronRightIcon size={20} color={danger ? Colors.danger : Colors.textMuted} />}
       </View>
     </TouchableOpacity>
   );
@@ -131,30 +132,30 @@ function SettingsScreen({ navigation }: Props) {
         </TouchableOpacity>
 
         <SettingsSection title={t('settings.accountSection')}>
-          <SettingsRow icon="👤" label={t('settings.editProfileLabel')} onPress={() => navigation.navigate('EditProfile')} />
+          <SettingsRow icon={<PersonIcon size={18} color={Colors.primary} />} label={t('settings.editProfileLabel')} onPress={() => navigation.navigate('EditProfile')} />
           <View style={styles.divider} />
-          <SettingsRow icon="💳" label={t('settings.paymentMethodsLabel')} onPress={() => navigation.navigate('PaymentMethods')} />
+          <SettingsRow icon={<CardIcon size={18} color={Colors.primary} />} label={t('settings.paymentMethodsLabel')} onPress={() => navigation.navigate('PaymentMethods')} />
         </SettingsSection>
 
         <SettingsSection title={t('settings.securitySection')}>
-          <SettingsRow icon="🔒" label={t('settings.securityLabel')} onPress={() => navigation.navigate('SecuritySettings')} />
+          <SettingsRow icon={<LockIcon size={18} color={Colors.primary} />} label={t('settings.securityLabel')} onPress={() => navigation.navigate('SecuritySettings')} />
         </SettingsSection>
 
         <SettingsSection title={t('settings.appSection')}>
           <SettingsRow
-            icon="🌐"
+            icon={<GlobeIcon size={18} color={Colors.primary} />}
             label={t('settings.languageLabel')}
             value={LANGUAGE_LABELS[currentLanguage]}
             onPress={() => setLanguagePickerVisible(true)}
           />
           <View style={styles.divider} />
-          <SettingsRow icon="❓" label={t('settings.helpSupportLabel')} onPress={() => {}} />
+          <SettingsRow icon={<HelpIcon size={18} color={Colors.primary} />} label={t('settings.helpSupportLabel')} onPress={() => {}} />
           <View style={styles.divider} />
-          <SettingsRow icon="ℹ️" label={t('settings.aboutLabel')} value="v1.0.0" onPress={() => {}} />
+          <SettingsRow icon={<Text style={styles.rowIconText}>ℹ️</Text>} label={t('settings.aboutLabel')} value="v1.0.0" onPress={() => {}} />
         </SettingsSection>
 
         <SettingsSection title="">
-          <SettingsRow icon="🚪" label={t('settings.logoutLabel')} onPress={handleLogout} danger chevron={false} />
+          <SettingsRow icon={<LogoutIcon size={18} color={Colors.danger} />} label={t('settings.logoutLabel')} onPress={handleLogout} danger chevron={false} />
         </SettingsSection>
 
       </ScrollView>
@@ -180,7 +181,11 @@ function SettingsScreen({ navigation }: Props) {
                   <Text style={[styles.languageRowText, selected && styles.languageRowTextSelected]}>
                     {LANGUAGE_LABELS[language]}
                   </Text>
-                  {selected && <Text style={styles.checkmark}>✓</Text>}
+                  {selected && (
+                    <View style={styles.checkmark}>
+                      <CheckIcon size={18} color={Colors.primary} />
+                    </View>
+                  )}
                 </TouchableOpacity>
               );
             })}
@@ -277,8 +282,6 @@ const styles = StyleSheet.create({
   rowLabelDanger: { color: Colors.danger },
   rowRight: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   rowValue: { fontSize: 13, color: Colors.textMuted },
-  rowChevron: { fontSize: 20, color: Colors.textMuted, marginLeft: 2 },
-  rowChevronDanger: { color: Colors.danger },
   divider: { height: 1, backgroundColor: Colors.borderLight, marginLeft: 62 },
 
   modalOverlay: { flex: 1, backgroundColor: Colors.overlay, justifyContent: 'flex-end' },
@@ -301,5 +304,5 @@ const styles = StyleSheet.create({
   languageRowSelected: { backgroundColor: Colors.primary + '10' },
   languageRowText: { flex: 1, fontSize: 16, color: Colors.text, textAlign: 'right' },
   languageRowTextSelected: { color: Colors.primary, fontWeight: '600' },
-  checkmark: { fontSize: 18, color: Colors.primary, marginLeft: 8 },
+  checkmark: { marginLeft: 8 },
 });

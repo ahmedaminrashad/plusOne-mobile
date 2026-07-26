@@ -6,6 +6,7 @@ import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
 import Avatar from '../../components/common/Avatar';
+import { ChevronLeftIcon, CheckIcon } from '../../components/icons';
 import { useGetMySharesQuery, useSendShareReminderMutation } from '../../store/api/sharesApi';
 import { useGetMeQuery } from '../../store/api/usersApi';
 import { formatCurrency } from '../../utils/format';
@@ -67,7 +68,7 @@ function SettleUpScreen({ navigation }: Props) {
     <SafeAreaView style={styles.container}>
       <View style={styles.headerRow}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} hitSlop={12}>
-          <Text style={[typography.headingLarge, styles.back]}>‹</Text>
+          <ChevronLeftIcon size={20} color={Colors.text} />
         </TouchableOpacity>
         <Text style={[typography.headingLarge, styles.title]}>{t('navigation:appStack.settleUpTitle')}</Text>
         {!isEmpty && net !== 0 && (
@@ -81,7 +82,7 @@ function SettleUpScreen({ navigation }: Props) {
 
       {isEmpty ? (
         <View style={styles.empty}>
-          <Text style={styles.emptyIcon}>✅</Text>
+          <CheckIcon size={40} color={Colors.success} strokeWidth={2} />
           <Text style={[typography.headingMedium, styles.emptyTitle]}>{t('settleUp.emptyTitle')}</Text>
           <Text style={[typography.bodyMedium, styles.emptySubtitle]}>{t('settleUp.emptySubtitle')}</Text>
         </View>
@@ -169,7 +170,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     justifyContent: 'center', alignItems: 'center',
   },
-  back: { color: Colors.text },
   title: { color: Colors.text, flex: 1 },
   netPill: { borderRadius: Radius.pill, paddingHorizontal: 10, paddingVertical: 4 },
   netPillPositive: { backgroundColor: Colors.successTint },
@@ -178,7 +178,6 @@ const styles = StyleSheet.create({
   netPillNegativeText: { color: Colors.danger },
 
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 8 },
-  emptyIcon: { fontSize: 44, marginBottom: 8 },
   emptyTitle: { color: Colors.text },
   emptySubtitle: { color: Colors.textSecondary, textAlign: 'center' },
 

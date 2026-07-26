@@ -23,6 +23,7 @@ import { useCreateBillMutation } from '../../store/api/billsApi';
 import { GroupMember, ParsedReceiptData } from '../../types/models';
 import { formatCurrency, resolveAssetUrl } from '../../utils/format';
 import i18n from '../../i18n';
+import { ChevronLeftIcon, CheckIcon, ChevronDownIcon } from '../../components/icons';
 
 type Props = AppScreenProps<'AssignItems'>;
 type SplitMode = 'byItem' | 'equally';
@@ -295,7 +296,7 @@ function AssignItemsScreen({ route, navigation }: Props) {
       <View style={styles.receiptHeader}>
         <View style={styles.titleRow}>
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} hitSlop={12}>
-            <Text style={styles.backBtnText}>‹</Text>
+            <ChevronLeftIcon size={20} color={Colors.text} />
           </TouchableOpacity>
           <Text style={[typography.headingLarge, styles.title]}>{t('assignItems.title')}</Text>
         </View>
@@ -311,7 +312,7 @@ function AssignItemsScreen({ route, navigation }: Props) {
           <Text style={[typography.labelMedium, styles.paidByLabel]}>{t('assignItems.paidByLabel')}</Text>
           <Avatar name={payerName} size={26} />
           <Text style={[typography.labelLarge, styles.paidByName]}>{payerName}</Text>
-          <Text style={styles.paidByArrow}>▾</Text>
+          <ChevronDownIcon size={13} color={Colors.textMuted} strokeWidth={2} />
         </TouchableOpacity>
 
         <View style={styles.modeRow}>
@@ -406,7 +407,7 @@ function AssignItemsScreen({ route, navigation }: Props) {
                   <Text style={[typography.bodyLarge, styles.payerOptionName, selected && styles.payerOptionNameSelected]}>
                     {getMemberName(m)}
                   </Text>
-                  {selected && <Text style={styles.checkmark}>✓</Text>}
+                  {selected && <CheckIcon size={16} color={Colors.primary} strokeWidth={2} />}
                 </TouchableOpacity>
               );
             })}
@@ -438,7 +439,6 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 1,
   },
-  backBtnText: { fontSize: 20, color: Colors.text },
   title: { color: Colors.text },
   totalRow: { flexDirection: 'row', alignItems: 'baseline' },
   totalAmount: { color: Colors.text },
@@ -456,7 +456,6 @@ const styles = StyleSheet.create({
   },
   paidByLabel: { color: Colors.textSecondary },
   paidByName: { color: Colors.text },
-  paidByArrow: { fontSize: 11, color: Colors.textMuted },
 
   modeRow: {
     flexDirection: 'row',
@@ -566,5 +565,4 @@ const styles = StyleSheet.create({
   payerOptionSelected: { backgroundColor: Colors.tint },
   payerOptionName: { flex: 1, color: Colors.text, textAlign: 'right' },
   payerOptionNameSelected: { color: Colors.primary },
-  checkmark: { fontSize: 18, color: Colors.primary },
 });

@@ -18,6 +18,7 @@ import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
 import { AppStorage } from '../../utils/storage';
+import { CheckIcon } from '../../components/icons';
 
 type Props = AuthScreenProps<'Onboarding'>;
 
@@ -97,7 +98,7 @@ function SettleIllustration() {
   return (
     <View style={styles.illustrationCard}>
       <View style={styles.settleBadge}>
-        <Text style={styles.settleCheck}>✓</Text>
+        <CheckIcon size={24} color={Colors.success} strokeWidth={2.25} />
       </View>
       <Text style={[typography.amountLarge, styles.settleAmount]}>EGP 206.67</Text>
       <Text style={[typography.caption, styles.illustrationMuted]}>sent to Omar · InstaPay</Text>
@@ -251,7 +252,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 4,
   },
-  settleCheck: { color: Colors.success, fontSize: 24 },
   settleAmount: { color: Colors.primaryDark, textAlign: 'center' },
   settledBadge: {
     alignSelf: 'center',

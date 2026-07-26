@@ -16,6 +16,7 @@ import { useGetGroupMembersQuery } from '../../store/api/groupsApi';
 import Avatar from '../../components/common/Avatar';
 import { resolveAssetUrl } from '../../utils/format';
 import GroupChatPane from './GroupChatPane';
+import { ChevronLeftIcon } from '../../components/icons';
 
 type Props = AppScreenProps<'Chat'>;
 
@@ -44,7 +45,7 @@ function ChatScreen({ route, navigation }: Props) {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} hitSlop={10} activeOpacity={0.7}>
-          <Text style={[typography.headingLarge, styles.backIcon]}>‹</Text>
+          <ChevronLeftIcon size={20} color={Colors.text} />
         </TouchableOpacity>
         <View style={styles.headerTitleWrap}>
           <Text style={[typography.labelLarge, styles.headerTitle]} numberOfLines={1}>{groupName}</Text>
@@ -100,7 +101,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     justifyContent: 'center', alignItems: 'center',
   },
-  backIcon: { color: Colors.text, lineHeight: 22 },
   headerTitleWrap: { flex: 1 },
   headerTitle: { color: Colors.text },
   headerSubtitle: { color: Colors.textSecondary, marginTop: 1 },
