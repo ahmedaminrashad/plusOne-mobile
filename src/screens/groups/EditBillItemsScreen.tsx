@@ -23,7 +23,7 @@ import { useGetBillDetailQuery, useUpdateBillItemsMutation } from '../../store/a
 import { GroupMember } from '../../types/models';
 import { formatCurrency, resolveAssetUrl } from '../../utils/format';
 import i18n from '../../i18n';
-import { LockIcon } from '../../components/icons';
+import { LockIcon, PlusIcon } from '../../components/icons';
 
 type Props = AppScreenProps<'EditBillItems'>;
 
@@ -338,7 +338,7 @@ function EditBillItemsScreen({ route, navigation }: Props) {
           keyboardType="decimal-pad"
         />
         <TouchableOpacity style={styles.addItemBtn} onPress={handleAddItem} activeOpacity={0.8}>
-          <Text style={styles.addItemBtnText}>+</Text>
+          <PlusIcon size={18} color={Colors.textOnPrimary} />
         </TouchableOpacity>
       </View>
     </View>
@@ -478,8 +478,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  addItemBtnText: { color: Colors.textOnPrimary, fontSize: 18, fontWeight: '700' },
-
   bottomPanel: {
     backgroundColor: Colors.background,
     borderTopWidth: 1,

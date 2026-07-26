@@ -22,7 +22,7 @@ import { baseApi } from '../../store/api/baseApi';
 import { SecureStorage } from '../../utils/storage';
 import { changeLanguage, AppLanguage } from '../../i18n';
 import { resolveAssetUrl } from '../../utils/format';
-import { PersonIcon, CardIcon, LockIcon, GlobeIcon, HelpIcon, LogoutIcon, CheckIcon, ChevronRightIcon } from '../../components/icons';
+import { PersonIcon, CardIcon, LockIcon, GlobeIcon, HelpIcon, InfoIcon, LogoutIcon, CheckIcon, ChevronRightIcon } from '../../components/icons';
 
 type Props = SettingsScreenProps<'Settings'>;
 
@@ -151,7 +151,7 @@ function SettingsScreen({ navigation }: Props) {
           <View style={styles.divider} />
           <SettingsRow icon={<HelpIcon size={18} color={Colors.primary} />} label={t('settings.helpSupportLabel')} onPress={() => {}} />
           <View style={styles.divider} />
-          <SettingsRow icon={<Text style={styles.rowIconText}>ℹ️</Text>} label={t('settings.aboutLabel')} value="v1.0.0" onPress={() => {}} />
+          <SettingsRow icon={<InfoIcon size={18} color={Colors.primary} />} label={t('settings.aboutLabel')} value="v1.0.0" onPress={() => {}} />
         </SettingsSection>
 
         <SettingsSection title="">
@@ -277,7 +277,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
   },
   rowIconDanger: { backgroundColor: Colors.danger + '15' },
-  rowIconText: { fontSize: 18 },
   rowLabel: { flex: 1, fontSize: 15, color: Colors.text, fontWeight: '500' },
   rowLabelDanger: { color: Colors.danger },
   rowRight: { flexDirection: 'row', alignItems: 'center', gap: 4 },
