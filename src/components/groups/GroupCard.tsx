@@ -53,7 +53,7 @@ function GroupCard({ group, onPress }: Props) {
             <Avatar
               key={m.id}
               uri={resolveAssetUrl(m.user?.photoUrl)}
-              name={m.user?.displayName ?? t('groupDetail.defaultUserName')}
+              name={m.user?.displayName ?? m.pendingPhone ?? t('groupDetail.defaultUserName')}
               seed={m.userId ?? m.id}
               size={28}
               style={[styles.avatarStackItem, i > 0 && { marginLeft: -8 }]}
