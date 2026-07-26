@@ -86,16 +86,18 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
       <View style={styles.tabBarWrap}>
         <View style={styles.tabBar}>
           <TouchableOpacity style={styles.tabItem} onPress={handleHomePress} activeOpacity={0.7}>
-            <View style={[styles.tabItemInner, homeActive && styles.tabItemInnerActive]}>
+            <View style={styles.tabItemInner}>
               <HomeIcon size={20} color={homeActive ? Colors.navActive : Colors.navInactive} />
               <Text style={[typography.labelSmall, styles.tabLabel, homeActive && styles.tabLabelActive]}>{t('tabBar.homeLabel')}</Text>
+              {homeActive && <View style={styles.tabActiveDot} />}
             </View>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.tabItem} onPress={handleBillsPress} activeOpacity={0.7}>
-            <View style={[styles.tabItemInner, billsActive && styles.tabItemInnerActive]}>
+            <View style={styles.tabItemInner}>
               <ReceiptIcon size={20} color={billsActive ? Colors.navActive : Colors.navInactive} />
               <Text style={[typography.labelSmall, styles.tabLabel, billsActive && styles.tabLabelActive]}>{t('tabBar.billsLabel')}</Text>
+              {billsActive && <View style={styles.tabActiveDot} />}
             </View>
           </TouchableOpacity>
 
@@ -103,16 +105,18 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
           <View style={styles.fabSpacer} />
 
           <TouchableOpacity style={styles.tabItem} onPress={handleActivityPress} activeOpacity={0.7}>
-            <View style={[styles.tabItemInner, activityActive && styles.tabItemInnerActive]}>
+            <View style={styles.tabItemInner}>
               <ActivityIcon size={20} color={activityActive ? Colors.navActive : Colors.navInactive} />
               <Text style={[typography.labelSmall, styles.tabLabel, activityActive && styles.tabLabelActive]}>{t('tabBar.activityLabel')}</Text>
+              {activityActive && <View style={styles.tabActiveDot} />}
             </View>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.tabItem} onPress={handleProfilePress} activeOpacity={0.7}>
-            <View style={[styles.tabItemInner, profileActive && styles.tabItemInnerActive]}>
+            <View style={styles.tabItemInner}>
               <PersonIcon size={20} color={profileActive ? Colors.navActive : Colors.navInactive} />
               <Text style={[typography.labelSmall, styles.tabLabel, profileActive && styles.tabLabelActive]}>{t('tabBar.profileLabel')}</Text>
+              {profileActive && <View style={styles.tabActiveDot} />}
             </View>
           </TouchableOpacity>
         </View>
@@ -191,12 +195,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 3,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: Radius.pill,
   },
-  tabItemInnerActive: {
-    backgroundColor: Colors.tint,
+  tabActiveDot: {
+    position: 'absolute',
+    bottom: -8,
+    width: 4, height: 4, borderRadius: 2,
+    backgroundColor: Colors.navActive,
   },
   tabLabel: { color: Colors.navInactive },
   tabLabelActive: { color: Colors.navActive },
