@@ -21,6 +21,22 @@ type Props = AppScreenProps<'AllGroups'>;
 
 type Filter = 'all' | 'owedToMe' | 'iOwe' | 'settled';
 
+// Per-filter colors, matching Figma exactly (Section - ALL GROUPS, node 1:2163):
+// each chip has its own semantic tint at rest, and switches to a solid fill
+// with white text when selected — same color pairing GroupCard uses for its
+// balance pills (owed = success, owe = danger, settled = teal tint).
+const FILTER_STYLES: Record<Filter, { restBg: string; restText: string; activeBg: string; activeText: string }> = {
+  all: { restBg: Colors.tint, restText: Colors.primary, activeBg: Colors.primary, activeText: Colors.textOnPrimary },
+  owedToMe: {
+    restBg: Colors.successTint,
+    restText: Colors.secondaryDark,
+    activeBg: Colors.secondary,
+    activeText: Colors.textOnPrimary,
+  },
+  iOwe: { restBg: Colors.dangerTint, restText: Colors.danger, activeBg: Colors.danger, activeText: Colors.textOnPrimary },
+  settled: { restBg: Colors.tint, restText: Colors.primary, activeBg: Colors.primary, activeText: Colors.textOnPrimary },
+};
+
 function AllGroupsScreen({ navigation }: Props) {
   const { t } = useTranslation('groups');
   const typography = useTypography();
@@ -69,14 +85,18 @@ function AllGroupsScreen({ navigation }: Props) {
       ))}
 
       <View style={styles.headerRow}>
-        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={12}>
-          <Text style={[typography.headingLarge, styles.back]}>‹</Text>
-        </TouchableOpacity>
-        <Text style={[typography.headingLarge, styles.title]}>{t('navigation:appStack.allGroupsTitle')}</Text>
+        <View style={styles.headerLeft}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} hitSlop={12}>
+            <Text style={[typography.bodyLarge, styles.backBtnText]}>‹</Text>
+          </TouchableOpacity>
+          <Text style={[typography.headingMedium, styles.title]}>{t('navigation:appStack.allGroupsTitle')}</Text>
+        </View>
+        <View style={styles.countPill}>
+          <Text style={[typography.labelSmall, styles.countPillText]}>
+            {t('allGroups.groupsCount', { count: groups?.length ?? 0 })}
+          </Text>
+        </View>
       </View>
-      <Text style={[typography.bodyMedium, styles.count]}>
-        {t('allGroups.groupsCount', { count: groups?.length ?? 0 })}
-      </Text>
 
       <View style={styles.searchBar}>
         <Text style={styles.searchIcon}>🔍</Text>
@@ -90,16 +110,18 @@ function AllGroupsScreen({ navigation }: Props) {
       </View>
 
       <View style={styles.filterRow}>
-        {filters.map((f) => (
-          <TouchableOpacity
-            key={f.key}
-            style={[styles.filterChip, filter === f.key && styles.filterChipActive]}
-            onPress={() => setFilter(f.key)}>
-            <Text style={[typography.labelMedium, filter === f.key ? styles.filterTextActive : styles.filterText]}>
-              {f.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
+        {filters.map((f) => {
+          const c = FILTER_STYLES[f.key];
+          const active = filter === f.key;
+          return (
+            <TouchableOpacity
+              key={f.key}
+              style={[styles.filterChip, { backgroundColor: active ? c.activeBg : c.restBg }]}
+              onPress={() => setFilter(f.key)}>
+              <Text style={[typography.labelSmall, { color: active ? c.activeText : c.restText }]}>{f.label}</Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
       <FlatList
@@ -125,33 +147,39 @@ export default memo(AllGroupsScreen);
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-  headerRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingTop: 12 },
-  back: { color: Colors.accent },
+  headerRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 16, paddingTop: 8, marginBottom: 14,
+  },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  backBtn: {
+    width: 34, height: 34, borderRadius: Radius.md,
+    backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.borderLight,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  backBtnText: { color: Colors.text },
   title: { color: Colors.text },
-  count: { color: Colors.textMuted, paddingHorizontal: 20, marginTop: 2 },
+  countPill: {
+    backgroundColor: Colors.tint, borderRadius: Radius.pill,
+    paddingHorizontal: 10, paddingVertical: 4,
+  },
+  countPillText: { color: Colors.primary },
   searchBar: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: Colors.surface, borderRadius: Radius.pill,
-    marginHorizontal: 20, marginTop: 14, paddingHorizontal: 16, height: 46, gap: 8,
+    marginHorizontal: 16, marginTop: 14, paddingHorizontal: 16, height: 38, gap: 8,
     borderWidth: 1, borderColor: Colors.borderLight,
   },
   searchIcon: { fontSize: 15 },
   searchInput: { flex: 1, color: Colors.text, padding: 0 },
-  filterRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 20, marginTop: 14 },
-  filterChip: {
-    paddingHorizontal: 14, paddingVertical: 8, borderRadius: Radius.pill,
-    backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.borderLight,
-  },
-  filterChipActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
-  filterText: { color: Colors.textSecondary },
-  filterTextActive: { color: Colors.textOnPrimary },
-  list: { paddingHorizontal: 14, paddingTop: 14, paddingBottom: 90 },
+  filterRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 16, marginTop: 10 },
+  filterChip: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: Radius.pill },
+  list: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 90 },
   empty: { color: Colors.textMuted, textAlign: 'center', marginTop: 32 },
   newGroupBtn: {
-    position: 'absolute', bottom: 20, alignSelf: 'center',
-    backgroundColor: Colors.primary, borderRadius: Radius.pill,
-    paddingHorizontal: 24, paddingVertical: 14,
-    shadowColor: Colors.primaryDark, shadowOpacity: 0.25, shadowOffset: { width: 0, height: 4 }, shadowRadius: 10, elevation: 6,
+    position: 'absolute', bottom: 20, left: 16, right: 16, alignItems: 'center',
+    backgroundColor: Colors.primary, borderRadius: Radius.pill, paddingVertical: 14,
+    shadowColor: Colors.primaryDark, shadowOpacity: 0.3, shadowOffset: { width: 0, height: 6 }, shadowRadius: 14, elevation: 6,
   },
   newGroupBtnText: { color: Colors.textOnPrimary },
 });

@@ -46,6 +46,7 @@ function MyCircleScreen({ navigation }: Props) {
 
   const active = filtered.filter((f) => f.status === 'active');
   const pending = filtered.filter((f) => f.status === 'pending');
+  const members = [...active, ...pending];
 
   const handleAdd = useCallback(async () => {
     const phone = newPhone.trim();
@@ -83,16 +84,19 @@ function MyCircleScreen({ navigation }: Props) {
 
   const renderRow = (item: Friend) => (
     <View style={styles.row} key={item.id}>
-      <Avatar name={friendName(item)} size={44} />
+      <Avatar name={friendName(item)} seed={item.friendUserId ?? item.id} size={28} style={styles.avatarBorder} />
       <View style={styles.rowInfo}>
         <Text style={[typography.labelLarge, styles.rowName]}>{friendName(item)}</Text>
-        {item.status === 'active' ? (
-          <Text style={[typography.bodySmall, styles.rowSubtitle]}>{t('myCircle.onPlusOne')}</Text>
-        ) : (
-          <Text style={[typography.bodySmall, styles.pendingText]}>{t('myCircle.pendingBadge')}</Text>
+        {item.status === 'pending' && (
+          <Text style={[typography.bodySmall, styles.pendingSubtitle]}>{t('myCircle.pendingBadge')}</Text>
         )}
       </View>
-      <TouchableOpacity onPress={() => handleRemove(item)} hitSlop={10}>
+      <View style={[styles.statusPill, item.status === 'active' ? styles.statusPillActive : styles.statusPillPending]}>
+        <Text style={[typography.labelSmall, item.status === 'active' ? styles.statusPillActiveText : styles.statusPillPendingText]}>
+          {item.status === 'active' ? t('myCircle.onPlusOne') : t('myCircle.pendingPill')}
+        </Text>
+      </View>
+      <TouchableOpacity onPress={() => handleRemove(item)} hitSlop={10} style={styles.removeBtn}>
         <Text style={styles.removeIcon}>✕</Text>
       </TouchableOpacity>
     </View>
@@ -109,12 +113,12 @@ function MyCircleScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.headerRow}>
-        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={12}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} hitSlop={12}>
           <Text style={[typography.headingLarge, styles.back]}>‹</Text>
         </TouchableOpacity>
-        <View>
-          <Text style={[typography.headingLarge, styles.title]}>{t('navigation:appStack.myCircleTitle')}</Text>
-          <Text style={[typography.bodyMedium, styles.count]}>{t('myCircle.peopleCount', { count: circle?.length ?? 0 })}</Text>
+        <Text style={[typography.headingLarge, styles.title]}>{t('navigation:appStack.myCircleTitle')}</Text>
+        <View style={styles.countPill}>
+          <Text style={[typography.labelMedium, styles.countPillText]}>{t('myCircle.peopleCount', { count: circle?.length ?? 0 })}</Text>
         </View>
       </View>
 
@@ -130,6 +134,9 @@ function MyCircleScreen({ navigation }: Props) {
       </View>
 
       <View style={styles.growCard}>
+        <View style={styles.growIconWrap}>
+          <Text style={styles.growIcon}>🤝</Text>
+        </View>
         <View style={styles.growInfo}>
           <Text style={[typography.labelLarge, styles.growTitle]}>{t('myCircle.growTitle')}</Text>
           <Text style={[typography.bodySmall, styles.growSubtitle]}>{t('myCircle.growSubtitle')}</Text>
@@ -139,7 +146,7 @@ function MyCircleScreen({ navigation }: Props) {
         </TouchableOpacity>
       </View>
 
-      {active.length === 0 && pending.length === 0 ? (
+      {members.length === 0 ? (
         <View style={styles.empty}>
           <Text style={styles.emptyIcon}>👥</Text>
           <Text style={[typography.headingMedium, styles.emptyTitle]}>{t('myCircle.emptyTitle')}</Text>
@@ -148,10 +155,8 @@ function MyCircleScreen({ navigation }: Props) {
       ) : (
         <FlatList
           data={[
-            ...(active.length ? [{ type: 'header' as const, label: t('myCircle.inCircleHeader') }] : []),
-            ...active.map((f) => ({ type: 'row' as const, friend: f })),
-            ...(pending.length ? [{ type: 'header' as const, label: t('myCircle.pendingHeader') }] : []),
-            ...pending.map((f) => ({ type: 'row' as const, friend: f })),
+            { type: 'header' as const, label: t('myCircle.inCircleHeader') },
+            ...members.map((f) => ({ type: 'row' as const, friend: f })),
           ]}
           keyExtractor={(item, idx) => (item.type === 'header' ? `h-${item.label}` : item.friend.id) + idx}
           contentContainerStyle={styles.list}
@@ -195,29 +200,40 @@ export default memo(MyCircleScreen);
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   loader: { flex: 1 },
-  headerRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 8 },
-  back: { color: Colors.accent },
-  title: { color: Colors.text },
-  count: { color: Colors.textMuted, marginTop: 2 },
+  headerRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8 },
+  backBtn: {
+    width: 34, height: 34, borderRadius: Radius.md,
+    backgroundColor: Colors.surface,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  back: { color: Colors.text },
+  title: { color: Colors.text, flex: 1 },
+  countPill: { borderRadius: Radius.pill, paddingHorizontal: 10, paddingVertical: 4, backgroundColor: Colors.tint },
+  countPillText: { color: Colors.primary },
 
   searchBar: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: Colors.surface, borderRadius: Radius.pill,
-    marginHorizontal: 20, marginTop: 8, paddingHorizontal: 16, height: 46, gap: 8,
-    borderWidth: 1, borderColor: Colors.borderLight,
+    marginHorizontal: 16, marginTop: 8, paddingHorizontal: 16, height: 38, gap: 8,
   },
   searchIcon: { fontSize: 15 },
   searchInput: { flex: 1, color: Colors.text, padding: 0 },
 
   growCard: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: Colors.tint, borderRadius: Radius.lg,
-    marginHorizontal: 20, marginTop: 14, padding: 14,
+    backgroundColor: Colors.warningTint, borderRadius: Radius.xl,
+    marginHorizontal: 16, marginTop: 14, padding: 14,
   },
+  growIconWrap: {
+    width: 30, height: 30, borderRadius: 15,
+    backgroundColor: Colors.accent,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  growIcon: { fontSize: 14 },
   growInfo: { flex: 1 },
   growTitle: { color: Colors.text },
-  growSubtitle: { color: Colors.textSecondary, marginTop: 2 },
-  growBtn: { backgroundColor: Colors.primary, borderRadius: Radius.pill, paddingHorizontal: 16, paddingVertical: 10 },
+  growSubtitle: { color: Colors.warningDark, marginTop: 2 },
+  growBtn: { backgroundColor: Colors.accent, borderRadius: Radius.pill, paddingHorizontal: 16, paddingVertical: 10 },
   growBtnText: { color: Colors.textOnPrimary },
 
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 8 },
@@ -225,16 +241,27 @@ const styles = StyleSheet.create({
   emptyTitle: { color: Colors.text },
   emptySubtitle: { color: Colors.textSecondary, textAlign: 'center' },
 
-  list: { paddingHorizontal: 20, paddingTop: 18, paddingBottom: 24 },
+  list: { paddingHorizontal: 16, paddingTop: 18, paddingBottom: 24 },
   sectionHeader: { color: Colors.textSecondary, marginBottom: 8, marginTop: 12 },
   row: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: 12, marginBottom: 8,
+    backgroundColor: Colors.surface, borderRadius: Radius.xl, padding: 12, marginBottom: 8,
+    shadowColor: Colors.primaryDark,
+    shadowOpacity: 0.06,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 8,
+    elevation: 2,
   },
+  avatarBorder: { borderWidth: 2, borderColor: Colors.surface },
   rowInfo: { flex: 1 },
   rowName: { color: Colors.text },
-  rowSubtitle: { color: Colors.secondaryDark, marginTop: 2 },
-  pendingText: { color: Colors.accent, marginTop: 2 },
+  pendingSubtitle: { color: Colors.textSecondary, marginTop: 2 },
+  statusPill: { borderRadius: Radius.pill, paddingHorizontal: 10, paddingVertical: 4 },
+  statusPillActive: { backgroundColor: Colors.successTint },
+  statusPillActiveText: { color: Colors.secondaryDark },
+  statusPillPending: { backgroundColor: Colors.warningTint },
+  statusPillPendingText: { color: Colors.warningDark },
+  removeBtn: { marginLeft: 2 },
   removeIcon: { fontSize: 15, color: Colors.textMuted, padding: 6 },
 
   modalOverlay: { flex: 1, backgroundColor: Colors.overlay, justifyContent: 'center', padding: 24 },

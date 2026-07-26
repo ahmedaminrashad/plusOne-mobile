@@ -48,7 +48,7 @@ function AddBillChooserScreen({ route, navigation }: Props) {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.headerRow}>
-        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={12}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} hitSlop={12}>
           <Text style={[typography.headingLarge, styles.back]}>‹</Text>
         </TouchableOpacity>
         <View>
@@ -75,7 +75,7 @@ function AddBillChooserScreen({ route, navigation }: Props) {
             </View>
             {opt.badge && (
               <View style={styles.badge}>
-                <Text style={[typography.labelSmall, styles.badgeText]}>{opt.badge}</Text>
+                <Text style={[typography.labelSmall, styles.badgeText]} numberOfLines={1}>{opt.badge}</Text>
               </View>
             )}
           </TouchableOpacity>
@@ -92,7 +92,13 @@ export default memo(AddBillChooserScreen);
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 24 },
-  back: { color: Colors.accent },
+  backBtn: {
+    width: 34, height: 34, borderRadius: Radius.md,
+    justifyContent: 'center', alignItems: 'center',
+    backgroundColor: Colors.surface,
+    borderWidth: 1, borderColor: Colors.borderLight,
+  },
+  back: { color: Colors.text },
   title: { color: Colors.text },
   subtitle: { color: Colors.textSecondary, marginTop: 2 },
 
@@ -109,15 +115,15 @@ const styles = StyleSheet.create({
   },
   optionHighlighted: { borderColor: Colors.primary },
   optionIconWrap: {
-    width: 52, height: 52, borderRadius: Radius.lg,
+    width: 50, height: 50, borderRadius: 16,
     justifyContent: 'center', alignItems: 'center',
   },
   optionIcon: { fontSize: 22, fontWeight: '700' },
   optionInfo: { flex: 1 },
   optionTitle: { color: Colors.text },
-  optionSubtitle: { color: Colors.textMuted, marginTop: 2 },
-  badge: { backgroundColor: Colors.warningTint, borderRadius: Radius.pill, paddingHorizontal: 10, paddingVertical: 4 },
-  badgeText: { color: Colors.accent },
+  optionSubtitle: { color: Colors.textSecondary, marginTop: 2 },
+  badge: { backgroundColor: Colors.accent, borderRadius: Radius.pill, paddingHorizontal: 10, paddingVertical: 4 },
+  badgeText: { color: '#fff' },
 
-  footer: { color: Colors.textMuted, textAlign: 'center', marginTop: 20, paddingHorizontal: 32 },
+  footer: { color: Colors.textSecondary, textAlign: 'center', marginTop: 20, paddingHorizontal: 32 },
 });

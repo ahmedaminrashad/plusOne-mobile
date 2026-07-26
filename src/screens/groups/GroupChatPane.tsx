@@ -15,14 +15,15 @@ import { launchImageLibrary } from 'react-native-image-picker';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
 import { Colors } from '../../constants/colors';
+import { Radius } from '../../constants/radius';
+import { useTypography } from '../../hooks/useTypography';
 import { ASSET_BASE_URL } from '../../config';
 import { setActiveChatGroupId } from '../../services/activeChat';
-import Avatar from '../../components/common/Avatar';
 import { useGetMeQuery } from '../../store/api/usersApi';
 import { useGetGroupMessagesQuery, useSendGroupMessageMutation, useUploadChatImageMutation } from '../../store/api/groupsApi';
 import { ChatMessage } from '../../types/models';
 import { AppStackParamList } from '../../types/navigation';
-import { formatRelativeTime, formatCurrency, resolveAssetUrl } from '../../utils/format';
+import { formatDate, formatCurrency } from '../../utils/format';
 import { useKeyboardInsetHeight } from '../../services/keyboardInsets';
 
 // The single implementation of a group's chat (message list + composer), used both
@@ -49,7 +50,24 @@ interface PendingMessage {
 
 type ChatListItem =
   | { kind: 'pending'; item: PendingMessage }
-  | { kind: 'message'; message: ChatMessage };
+  | { kind: 'message'; message: ChatMessage }
+  | { kind: 'separator'; key: string; label: string };
+
+// Figma shows a rounded "Today" pill dividing message groups by calendar day.
+function dayKey(iso: string) {
+  const d = new Date(iso);
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+
+function dayLabel(iso: string, t: (key: string) => string) {
+  const d = new Date(iso);
+  const now = new Date();
+  const startOf = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const diffDays = Math.round((startOf(now) - startOf(d)) / 86400000);
+  if (diffDays === 0) return t('chat.dateToday');
+  if (diffDays === 1) return t('chat.dateYesterday');
+  return formatDate(d, { day: 'numeric', month: 'short' });
+}
 
 function MessageBubble({
   item,
@@ -65,6 +83,7 @@ function MessageBubble({
   onOpenReceipt: (billId: string) => void;
 }) {
   const { t } = useTranslation('groups');
+  const typography = useTypography();
 
   if (item.kind === 'pending') {
     const { item: pending } = item;
@@ -85,9 +104,9 @@ function MessageBubble({
                 <Image source={{ uri: pending.imageUri }} style={styles.bubbleImage} resizeMode="cover" />
               )}
               {!!pending.text && (
-                <Text style={[styles.bubbleText, styles.bubbleTextMine]}>{pending.text}</Text>
+                <Text style={[typography.bodyMedium, styles.bubbleText, styles.bubbleTextMine]}>{pending.text}</Text>
               )}
-              <Text style={[styles.bubbleTime, styles.bubbleTimeMine, pending.failed && styles.bubbleTimeFailed]}>
+              <Text style={[typography.labelSmall, styles.bubbleTime, styles.bubbleTimeMine, pending.failed && styles.bubbleTimeFailed]}>
                 {pending.failed ? '⚠ ' : ''}{timeStr}
               </Text>
             </View>
@@ -97,63 +116,54 @@ function MessageBubble({
     );
   }
 
+  if (item.kind !== 'message') return null; // separators are rendered directly by the parent list
+
+  // Figma shows no avatar and no per-message timestamp beside chat bubbles — just a
+  // muted sender label above the bubble (shared by both text and bill-receipt messages)
+  // and, separately, a date pill between day groups (rendered by the parent list).
   const msg = item.message;
-  const timeStr = formatRelativeTime(new Date(msg.createdAt));
 
   return (
     <View style={[styles.bubbleRow, isMine && styles.bubbleRowMine]}>
-      {!isMine && (
-        <View style={styles.avatarCol}>
-          {showSender ? (
-            <Avatar uri={resolveAssetUrl(msg.senderPhoto)} name={msg.senderName} size={34} />
-          ) : (
-            <View style={styles.avatarSpacer} />
-          )}
-        </View>
-      )}
       <View style={styles.bubbleCol}>
+        {!isMine && showSender && (
+          <Text style={[typography.bodySmall, styles.senderName]}>{msg.senderName}</Text>
+        )}
         {msg.bill ? (
-          <>
-            {!isMine && showSender && (
-              <Text style={styles.senderName}>{msg.senderName}</Text>
-            )}
-            <TouchableOpacity
-              style={styles.receiptCard}
-              activeOpacity={0.8}
-              onPress={() => onOpenReceipt(msg.bill!.id)}>
-              <View style={styles.receiptIcon}>
-                <Text style={styles.receiptIconText}>🧾</Text>
+          <TouchableOpacity
+            style={styles.receiptCard}
+            activeOpacity={0.8}
+            onPress={() => onOpenReceipt(msg.bill!.id)}>
+            <View style={styles.receiptIcon}>
+              <Text style={styles.receiptIconText}>🧾</Text>
+            </View>
+            <View style={styles.receiptInfo}>
+              <Text style={[typography.labelLarge, styles.receiptTitle]} numberOfLines={1}>
+                {t('chat.receiptAddedTitle', { title: msg.bill.title ?? t('chat.receiptDefaultTitle') })}
+              </Text>
+              <Text style={[typography.bodySmall, styles.receiptMeta]}>
+                {msg.bill.itemCount > 0
+                  ? t('chat.receiptItemCount', { count: msg.bill.itemCount })
+                  : t('chat.receiptNoItemsYet')}
+              </Text>
+              <View style={styles.receiptCtaPill}>
+                <Text style={[typography.labelSmall, styles.receiptCta]}>{t('chat.receiptOpenCta')}</Text>
               </View>
-              <View style={styles.receiptInfo}>
-                <Text style={styles.receiptTitle} numberOfLines={1}>
-                  {msg.bill.title ?? t('chat.receiptDefaultTitle')}
-                </Text>
-                <Text style={styles.receiptMeta}>
-                  {msg.bill.itemCount > 0
-                    ? t('chat.receiptItemCount', { count: msg.bill.itemCount })
-                    : t('chat.receiptNoItemsYet')}
-                </Text>
-                <Text style={styles.receiptCta}>{t('chat.receiptOpenCta')}</Text>
-              </View>
-              <Text style={styles.receiptAmount}>{formatCurrency(Number(msg.bill.amount), msg.bill.currency)}</Text>
-            </TouchableOpacity>
-          </>
+            </View>
+            <Text style={[typography.labelLarge, styles.receiptAmount]}>{formatCurrency(Number(msg.bill.amount), msg.bill.currency)}</Text>
+          </TouchableOpacity>
         ) : (
           <View style={[
             styles.bubble,
             msg.imageUrl && styles.bubbleImageWrap,
             isMine ? styles.bubbleMine : styles.bubbleTheirs,
           ]}>
-            {!isMine && showSender && (
-              <Text style={styles.senderNameInBubble}>{msg.senderName}</Text>
-            )}
             {msg.imageUrl && (
               <Image source={{ uri: msg.imageUrl }} style={styles.bubbleImage} resizeMode="cover" />
             )}
             {!!msg.text && (
-              <Text style={[styles.bubbleText, isMine && styles.bubbleTextMine]}>{msg.text}</Text>
+              <Text style={[typography.bodyMedium, styles.bubbleText, isMine && styles.bubbleTextMine]}>{msg.text}</Text>
             )}
-            <Text style={[styles.bubbleTime, isMine && styles.bubbleTimeMine]}>{timeStr}</Text>
           </View>
         )}
       </View>
@@ -174,6 +184,7 @@ interface GroupChatPaneProps {
 
 function GroupChatPane({ groupId, groupName, navigation, sharedImageUri, onSharedImageConsumed }: GroupChatPaneProps) {
   const { t } = useTranslation('groups');
+  const typography = useTypography();
   const { data: me } = useGetMeQuery();
   const [sendGroupMessage] = useSendGroupMessageMutation();
   const [uploadChatImage] = useUploadChatImageMutation();
@@ -300,9 +311,21 @@ function GroupChatPane({ groupId, groupName, navigation, sharedImageUri, onShare
     );
   }
 
+  // Messages arrive newest-first (for the inverted list); a date-pill separator is
+  // inserted right after the oldest message of each calendar day so it renders above
+  // that day's block on screen (Figma: rounded "Today" pill between message groups).
+  const messageItems: ChatListItem[] = [];
+  (messages ?? []).forEach((message, idx) => {
+    messageItems.push({ kind: 'message', message });
+    const next = (messages ?? [])[idx + 1];
+    if (!next || dayKey(next.createdAt) !== dayKey(message.createdAt)) {
+      messageItems.push({ kind: 'separator', key: `sep-${message.id}`, label: dayLabel(message.createdAt, t) });
+    }
+  });
+
   const listData: ChatListItem[] = [
     ...pending.map((item) => ({ kind: 'pending' as const, item })),
-    ...(messages ?? []).map((message) => ({ kind: 'message' as const, message })),
+    ...messageItems,
   ];
 
   return (
@@ -316,11 +339,24 @@ function GroupChatPane({ groupId, groupName, navigation, sharedImageUri, onShare
         <FlatList
           ref={listRef}
           data={listData}
-          keyExtractor={(item) => (item.kind === 'pending' ? item.item.localId : item.message.id)}
+          keyExtractor={(item) => {
+            if (item.kind === 'pending') return item.item.localId;
+            if (item.kind === 'separator') return item.key;
+            return item.message.id;
+          }}
           renderItem={({ item, index }) => {
             if (item.kind === 'pending') {
               return (
                 <MessageBubble item={item} isMine showSender={false} onRetry={handleRetry} onOpenReceipt={handleOpenReceipt} />
+              );
+            }
+            if (item.kind === 'separator') {
+              return (
+                <View style={styles.dateSeparatorRow}>
+                  <View style={styles.dateSeparatorPill}>
+                    <Text style={[typography.labelMedium, styles.dateSeparatorText]}>{item.label}</Text>
+                  </View>
+                </View>
               );
             }
             const msg = item.message;
@@ -358,11 +394,11 @@ function GroupChatPane({ groupId, groupName, navigation, sharedImageUri, onShare
           <Text style={styles.attachIcon}>📎</Text>
         </TouchableOpacity>
         <TextInput
-          style={styles.input}
+          style={[typography.bodyMedium, styles.input]}
           value={text}
           onChangeText={setText}
           placeholder={t('chat.messagePlaceholder')}
-          placeholderTextColor={Colors.textMuted}
+          placeholderTextColor={Colors.textSecondary}
           multiline
           maxLength={1000}
         />
@@ -387,29 +423,28 @@ const styles = StyleSheet.create({
   messagesList: { padding: 12 },
   loadMoreSpinner: { paddingVertical: 16 },
 
-  bubbleRow: { flexDirection: 'row', alignItems: 'flex-end', marginBottom: 4 },
+  bubbleRow: { flexDirection: 'row', alignItems: 'flex-end', marginBottom: 8 },
   bubbleRowMine: { flexDirection: 'row-reverse' },
-  avatarCol: { width: 40, alignItems: 'center', justifyContent: 'flex-end', marginRight: 6 },
-  avatarSpacer: { width: 34, height: 34 },
-  bubbleCol: { flex: 1 },
-  senderName: { fontSize: 11, fontWeight: '700', color: Colors.primary, marginBottom: 3, marginLeft: 4 },
-  senderNameInBubble: { fontSize: 12, fontWeight: '700', color: Colors.primary, marginBottom: 2 },
+  bubbleCol: { flex: 1, alignItems: 'flex-start' },
+  senderName: { color: Colors.textSecondary, marginBottom: 3, marginLeft: 4 },
+  // Corner radii match Figma's asymmetric rectangleCornerRadii exactly: [18,18,18,6]
+  // for received bubbles (tail bottom-left) and [18,18,6,18] for sent (tail bottom-right).
   bubble: {
     maxWidth: '80%',
     alignSelf: 'flex-start',
-    borderRadius: 16,
+    borderRadius: 18,
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
   bubbleMine: {
     alignSelf: 'flex-end',
     backgroundColor: Colors.primary,
-    borderBottomRightRadius: 4,
+    borderBottomRightRadius: 6,
   },
   bubbleTheirs: {
     backgroundColor: Colors.surface,
-    borderBottomLeftRadius: 4,
-    shadowColor: '#000',
+    borderBottomLeftRadius: 6,
+    shadowColor: Colors.primaryDark,
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 1 },
     shadowRadius: 3,
@@ -421,74 +456,94 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     maxWidth: '90%',
     backgroundColor: Colors.surface,
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: Colors.border,
+    borderRadius: Radius.xl,
     padding: 12,
     gap: 10,
+    shadowColor: Colors.primaryDark,
+    shadowOpacity: 0.08,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 10,
+    elevation: 2,
   },
   receiptIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 11,
-    backgroundColor: Colors.primary + '15',
+    width: 34,
+    height: 34,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.tint,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  receiptIconText: { fontSize: 18 },
+  receiptIconText: { fontSize: 16 },
   receiptInfo: { flex: 1 },
-  receiptTitle: { fontSize: 14, fontWeight: '700', color: Colors.text },
-  receiptMeta: { fontSize: 11, color: Colors.textMuted, marginTop: 2 },
-  receiptCta: { fontSize: 11, color: Colors.primary, fontWeight: '600', marginTop: 3 },
-  receiptAmount: { fontSize: 14, fontWeight: '700', color: Colors.text, marginLeft: 6 },
+  receiptTitle: { color: Colors.text },
+  receiptMeta: { color: Colors.textSecondary, marginTop: 2 },
+  receiptCtaPill: {
+    alignSelf: 'flex-start',
+    backgroundColor: Colors.tint,
+    borderRadius: Radius.pill,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginTop: 4,
+  },
+  receiptCta: { color: Colors.primary },
+  receiptAmount: { color: Colors.text, marginLeft: 6 },
   bubbleImageWrap: { padding: 4 },
   bubbleImage: { width: 200, height: 200, borderRadius: 12, marginBottom: 4 },
-  bubbleText: { fontSize: 15, color: Colors.text, lineHeight: 20 },
+  bubbleText: { color: Colors.text },
   bubbleTextMine: { color: Colors.textOnPrimary },
-  bubbleTime: { fontSize: 10, color: Colors.textMuted, marginTop: 4, textAlign: 'right' },
+  bubbleTime: { color: Colors.textMuted, marginTop: 4, textAlign: 'right' },
   bubbleTimeMine: { color: 'rgba(255,255,255,0.7)' },
   bubbleTimeFailed: { color: Colors.danger },
+
+  // Date separator — Figma: rounded tint pill ("Today") between message day-groups.
+  dateSeparatorRow: { alignItems: 'center', marginVertical: 8 },
+  dateSeparatorPill: {
+    backgroundColor: Colors.tint,
+    borderRadius: Radius.pill,
+    paddingHorizontal: 14,
+    paddingVertical: 5,
+  },
+  dateSeparatorText: { color: Colors.primary },
 
   inputRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: Colors.surface,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     gap: 8,
   },
   input: {
     flex: 1,
-    minHeight: 40,
+    minHeight: 44,
     maxHeight: 120,
-    backgroundColor: Colors.background,
-    borderRadius: 20,
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.pill,
     paddingHorizontal: 16,
-    paddingVertical: 8,
-    fontSize: 15,
+    paddingVertical: 10,
     color: Colors.text,
   },
   sendBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: Radius.lg,
     backgroundColor: Colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   sendBtnDisabled: { backgroundColor: Colors.border },
-  sendIcon: { color: Colors.textOnPrimary, fontSize: 14 },
+  sendIcon: { color: Colors.textOnPrimary, fontSize: 16 },
+  // No Figma reference for the image-attach entry point (not shown in the mockup),
+  // but it's real, working functionality (chat image upload) — kept, restyled to
+  // fit the app's tint-chip convention instead of the old flat-gray circle.
   attachBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: Colors.border,
+    backgroundColor: Colors.tint,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  attachIcon: { fontSize: 20, color: Colors.text },
+  attachIcon: { fontSize: 18, color: Colors.primary },
 
   emptyChat: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12 },
   emptyChatIcon: { fontSize: 52 },

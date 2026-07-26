@@ -67,7 +67,7 @@ function RemindScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.headerRow}>
-        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={12}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} hitSlop={12}>
           <Text style={[typography.headingLarge, styles.back]}>‹</Text>
         </TouchableOpacity>
         <Text style={[typography.headingLarge, styles.title]}>{t('remind.title')}</Text>
@@ -86,23 +86,31 @@ function RemindScreen({ navigation }: Props) {
             keyExtractor={(r) => r.key}
             contentContainerStyle={styles.list}
             ListHeaderComponent={<Text style={[typography.labelMedium, styles.sectionHeader]}>{t('remind.waitingOn')}</Text>}
-            renderItem={({ item }) => (
-              <TouchableOpacity style={[styles.row, selected.has(item.key) && styles.rowSelected]} onPress={() => toggleRow(item.key)}>
-                <Avatar name={item.counterpartName} size={40} />
-                <View style={styles.rowInfo}>
-                  <Text style={[typography.labelLarge, styles.rowName]}>{item.counterpartName}</Text>
-                  <Text style={[typography.bodySmall, styles.rowGroup]}>{item.groupName}</Text>
-                </View>
-                <Text style={[typography.amountMedium, styles.rowAmount]}>{formatCurrency(item.amountPiastres / 100)}</Text>
-              </TouchableOpacity>
-            )}
+            renderItem={({ item }) => {
+              const isSelected = selected.has(item.key);
+              return (
+                <TouchableOpacity style={styles.row} onPress={() => toggleRow(item.key)}>
+                  <Avatar name={item.counterpartName} seed={item.counterpartId ?? item.counterpartPhone} size={28} style={styles.avatarBorder} />
+                  <View style={styles.rowInfo}>
+                    <Text style={[typography.labelLarge, styles.rowName]}>{item.counterpartName}</Text>
+                    <Text style={[typography.bodySmall, styles.rowGroup]}>{item.groupName}</Text>
+                  </View>
+                  <Text style={[typography.amountMedium, styles.rowAmount]}>{formatCurrency(item.amountPiastres / 100)}</Text>
+                  <View style={[styles.checkbox, isSelected && styles.checkboxChecked]}>
+                    {isSelected && <Text style={styles.checkmark}>✓</Text>}
+                  </View>
+                </TouchableOpacity>
+              );
+            }}
             ListFooterComponent={
               firstRow ? (
                 <View style={styles.previewCard}>
                   <Text style={[typography.labelMedium, styles.previewHeader]}>{t('remind.theyllReceive')}</Text>
-                  <Text style={[typography.caption, styles.rateLimitNote]}>{t('remind.rateLimitNote')}</Text>
                   <View style={styles.previewBubble}>
-                    <Text style={[typography.labelSmall, styles.previewSender]}>{t('remind.previewSender')}</Text>
+                    <View style={styles.previewSenderRow}>
+                      <View style={styles.previewIcon} />
+                      <Text style={[typography.labelSmall, styles.previewSender]}>{t('remind.previewSender')}</Text>
+                    </View>
                     <Text style={[typography.bodyMedium, styles.previewMessage]}>
                       {t('remind.previewMessage', {
                         name: firstRow.counterpartName,
@@ -111,6 +119,7 @@ function RemindScreen({ navigation }: Props) {
                       })}
                     </Text>
                   </View>
+                  <Text style={[typography.caption, styles.rateLimitNote]}>{t('remind.rateLimitNote')}</Text>
                 </View>
               ) : null
             }
@@ -137,8 +146,13 @@ export default memo(RemindScreen);
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   loader: { flex: 1 },
-  headerRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 8 },
-  back: { color: Colors.accent },
+  headerRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8 },
+  backBtn: {
+    width: 34, height: 34, borderRadius: Radius.md,
+    backgroundColor: Colors.surface,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  back: { color: Colors.text },
   title: { color: Colors.text },
 
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 8 },
@@ -153,24 +167,36 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     backgroundColor: Colors.surface,
-    borderRadius: Radius.lg,
+    borderRadius: Radius.xl,
     padding: 12,
     marginBottom: 8,
-    borderWidth: 1.5,
-    borderColor: 'transparent',
+    shadowColor: Colors.primaryDark,
+    shadowOpacity: 0.06,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 8,
+    elevation: 2,
   },
-  rowSelected: { borderColor: Colors.primary },
+  avatarBorder: { borderWidth: 2, borderColor: Colors.surface },
   rowInfo: { flex: 1 },
   rowName: { color: Colors.text },
-  rowGroup: { color: Colors.textMuted, marginTop: 2 },
+  rowGroup: { color: Colors.textSecondary, marginTop: 2 },
   rowAmount: { color: Colors.text },
+  checkbox: {
+    width: 22, height: 22, borderRadius: Radius.sm,
+    borderWidth: 1, borderColor: Colors.borderLight,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  checkboxChecked: { backgroundColor: Colors.primary, borderColor: Colors.primary },
+  checkmark: { color: Colors.textOnPrimary, fontSize: 12, fontWeight: 'bold' },
 
   previewCard: { marginTop: 16 },
   previewHeader: { color: Colors.textSecondary, marginBottom: 4 },
-  rateLimitNote: { color: Colors.textMuted, marginBottom: 10 },
-  previewBubble: { backgroundColor: Colors.tint, borderRadius: Radius.lg, padding: 14 },
-  previewSender: { color: Colors.primary, marginBottom: 4 },
-  previewMessage: { color: Colors.text },
+  rateLimitNote: { color: Colors.textSecondary, marginTop: 10 },
+  previewBubble: { backgroundColor: Colors.surface, borderRadius: Radius.xl, padding: 14 },
+  previewSenderRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
+  previewIcon: { width: 22, height: 22, borderRadius: 11, backgroundColor: Colors.primary },
+  previewSender: { color: Colors.text },
+  previewMessage: { color: Colors.textSecondary },
 
   bottomBar: { padding: 16, borderTopWidth: 1, borderTopColor: Colors.border, backgroundColor: Colors.surface },
   sendBtn: { height: 52, borderRadius: Radius.pill, backgroundColor: Colors.primary, alignItems: 'center', justifyContent: 'center' },

@@ -39,18 +39,10 @@ export default function AppStack() {
       }}>
       <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Invitations" component={InvitationsScreen} options={{ title: t('appStack.invitationsTitle') }} />
-      <Stack.Screen name="CreateGroup" component={CreateGroupScreen} options={{ title: t('appStack.createGroupTitle') }} />
-      <Stack.Screen
-        name="GroupDetail"
-        component={GroupDetailScreen}
-        options={({ route }) => ({ title: route.params.groupName })}
-      />
+      <Stack.Screen name="CreateGroup" component={CreateGroupScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="GroupDetail" component={GroupDetailScreen} options={{ headerShown: false }} />
       <Stack.Screen name="InviteMembers" component={InviteMembersScreen} options={{ title: t('appStack.inviteMembersTitle') }} />
-      <Stack.Screen
-        name="Chat"
-        component={ChatScreen}
-        options={({ route }) => ({ title: route.params.groupName })}
-      />
+      <Stack.Screen name="Chat" component={ChatScreen} options={{ headerShown: false }} />
       <Stack.Screen name="AddBillChooser" component={AddBillChooserScreen} options={{ headerShown: false }} />
       <Stack.Screen
         name="AddBill"

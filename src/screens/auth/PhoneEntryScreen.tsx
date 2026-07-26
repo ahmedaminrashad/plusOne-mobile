@@ -54,11 +54,13 @@ function PhoneEntryScreen({ navigation }: Props) {
       <KeyboardAvoidingView
         style={styles.content}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={styles.logoSection}>
-          <Image source={require('../../../assets/PlusOne.png')} style={styles.logo} resizeMode="contain" />
-          <Text style={[typography.headingMedium, styles.appName]}>+one</Text>
-          <Text style={[typography.bodyLarge, styles.tagline]}>{t('phoneEntry.tagline')}</Text>
-        </View>
+        <Image
+          source={require('../../../assets/PlusOne.png')}
+          style={styles.logo}
+          tintColor={Colors.primaryDark}
+          resizeMode="contain"
+        />
+        <Text style={[typography.headingLarge, styles.headline]}>{t('phoneEntry.tagline')}</Text>
 
         <View style={styles.form}>
           <Input
@@ -72,18 +74,19 @@ function PhoneEntryScreen({ navigation }: Props) {
             error={error}
             autoFocus
           />
-          <Text style={[typography.caption, styles.hint]}>{t('phoneEntry.hint')}</Text>
         </View>
 
-        <View style={styles.footer}>
-          <Button
-            title={t('common:continue')}
-            onPress={handleContinue}
-            loading={isLoading}
-            disabled={phone.length < 7}
-          />
-          <Text style={[typography.caption, styles.terms]}>{t('phoneEntry.terms')}</Text>
-        </View>
+        <Button
+          title={t('common:continue')}
+          onPress={handleContinue}
+          loading={isLoading}
+          disabled={phone.length < 7}
+        />
+        <Text style={[typography.caption, styles.hint]}>{t('phoneEntry.hint')}</Text>
+
+        <View style={styles.spacer} />
+
+        <Text style={[typography.caption, styles.terms]}>{t('phoneEntry.terms')}</Text>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -93,13 +96,11 @@ export default memo(PhoneEntryScreen);
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-  content: { flex: 1, paddingHorizontal: 24, paddingTop: 32, paddingBottom: 24, justifyContent: 'space-between' },
-  logoSection: { alignItems: 'center', gap: 8, marginBottom: 24 },
-  logo: { width: 64, height: 64, marginBottom: 4 },
-  appName: { color: Colors.primary },
-  tagline: { color: Colors.textSecondary, textAlign: 'center', marginTop: 4 },
-  form: { flex: 1, justifyContent: 'center' },
-  hint: { color: Colors.textMuted, marginTop: -8 },
-  footer: { gap: 12 },
-  terms: { color: Colors.textMuted, textAlign: 'center' },
+  content: { flex: 1, paddingHorizontal: 24, paddingTop: 32, paddingBottom: 24 },
+  logo: { width: 56, height: 56, marginBottom: 20 },
+  headline: { color: Colors.text, textAlign: 'left', marginBottom: 24 },
+  form: { marginBottom: 4 },
+  hint: { color: Colors.textSecondary, marginTop: 10 },
+  spacer: { flex: 1 },
+  terms: { color: Colors.textSecondary, textAlign: 'center' },
 });

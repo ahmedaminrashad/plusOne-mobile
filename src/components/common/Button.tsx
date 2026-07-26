@@ -4,6 +4,7 @@ import {
   Text,
   ActivityIndicator,
   StyleSheet,
+  StyleProp,
   ViewStyle,
   TextStyle,
 } from 'react-native';
@@ -17,7 +18,7 @@ interface Props {
   loading?: boolean;
   disabled?: boolean;
   variant?: 'primary' | 'outline' | 'danger' | 'ghost';
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
   textStyle?: TextStyle;
 }
 

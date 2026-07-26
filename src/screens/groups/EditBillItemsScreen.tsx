@@ -17,10 +17,11 @@ import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
 import Button from '../../components/common/Button';
+import Avatar from '../../components/common/Avatar';
 import { useGetGroupMembersQuery } from '../../store/api/groupsApi';
 import { useGetBillDetailQuery, useUpdateBillItemsMutation } from '../../store/api/billsApi';
 import { GroupMember } from '../../types/models';
-import { formatCurrency } from '../../utils/format';
+import { formatCurrency, resolveAssetUrl } from '../../utils/format';
 import i18n from '../../i18n';
 
 type Props = AppScreenProps<'EditBillItems'>;
@@ -52,16 +53,13 @@ function MemberChip({
 }) {
   const typography = useTypography();
   const name = getMemberName(member);
+  const id = getMemberId(member);
   return (
     <TouchableOpacity
       style={[styles.chip, selected && styles.chipSelected]}
       onPress={onToggle}
       activeOpacity={0.7}>
-      <View style={[styles.chipAvatar, selected && styles.chipAvatarSelected]}>
-        <Text style={[typography.labelMedium, styles.chipInitial, selected && styles.chipInitialSelected]}>
-          {name.charAt(0).toUpperCase()}
-        </Text>
-      </View>
+      <Avatar name={name} seed={id} size={26} />
       <Text style={[typography.labelSmall, styles.chipName, selected && styles.chipNameSelected]} numberOfLines={1}>
         {name.split(' ')[0]}
       </Text>
@@ -87,7 +85,6 @@ function ItemRow({
   return (
     <View style={[styles.itemCard, unclaimed && styles.itemCardUnclaimed]}>
       <View style={styles.itemHeader}>
-        <Text style={[typography.amountMedium, styles.itemSubtotal]}>{formatCurrency(subtotal)}</Text>
         <View style={styles.itemNameBlock}>
           <Text style={[typography.labelLarge, styles.itemName]}>{item.name}</Text>
           <View style={styles.priceRow}>
@@ -101,6 +98,7 @@ function ItemRow({
             />
           </View>
         </View>
+        <Text style={[typography.amountMedium, styles.itemSubtotal]}>{formatCurrency(subtotal)}</Text>
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsRow}>
         {members.map((m) => (
@@ -363,10 +361,12 @@ function EditBillItemsScreen({ route, navigation }: Props) {
             <Text style={[typography.labelMedium, styles.summaryTitle]}>{t('receiptSplit.paymentSummaryTitle')}</Text>
             {summaryRows.map((m) => {
               const id = getMemberId(m);
+              const name = getMemberName(m);
               return (
                 <View key={m.id} style={styles.summaryRow}>
+                  <Avatar uri={resolveAssetUrl(m.user?.photoUrl)} name={name} seed={id} size={24} />
+                  <Text style={[typography.bodyMedium, styles.summaryName]}>{name}</Text>
                   <Text style={[typography.labelLarge, styles.summaryAmount]}>{formatCurrency(memberTotals[id]!)}</Text>
-                  <Text style={[typography.bodyMedium, styles.summaryName]}>{getMemberName(m)}</Text>
                 </View>
               );
             })}
@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     marginHorizontal: 16,
     marginBottom: 10,
-    borderRadius: Radius.lg,
+    borderRadius: Radius.xl,
     padding: 14,
     shadowColor: '#000',
     shadowOpacity: 0.04,
@@ -412,12 +412,12 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 1,
   },
-  itemCardUnclaimed: { borderWidth: 1.5, borderColor: Colors.warning + '55' },
+  itemCardUnclaimed: { borderWidth: 1.5, borderColor: Colors.dangerTint },
   itemHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 },
-  itemNameBlock: { flex: 1, alignItems: 'flex-end' },
-  itemName: { color: Colors.text, textAlign: 'right' },
+  itemNameBlock: { flex: 1, alignItems: 'flex-start' },
+  itemName: { color: Colors.text, textAlign: 'left' },
   itemQty: { color: Colors.textMuted },
-  itemSubtotal: { color: Colors.text, marginLeft: 8 },
+  itemSubtotal: { color: Colors.text, marginLeft: 8, textAlign: 'right' },
   priceRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
   priceInput: {
     color: Colors.text,
@@ -434,31 +434,18 @@ const styles = StyleSheet.create({
   chip: {
     alignItems: 'center',
     gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: Radius.pill,
-    backgroundColor: Colors.background,
-    borderWidth: 1.5,
-    borderColor: Colors.border,
-    minWidth: 56,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    borderRadius: Radius.lg,
+    backgroundColor: Colors.surfaceElevated,
+    minWidth: 54,
   },
-  chipSelected: { backgroundColor: Colors.tint, borderColor: Colors.primary },
-  chipAvatar: {
-    width: 28,
-    height: 28,
-    borderRadius: Radius.pill,
-    backgroundColor: Colors.border,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  chipAvatarSelected: { backgroundColor: Colors.primary },
-  chipInitial: { color: Colors.textSecondary },
-  chipInitialSelected: { color: '#fff' },
+  chipSelected: { backgroundColor: Colors.tint },
   chipName: { color: Colors.textSecondary },
   chipNameSelected: { color: Colors.primary },
 
-  unclaimedNote: { color: Colors.warning, textAlign: 'right', marginTop: 6 },
-  splitNote: { color: Colors.textMuted, textAlign: 'right', marginTop: 4 },
+  unclaimedNote: { color: Colors.danger, textAlign: 'left', marginTop: 6 },
+  splitNote: { color: Colors.textMuted, textAlign: 'left', marginTop: 4 },
 
   addItemPanel: {
     backgroundColor: Colors.surface,
@@ -494,23 +481,29 @@ const styles = StyleSheet.create({
   addItemBtnText: { color: Colors.textOnPrimary, fontSize: 18, fontWeight: '700' },
 
   bottomPanel: {
-    backgroundColor: Colors.surface,
+    backgroundColor: Colors.background,
     borderTopWidth: 1,
     borderTopColor: Colors.border,
+    paddingTop: 10,
     paddingBottom: 16,
   },
   summarySection: {
-    paddingHorizontal: 16,
-    paddingTop: 14,
-    paddingBottom: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
+    backgroundColor: Colors.surface,
+    marginHorizontal: 16,
+    marginBottom: 10,
+    borderRadius: Radius.xl,
+    padding: 14,
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 4,
+    elevation: 1,
     gap: 8,
   },
-  summaryTitle: { color: Colors.textSecondary, textAlign: 'right', marginBottom: 4 },
-  summaryRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  summaryName: { color: Colors.text },
-  summaryAmount: { color: Colors.primary },
+  summaryTitle: { color: Colors.textSecondary, textAlign: 'left', marginBottom: 2 },
+  summaryRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  summaryName: { color: Colors.text, flex: 1 },
+  summaryAmount: { color: Colors.text },
 
   saveBtn: { marginHorizontal: 16, marginTop: 4 },
 });

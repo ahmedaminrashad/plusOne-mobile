@@ -31,7 +31,8 @@
     "inCircleHeader": "In your Circle",
     "onPlusOne": "On +one",
     "pendingHeader": "Invited",
-    "pendingBadge": "Pending · pays by link",
+    "pendingPill": "Pending",
+    "pendingBadge": "Invited · pays by link",
     "emptyTitle": "Your Circle is empty",
     "emptySubtitle": "Add the people you split bills with most often.",
     "addPhoneTitle": "Add to your Circle",
@@ -42,7 +43,10 @@
     "removeMessage": "Remove {{name}} from your Circle?"
   },
   "myLedger": {
+    "allGroupsSubtitle": "All groups",
     "spentThisMonth": "Spent this month, across your groups",
+    "outingsLabel": "Outings",
+    "outingsMeta": "{{count}} outings · {{amount}}",
     "youAreOwed": "Owed to you",
     "youOwe": "You owe",
     "byGroupHeader": "By group",
@@ -52,13 +56,18 @@
   },
   "groupLedger": {
     "spentThisMonth": "Spent this month",
+    "outingsLabel": "Outings",
     "youPaid": "You paid",
     "yourFairShare": "Your fair share",
-    "balance": "Balance"
+    "balance": "Balance",
+    "settledThisMonth": "Settled this month",
+    "settledCheckmark": "settled ✓"
   },
   "settleUp": {
     "netPositive": "Net +{{amount}}",
     "netNegative": "Net −{{amount}}",
+    "heroPositive": "+ {{amount}}",
+    "heroNegative": "− {{amount}}",
     "ifEveryoneSettles": "If everyone settles today",
     "acrossGroupsPeople": "across {{groups}} groups · {{people}} people",
     "toCollect": "To collect",
@@ -103,12 +112,12 @@
     "statusPending": "Pending",
     "removeAction": "Remove",
     "paidByMeta": "Paid by {{payer}} • {{date}}",
-    "tabChat": "💬 Chat",
+    "tabChat": "Chat",
     "tabBills": "Bills",
     "tabLedger": "Tab",
     "tabMembers": "Members",
     "pendingChatNotice": "You must accept the invitation first to access the chat.",
-    "addBillCta": "+ Add a bill",
+    "addBillCta": "+ Add bill",
     "emptyBillsTitle": "No receipts yet",
     "emptyBillsSubtitle": "Add or scan the group's first receipt",
     "inviteMembersCta": "+ Invite members",
@@ -117,7 +126,12 @@
     "deleteBillError": "Couldn't delete the receipt",
     "removeMemberTitle": "Remove member",
     "removeMemberMessage": "Do you want to remove {{name}} from the group?",
-    "removeMemberError": "Couldn't remove the member, please try again later"
+    "removeMemberError": "Couldn't remove the member, please try again later",
+    "awaitingSplit": "Awaiting split",
+    "splitNow": "Split now →",
+    "fullySettled": "Fully settled ✓",
+    "paidCount": "{{paid}} of {{total}} paid",
+    "pendingCount": "{{count}} pending"
   },
   "createGroup": {
     "categoryFriends": "👫 Friends",
@@ -168,9 +182,12 @@
     "imagePreviewLabel": "📷 Photo",
     "imageTooLarge": "Image is too large (max 10 MB)",
     "receiptDefaultTitle": "Receipt",
+    "receiptAddedTitle": "Bill added — {{title}}",
     "receiptItemCount": "{{count}} item(s)",
     "receiptNoItemsYet": "No items added yet",
-    "receiptOpenCta": "View & add items ›"
+    "receiptOpenCta": "View & add items ›",
+    "dateToday": "Today",
+    "dateYesterday": "Yesterday"
   },
   "shareToGroup": {
     "subtitle": "Choose a group to share this photo with",

@@ -42,13 +42,10 @@ const getMemberName = (m: GroupMember) =>
 function MemberChip({ member, selected, onToggle }: { member: GroupMember; selected: boolean; onToggle: () => void }) {
   const typography = useTypography();
   const name = getMemberName(member);
+  const id = getMemberId(member);
   return (
     <TouchableOpacity style={[styles.chip, selected && styles.chipSelected]} onPress={onToggle} activeOpacity={0.7}>
-      <View style={[styles.chipAvatar, selected && styles.chipAvatarSelected]}>
-        <Text style={[typography.labelMedium, styles.chipInitial, selected && styles.chipInitialSelected]}>
-          {name.charAt(0).toUpperCase()}
-        </Text>
-      </View>
+      <Avatar name={name} seed={id} size={26} />
       <Text style={[typography.labelSmall, styles.chipName, selected && styles.chipNameSelected]} numberOfLines={1}>
         {name.split(' ')[0]}
       </Text>
@@ -74,13 +71,13 @@ function ItemRow({
   return (
     <View style={[styles.itemCard, mode === 'byItem' && unclaimed && styles.itemCardUnclaimed]}>
       <View style={styles.itemHeader}>
-        <Text style={[typography.amountMedium, styles.itemSubtotal]}>{formatCurrency(subtotal)}</Text>
         <View style={styles.itemNameBlock}>
           <Text style={[typography.labelLarge, styles.itemName]}>{item.name}</Text>
           {item.qty > 1 && (
             <Text style={[typography.bodySmall, styles.itemQty]}>{item.qty} × {item.price.toFixed(2)}</Text>
           )}
         </View>
+        <Text style={[typography.amountMedium, styles.itemSubtotal]}>{formatCurrency(subtotal)}</Text>
       </View>
       {mode === 'byItem' && (
         <>
@@ -194,6 +191,13 @@ function AssignItemsScreen({ route, navigation }: Props) {
     return totals;
   }, [mode, activeMembers, grandTotal, items, taxAmt, serviceAmt, tipAmt, subtotal]);
 
+  const unassignedTotal = useMemo(() => {
+    if (mode !== 'byItem') return 0;
+    return items.filter((it) => it.claimedBy.length === 0).reduce((sum, it) => sum + it.price * it.qty, 0);
+  }, [items, mode]);
+
+  const assignedTotal = subtotal - unassignedTotal;
+
   const toggleClaim = useCallback((itemId: string, memberId: string) => {
     setItems((prev) =>
       prev.map((item) => {
@@ -289,7 +293,12 @@ function AssignItemsScreen({ route, navigation }: Props) {
   const ListHeader = useMemo(
     () => (
       <View style={styles.receiptHeader}>
-        <Text style={[typography.headingLarge, styles.title]}>{t('assignItems.title')}</Text>
+        <View style={styles.titleRow}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} hitSlop={12}>
+            <Text style={styles.backBtnText}>‹</Text>
+          </TouchableOpacity>
+          <Text style={[typography.headingLarge, styles.title]}>{t('assignItems.title')}</Text>
+        </View>
 
         <View style={styles.totalRow}>
           <Text style={[typography.amountLarge, styles.totalAmount]}>{formatCurrency(grandTotal)}</Text>
@@ -323,7 +332,7 @@ function AssignItemsScreen({ route, navigation }: Props) {
         </View>
       </View>
     ),
-    [receipt, grandTotal, payerName, mode, t, typography],
+    [receipt, grandTotal, payerName, mode, t, typography, navigation],
   );
 
   const summaryRows = activeMembers.filter((m) => memberTotals[getMemberId(m)] !== undefined);
@@ -345,16 +354,36 @@ function AssignItemsScreen({ route, navigation }: Props) {
             <Text style={[typography.labelMedium, styles.summaryTitle]}>{t('receiptSplit.paymentSummaryTitle')}</Text>
             {summaryRows.map((m) => {
               const id = getMemberId(m);
+              const name = getMemberName(m);
+              const isPayer = id === paidByUserId;
               return (
                 <View key={m.id} style={styles.summaryRow}>
-                  <Text style={[typography.labelLarge, styles.summaryAmount]}>{formatCurrency(memberTotals[id]!)}</Text>
+                  <Avatar uri={resolveAssetUrl(m.user?.photoUrl)} name={name} seed={id} size={24} />
                   <View style={styles.summaryMember}>
-                    <Text style={[typography.bodyMedium, styles.summaryName]}>{getMemberName(m)}</Text>
-                    <Avatar uri={resolveAssetUrl(m.user?.photoUrl)} name={getMemberName(m)} size={24} />
+                    <Text style={[typography.bodyMedium, styles.summaryName]}>{name}</Text>
+                    {isPayer && (
+                      <Text style={[typography.caption, styles.summarySubtitle]}>{t('receiptSplit.paidTheReceiptSuffix')}</Text>
+                    )}
                   </View>
+                  <Text style={[typography.labelLarge, styles.summaryAmount]}>{formatCurrency(memberTotals[id]!)}</Text>
                 </View>
               );
             })}
+            {mode === 'byItem' && items.length > 0 && (
+              <>
+                <View style={styles.summarySeparator} />
+                <Text style={[typography.bodySmall, styles.assignedNote]}>
+                  {t('receiptSplit.assignedWithCharges', { amount: formatCurrency(assignedTotal) })}
+                  {unassignedTotal > 0 && (
+                    <>
+                      {' · '}
+                      {t('receiptSplit.unassignedLabel')}
+                      <Text style={styles.unassignedAmt}> {formatCurrency(unassignedTotal)}</Text>
+                    </>
+                  )}
+                </Text>
+              </>
+            )}
           </View>
         )}
 
@@ -395,6 +424,21 @@ const styles = StyleSheet.create({
   list: { paddingBottom: 8 },
 
   receiptHeader: { padding: 20, backgroundColor: Colors.surface, marginBottom: 12, gap: 10 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  backBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  backBtnText: { fontSize: 20, color: Colors.text },
   title: { color: Colors.text },
   totalRow: { flexDirection: 'row', alignItems: 'baseline' },
   totalAmount: { color: Colors.text },
@@ -417,20 +461,27 @@ const styles = StyleSheet.create({
   modeRow: {
     flexDirection: 'row',
     gap: 8,
-    backgroundColor: Colors.background,
-    borderRadius: Radius.lg,
+    backgroundColor: Colors.neutral200,
+    borderRadius: Radius.pill,
     padding: 4,
   },
-  modeBtn: { flex: 1, paddingVertical: 8, borderRadius: Radius.md, alignItems: 'center' },
-  modeBtnActive: { backgroundColor: Colors.primary },
+  modeBtn: { flex: 1, paddingVertical: 8, borderRadius: Radius.pill, alignItems: 'center' },
+  modeBtnActive: {
+    backgroundColor: Colors.surface,
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 3,
+    elevation: 1,
+  },
   modeBtnText: { color: Colors.textSecondary },
-  modeBtnTextActive: { color: Colors.textOnPrimary },
+  modeBtnTextActive: { color: Colors.primary },
 
   itemCard: {
     backgroundColor: Colors.surface,
     marginHorizontal: 16,
     marginBottom: 10,
-    borderRadius: Radius.lg,
+    borderRadius: Radius.xl,
     padding: 14,
     shadowColor: '#000',
     shadowOpacity: 0.04,
@@ -438,62 +489,59 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 1,
   },
-  itemCardUnclaimed: { borderWidth: 1.5, borderColor: Colors.warning + '55' },
+  itemCardUnclaimed: { borderWidth: 1.5, borderColor: Colors.dangerTint },
   itemHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 },
-  itemNameBlock: { flex: 1, alignItems: 'flex-end' },
-  itemName: { color: Colors.text, textAlign: 'right' },
+  itemNameBlock: { flex: 1, alignItems: 'flex-start' },
+  itemName: { color: Colors.text, textAlign: 'left' },
   itemQty: { color: Colors.textMuted, marginTop: 2 },
-  itemSubtotal: { color: Colors.text, marginLeft: 8 },
+  itemSubtotal: { color: Colors.text, marginLeft: 8, textAlign: 'right' },
 
   chipsRow: { flexDirection: 'row', gap: 8, paddingBottom: 4 },
   chip: {
     alignItems: 'center',
     gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: Radius.pill,
-    backgroundColor: Colors.background,
-    borderWidth: 1.5,
-    borderColor: Colors.border,
-    minWidth: 56,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    borderRadius: Radius.lg,
+    backgroundColor: Colors.surfaceElevated,
+    minWidth: 54,
   },
-  chipSelected: { backgroundColor: Colors.tint, borderColor: Colors.primary },
-  chipAvatar: {
-    width: 28,
-    height: 28,
-    borderRadius: Radius.pill,
-    backgroundColor: Colors.border,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  chipAvatarSelected: { backgroundColor: Colors.primary },
-  chipInitial: { color: Colors.textSecondary },
-  chipInitialSelected: { color: '#fff' },
+  chipSelected: { backgroundColor: Colors.tint },
   chipName: { color: Colors.textSecondary },
   chipNameSelected: { color: Colors.primary },
 
-  unclaimedNote: { color: Colors.warning, textAlign: 'right', marginTop: 6 },
-  splitNote: { color: Colors.textMuted, textAlign: 'right', marginTop: 4 },
+  unclaimedNote: { color: Colors.danger, textAlign: 'left', marginTop: 6 },
+  splitNote: { color: Colors.textMuted, textAlign: 'left', marginTop: 4 },
 
   bottomPanel: {
-    backgroundColor: Colors.surface,
+    backgroundColor: Colors.background,
     borderTopWidth: 1,
     borderTopColor: Colors.border,
+    paddingTop: 10,
     paddingBottom: 16,
   },
   summarySection: {
-    paddingHorizontal: 16,
-    paddingTop: 14,
-    paddingBottom: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
+    backgroundColor: Colors.surface,
+    marginHorizontal: 16,
+    marginBottom: 10,
+    borderRadius: Radius.xl,
+    padding: 14,
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 4,
+    elevation: 1,
     gap: 8,
   },
-  summaryTitle: { color: Colors.textSecondary, textAlign: 'right', marginBottom: 4 },
-  summaryRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  summaryMember: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  summaryTitle: { color: Colors.textSecondary, textAlign: 'left', marginBottom: 2 },
+  summaryRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  summaryMember: { flex: 1 },
   summaryName: { color: Colors.text },
-  summaryAmount: { color: Colors.primary },
+  summarySubtitle: { color: Colors.textMuted, marginTop: 1 },
+  summaryAmount: { color: Colors.text },
+  summarySeparator: { height: 1, backgroundColor: Colors.borderLight, marginTop: 2, marginBottom: 2 },
+  assignedNote: { color: Colors.textSecondary },
+  unassignedAmt: { color: Colors.danger },
 
   saveBtn: { marginHorizontal: 16, marginTop: 4 },
 

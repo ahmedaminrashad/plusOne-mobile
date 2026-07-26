@@ -1,4 +1,4 @@
-import React, { useState, useCallback, memo } from 'react';
+import React, { useState, useCallback, useMemo, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   View,
@@ -15,18 +15,22 @@ import {
 import { AppScreenProps } from '../../types/navigation';
 import { useGetGroupMembersQuery, useRemoveMemberMutation } from '../../store/api/groupsApi';
 import { useGetGroupBillsQuery, useDeleteBillMutation } from '../../store/api/billsApi';
-import { GroupMember, MemberRole, Bill } from '../../types/models';
+import { useGetBillSharesQuery } from '../../store/api/sharesApi';
+import { GroupMember, Bill } from '../../types/models';
 import Avatar from '../../components/common/Avatar';
 import Button from '../../components/common/Button';
 import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/radius';
+import { useTypography } from '../../hooks/useTypography';
 import { useGetMeQuery } from '../../store/api/usersApi';
-import { formatDate, resolveAssetUrl } from '../../utils/format';
+import { formatDate, formatCurrency, resolveAssetUrl } from '../../utils/format';
 import GroupChatPane from './GroupChatPane';
 import GroupLedgerScreen from './GroupLedgerScreen';
 
 type Props = AppScreenProps<'GroupDetail'>;
 type Tab = 'chat' | 'bills' | 'ledger' | 'members';
+
+const HEADER_AVATAR_COUNT = 3;
 
 // ──────────────────────────────────────────────────────────────
 // Member row
@@ -44,26 +48,27 @@ function MemberRow({
   onRemove: () => void;
 }) {
   const { t } = useTranslation('groups');
+  const typography = useTypography();
   const name = member.user?.displayName ?? member.pendingPhone ?? t('groupDetail.defaultUserName');
   const isPending = member.status === 'pending';
   return (
     <View style={styles.memberRow}>
-      <Avatar uri={resolveAssetUrl(member.user?.photoUrl)} name={name} size={42} />
+      <Avatar uri={resolveAssetUrl(member.user?.photoUrl)} name={name} seed={member.userId ?? member.id} size={42} />
       <View style={styles.memberInfo}>
         <View style={styles.memberNameRow}>
-          <Text style={styles.memberName}>{name}</Text>
+          <Text style={[typography.labelLarge, styles.memberName]}>{name}</Text>
           {member.role === 'admin' && (
-            <View style={styles.adminBadge}><Text style={styles.adminText}>{t('groupDetail.roleAdmin')}</Text></View>
+            <View style={styles.adminBadge}><Text style={[typography.labelSmall, styles.adminText]}>{t('groupDetail.roleAdmin')}</Text></View>
           )}
           {isPending && (
-            <View style={styles.pendingBadge}><Text style={styles.pendingText}>{t('groupDetail.statusPending')}</Text></View>
+            <View style={styles.pendingBadge}><Text style={[typography.labelSmall, styles.pendingText]}>{t('groupDetail.statusPending')}</Text></View>
           )}
         </View>
-        <Text style={styles.memberPhone}>{member.user?.phone ?? member.pendingPhone ?? ''}</Text>
+        <Text style={[typography.bodySmall, styles.memberPhone]}>{member.user?.phone ?? member.pendingPhone ?? ''}</Text>
       </View>
       {isAdmin && !isSelf && (
         <TouchableOpacity onPress={onRemove} style={styles.removeBtn}>
-          <Text style={styles.removeText}>{t('groupDetail.removeAction')}</Text>
+          <Text style={[typography.labelMedium, styles.removeText]}>{t('groupDetail.removeAction')}</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -71,42 +76,92 @@ function MemberRow({
 }
 
 // ──────────────────────────────────────────────────────────────
-// Bill card
+// Bill card — mirrors Figma's "Section - BILLS" card exactly:
+// title / date+payer / amount, separator, then one of three real
+// states derived from that bill's actual shares (never fabricated):
+//   • no shares yet        → "Awaiting split" + "Split now"
+//   • some shares pending  → "N of M paid" + pending badge + progress bar
+//   • all shares settled   → "Fully settled ✓" + "M/M"
 // ──────────────────────────────────────────────────────────────
 
 function BillCard({
   bill,
   onPress,
+  onSplit,
   onDelete,
   canDelete,
 }: {
   bill: Bill;
   onPress: () => void;
+  onSplit: () => void;
   onDelete: () => void;
   canDelete: boolean;
 }) {
   const { t } = useTranslation('groups');
+  const typography = useTypography();
+  const { data: shares } = useGetBillSharesQuery(bill.id);
+
   const payerName = bill.paidBy?.displayName ?? t('groupDetail.defaultUserName');
   const date = formatDate(new Date(bill.createdAt), { day: 'numeric', month: 'short' });
   const displayName = bill.venueName ?? bill.title ?? t('groupDetail.defaultBillName');
+
+  const activeShares = (shares ?? []).filter((s) => s.status !== 'cancelled');
+  const settledCount = activeShares.filter((s) => s.status === 'settled').length;
+  const totalCount = activeShares.length;
+  const pendingCount = totalCount - settledCount;
+  const allSettled = totalCount > 0 && pendingCount === 0;
+
   return (
     <TouchableOpacity style={styles.billCard} onPress={onPress} activeOpacity={0.7}>
-      <View style={styles.billIcon}>
-        <Text style={styles.billIconText}>🧾</Text>
-      </View>
-      <View style={styles.billInfo}>
-        <Text style={styles.billTitle}>{displayName}</Text>
-        <Text style={styles.billMeta}>{t('groupDetail.paidByMeta', { payer: payerName, date })}</Text>
-      </View>
-      <View style={styles.billRight}>
-        <Text style={styles.billAmount}>{Number(bill.amount).toFixed(2)}</Text>
-        <Text style={styles.billCurrency}>{bill.currency}</Text>
+      <View style={styles.billTopRow}>
+        <View style={styles.billInfo}>
+          <Text style={[typography.headingSmall, styles.billTitle]} numberOfLines={1}>{displayName}</Text>
+          <Text style={[typography.bodySmall, styles.billMeta]}>
+            {t('groupDetail.paidByMeta', { payer: payerName, date })}
+          </Text>
+        </View>
+        <View style={styles.billAmountBlock}>
+          <Text style={[typography.amountMedium, styles.billAmount]}>{Number(bill.amount).toFixed(2)}</Text>
+          <Text style={[typography.bodySmall, styles.billCurrency]}>{bill.currency}</Text>
+        </View>
         {canDelete && (
-          <TouchableOpacity onPress={onDelete} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <TouchableOpacity onPress={onDelete} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} style={styles.billDeleteBtn}>
             <Text style={styles.billDelete}>🗑</Text>
           </TouchableOpacity>
         )}
       </View>
+
+      <View style={styles.billSeparator} />
+
+      {totalCount === 0 ? (
+        <View style={styles.billStatusRow}>
+          <Text style={[typography.bodyMedium, styles.billStatusMuted]}>{t('groupDetail.awaitingSplit')}</Text>
+          <TouchableOpacity style={styles.splitNowPill} onPress={onSplit} hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}>
+            <Text style={[typography.labelMedium, styles.splitNowText]}>{t('groupDetail.splitNow')}</Text>
+          </TouchableOpacity>
+        </View>
+      ) : allSettled ? (
+        <View style={styles.billStatusRow}>
+          <Text style={[typography.bodyMedium, styles.billSettledText]}>{t('groupDetail.fullySettled')}</Text>
+          <Text style={[typography.bodyMedium, styles.billStatusMuted]}>{settledCount}/{totalCount}</Text>
+        </View>
+      ) : (
+        <>
+          <View style={styles.billStatusRow}>
+            <Text style={[typography.bodyMedium, styles.billStatusMuted]}>
+              {t('groupDetail.paidCount', { paid: settledCount, total: totalCount })}
+            </Text>
+            <View style={styles.pendingCountBadge}>
+              <Text style={[typography.labelSmall, styles.pendingCountText]}>
+                {t('groupDetail.pendingCount', { count: pendingCount })}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.progressTrack}>
+            <View style={[styles.progressFill, { width: `${(settledCount / totalCount) * 100}%` }]} />
+          </View>
+        </>
+      )}
     </TouchableOpacity>
   );
 }
@@ -117,6 +172,7 @@ function BillCard({
 
 function GroupDetailScreen({ route, navigation }: Props) {
   const { t } = useTranslation('groups');
+  const typography = useTypography();
   const { groupId, groupName } = route.params;
   const [activeTab, setActiveTab] = useState<Tab>('chat');
 
@@ -128,14 +184,25 @@ function GroupDetailScreen({ route, navigation }: Props) {
   const [deleteBill] = useDeleteBillMutation();
   const { data: me } = useGetMeQuery();
 
+  const activeMembers = useMemo(() => members?.filter((m) => m.status === 'active') ?? [], [members]);
   const myMembership = members?.find((m) => m.userId === me?.id);
   const isAdmin = myMembership?.role === 'admin';
+
+  const headerAvatars = activeMembers.slice(0, HEADER_AVATAR_COUNT);
+  const headerOverflow = activeMembers.length - headerAvatars.length;
 
   // ── Bills actions ───────────────────────────────────────────
 
   const handleAddBill = useCallback(() => {
     navigation.navigate('AddBillChooser', { groupId, groupName });
   }, [groupId, groupName, navigation]);
+
+  const handleSplitBill = useCallback(
+    (billId: string) => {
+      navigation.navigate('EditBillItems', { groupId, groupName, billId });
+    },
+    [groupId, groupName, navigation],
+  );
 
   const handleDeleteBill = useCallback(
     (bill: Bill) => {
@@ -200,6 +267,13 @@ function GroupDetailScreen({ route, navigation }: Props) {
 
   const isChatPending = myMembership?.status === 'pending';
 
+  const TABS: Tab[] = ['chat', 'bills', 'ledger', 'members'];
+  const tabLabel = (tab: Tab) =>
+    tab === 'chat' ? t('groupDetail.tabChat')
+      : tab === 'bills' ? t('groupDetail.tabBills')
+      : tab === 'ledger' ? t('groupDetail.tabLedger')
+      : t('groupDetail.tabMembers');
+
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
@@ -207,18 +281,45 @@ function GroupDetailScreen({ route, navigation }: Props) {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}>
 
-        {/* Tab bar */}
-        <View style={styles.tabs}>
-          {(['chat', 'bills', 'ledger', 'members'] as Tab[]).map((tab) => (
+        {/* Header — back button, group name + member count, avatar stack */}
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} hitSlop={8}>
+            <Text style={[typography.headingMedium, styles.backBtnText]}>‹</Text>
+          </TouchableOpacity>
+          <View style={styles.headerTitleBlock}>
+            <Text style={[typography.headingSmall, styles.headerTitle]} numberOfLines={1}>{groupName}</Text>
+            <Text style={[typography.bodySmall, styles.headerSubtitle]}>
+              {t('home.activeMembersCount', { count: activeMembers.length })}
+            </Text>
+          </View>
+          <View style={styles.headerAvatarStack}>
+            {headerAvatars.map((m, i) => (
+              <Avatar
+                key={m.id}
+                uri={resolveAssetUrl(m.user?.photoUrl)}
+                name={m.user?.displayName ?? t('groupDetail.defaultUserName')}
+                seed={m.userId ?? m.id}
+                size={28}
+                style={[styles.headerAvatarItem, i > 0 && { marginLeft: -8 }]}
+              />
+            ))}
+            {headerOverflow > 0 && (
+              <View style={[styles.headerAvatarItem, styles.headerAvatarOverflow, { marginLeft: -8 }]}>
+                <Text style={[typography.labelSmall, styles.headerAvatarOverflowText]}>+{headerOverflow}</Text>
+              </View>
+            )}
+          </View>
+        </View>
+
+        {/* Segmented tab control */}
+        <View style={styles.segmentTrack}>
+          {TABS.map((tab) => (
             <TouchableOpacity
               key={tab}
-              style={[styles.tab, activeTab === tab && styles.tabActive]}
+              style={[styles.segment, activeTab === tab && styles.segmentActive]}
               onPress={() => setActiveTab(tab)}>
-              <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
-                {tab === 'chat' ? t('groupDetail.tabChat')
-                  : tab === 'bills' ? t('groupDetail.tabBills')
-                  : tab === 'ledger' ? t('groupDetail.tabLedger')
-                  : t('groupDetail.tabMembers')}
+              <Text style={[typography.labelMedium, styles.segmentText, activeTab === tab && styles.segmentTextActive]}>
+                {tabLabel(tab)}
               </Text>
             </TouchableOpacity>
           ))}
@@ -229,7 +330,7 @@ function GroupDetailScreen({ route, navigation }: Props) {
           <View style={styles.flex}>
             {isChatPending ? (
               <View style={styles.centered}>
-                <Text style={styles.pendingChatText}>
+                <Text style={[typography.bodyMedium, styles.pendingChatText]}>
                   {t('groupDetail.pendingChatNotice')}
                 </Text>
               </View>
@@ -242,22 +343,13 @@ function GroupDetailScreen({ route, navigation }: Props) {
         {/* ── Bills tab ────────────────────────────────────── */}
         {activeTab === 'bills' && (
           <View style={styles.flex}>
-            <View style={styles.billActions}>
-              <TouchableOpacity
-                style={styles.billActionBtnPrimary}
-                onPress={handleAddBill}
-                activeOpacity={0.8}>
-                <Text style={styles.billActionTextPrimary}>{t('groupDetail.addBillCta')}</Text>
-              </TouchableOpacity>
-            </View>
-
             {billsLoading ? (
               <ActivityIndicator color={Colors.primary} style={styles.loader} />
             ) : !bills?.length ? (
               <View style={styles.emptyBills}>
                 <Text style={styles.emptyBillsIcon}>🧾</Text>
-                <Text style={styles.emptyBillsTitle}>{t('groupDetail.emptyBillsTitle')}</Text>
-                <Text style={styles.emptyBillsSubtitle}>{t('groupDetail.emptyBillsSubtitle')}</Text>
+                <Text style={[typography.headingMedium, styles.emptyBillsTitle]}>{t('groupDetail.emptyBillsTitle')}</Text>
+                <Text style={[typography.bodyMedium, styles.emptyBillsSubtitle]}>{t('groupDetail.emptyBillsSubtitle')}</Text>
               </View>
             ) : (
               <FlatList
@@ -268,12 +360,16 @@ function GroupDetailScreen({ route, navigation }: Props) {
                     bill={item}
                     canDelete={item.paidByUserId === me?.id || isAdmin}
                     onPress={() => navigation.navigate('BillStatus', { groupId, groupName, billId: item.id })}
+                    onSplit={() => handleSplitBill(item.id)}
                     onDelete={() => handleDeleteBill(item)}
                   />
                 )}
                 contentContainerStyle={styles.list}
               />
             )}
+            <TouchableOpacity style={styles.addBillFab} onPress={handleAddBill} activeOpacity={0.85}>
+              <Text style={[typography.labelLarge, styles.addBillFabText]}>{t('groupDetail.addBillCta')}</Text>
+            </TouchableOpacity>
           </View>
         )}
 
@@ -315,93 +411,141 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
 
-  tabs: {
+  // Header
+  header: {
     flexDirection: 'row',
-    backgroundColor: Colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  tab: { flex: 1, paddingVertical: 13, alignItems: 'center' },
-  tabActive: { borderBottomWidth: 2, borderBottomColor: Colors.primary },
-  tabText: { fontSize: 13, color: Colors.textSecondary, fontWeight: '500' },
-  tabTextActive: { color: Colors.primary, fontWeight: '700' },
-
-  // Chat
-  pendingChatText: { fontSize: 14, color: Colors.textSecondary, textAlign: 'center' },
-
-  // Bills
-  billActions: { padding: 12, paddingBottom: 6 },
-  billActionBtnPrimary: {
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 14,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 12,
+    gap: 12,
+  },
+  backBtn: {
+    width: 34, height: 34, borderRadius: Radius.md,
+    backgroundColor: Colors.surface,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  backBtnText: { color: Colors.text },
+  headerTitleBlock: { flex: 1 },
+  headerTitle: { color: Colors.text },
+  headerSubtitle: { color: Colors.textSecondary, marginTop: 2 },
+  headerAvatarStack: { flexDirection: 'row', alignItems: 'center' },
+  headerAvatarItem: { borderWidth: 2, borderColor: Colors.background },
+  headerAvatarOverflow: {
+    width: 28, height: 28, borderRadius: 14,
+    backgroundColor: Colors.neutral200,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  headerAvatarOverflowText: { color: Colors.textSecondary },
+
+  // Segmented tab control
+  segmentTrack: {
+    flexDirection: 'row',
+    marginHorizontal: 16,
+    marginBottom: 12,
+    padding: 3,
     borderRadius: Radius.pill,
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.neutral200,
   },
-  billActionTextPrimary: { color: Colors.textOnPrimary, fontSize: 14, fontWeight: '700' },
-
-  billCard: {
-    flexDirection: 'row',
+  segment: {
+    flex: 1,
+    paddingVertical: 7,
+    borderRadius: Radius.pill,
     alignItems: 'center',
+  },
+  segmentActive: {
     backgroundColor: Colors.surface,
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 8,
     shadowColor: '#000',
-    shadowOpacity: 0.03,
+    shadowOpacity: 0.08,
     shadowOffset: { width: 0, height: 1 },
-    shadowRadius: 4,
+    shadowRadius: 3,
     elevation: 1,
   },
-  billIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    backgroundColor: Colors.primary + '15',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  billIconText: { fontSize: 20 },
-  billInfo: { flex: 1 },
-  billTitle: { fontSize: 14, fontWeight: '600', color: Colors.text },
-  billMeta: { fontSize: 11, color: Colors.textMuted, marginTop: 2 },
-  billRight: { alignItems: 'flex-end', gap: 2 },
-  billAmount: { fontSize: 15, fontWeight: '700', color: Colors.text },
-  billCurrency: { fontSize: 10, color: Colors.textMuted },
-  billDelete: { fontSize: 15, marginTop: 4 },
+  segmentText: { color: Colors.textSecondary },
+  segmentTextActive: { color: Colors.primary },
 
-  emptyBills: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 10 },
+  // Chat
+  pendingChatText: { color: Colors.textSecondary, textAlign: 'center' },
+
+  // Bills
+  billCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.xl,
+    padding: 16,
+    marginBottom: 10,
+    shadowColor: Colors.primaryDark,
+    shadowOpacity: 0.06,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  billTopRow: { flexDirection: 'row', alignItems: 'flex-start' },
+  billInfo: { flex: 1 },
+  billTitle: { color: Colors.text },
+  billMeta: { color: Colors.textSecondary, marginTop: 3 },
+  billAmountBlock: { alignItems: 'flex-end' },
+  billAmount: { color: Colors.text },
+  billCurrency: { color: Colors.textSecondary, marginTop: 1 },
+  billDeleteBtn: { marginLeft: 8 },
+  billDelete: { fontSize: 15 },
+  billSeparator: { height: 1, backgroundColor: Colors.borderLight, marginVertical: 12 },
+  billStatusRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  billStatusMuted: { color: Colors.textSecondary },
+  billSettledText: { color: Colors.success },
+  pendingCountBadge: { backgroundColor: Colors.warningTint, borderRadius: Radius.pill, paddingHorizontal: 10, paddingVertical: 4 },
+  pendingCountText: { color: Colors.warningDark },
+  splitNowPill: { backgroundColor: Colors.tint, borderRadius: Radius.pill, paddingHorizontal: 12, paddingVertical: 5 },
+  splitNowText: { color: Colors.primary },
+  progressTrack: { height: 6, borderRadius: 3, backgroundColor: Colors.surfaceElevated, marginTop: 10, overflow: 'hidden' },
+  progressFill: { height: 6, borderRadius: 3, backgroundColor: Colors.success },
+
+  addBillFab: {
+    position: 'absolute',
+    bottom: 16,
+    alignSelf: 'center',
+    backgroundColor: Colors.primary,
+    borderRadius: Radius.pill,
+    paddingHorizontal: 22,
+    paddingVertical: 13,
+    shadowColor: Colors.primaryDark,
+    shadowOpacity: 0.25,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  addBillFabText: { color: Colors.textOnPrimary },
+
+  emptyBills: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 10, paddingHorizontal: 32 },
   emptyBillsIcon: { fontSize: 48 },
-  emptyBillsTitle: { fontSize: 17, fontWeight: '700', color: Colors.text },
-  emptyBillsSubtitle: { fontSize: 13, color: Colors.textSecondary },
+  emptyBillsTitle: { color: Colors.text },
+  emptyBillsSubtitle: { color: Colors.textSecondary, textAlign: 'center' },
 
   // Members
   inviteBtn: { margin: 16 },
-  list: { paddingHorizontal: 16, paddingBottom: 24 },
+  list: { paddingHorizontal: 16, paddingBottom: 90 },
   loader: { marginTop: 40 },
 
   memberRow: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.surface,
-    borderRadius: 14,
+    borderRadius: Radius.xl,
     padding: 14,
     marginBottom: 8,
-    shadowColor: '#000',
-    shadowOpacity: 0.03,
-    shadowOffset: { width: 0, height: 1 },
-    shadowRadius: 4,
-    elevation: 1,
+    shadowColor: Colors.primaryDark,
+    shadowOpacity: 0.06,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 8,
+    elevation: 2,
   },
   memberInfo: { flex: 1, marginLeft: 12 },
   memberNameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  memberName: { fontSize: 15, fontWeight: '600', color: Colors.text },
-  memberPhone: { fontSize: 12, color: Colors.textMuted, marginTop: 2 },
-  adminBadge: { backgroundColor: Colors.primaryLight + '33', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 },
-  adminText: { fontSize: 11, color: Colors.primary, fontWeight: '600' },
-  pendingBadge: { backgroundColor: Colors.pending + '33', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 },
-  pendingText: { fontSize: 11, color: Colors.warning, fontWeight: '600' },
+  memberName: { color: Colors.text },
+  memberPhone: { color: Colors.textMuted, marginTop: 2 },
+  adminBadge: { backgroundColor: Colors.tint, paddingHorizontal: 8, paddingVertical: 2, borderRadius: Radius.sm },
+  adminText: { color: Colors.primary },
+  pendingBadge: { backgroundColor: Colors.warningTint, paddingHorizontal: 8, paddingVertical: 2, borderRadius: Radius.sm },
+  pendingText: { color: Colors.warningDark },
   removeBtn: { padding: 8 },
-  removeText: { fontSize: 13, color: Colors.danger, fontWeight: '500' },
+  removeText: { color: Colors.danger },
 });

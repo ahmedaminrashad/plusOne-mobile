@@ -75,7 +75,10 @@
     "chooseItemsHint": "اختر من أخذ كل صنف",
     "paymentSummaryTitle": "ملخص الدفع",
     "payerQuestionLabel": "من دفع الإيصال؟",
-    "saveButton": "حفظ الإيصال"
+    "saveButton": "حفظ الإيصال",
+    "paidTheReceiptSuffix": "دفع الإيصال",
+    "assignedWithCharges": "المحدد {{amount}} + الرسوم",
+    "unassignedLabel": "غير محدد"
   },
   "billStatus": {
     "paidCount": "دفع {{paid}}/{{total}}",
@@ -163,7 +166,8 @@
     "permissionRequiredSub": "يرجى منح الإذن للوصول إلى الكاميرا لمسح رمز QR على الإيصال",
     "analyzingText": "جارٍ تحليل الإيصال...",
     "scanHint": "وجّه الكاميرا نحو رمز QR الموجود على الإيصال",
-    "testEtaButton": "🧪 تجربة ETA"
+    "testEtaButton": "🧪 تجربة ETA",
+    "photoInsteadButton": "صوّر بدل كده"
   },
   "ocrCapture": {
     "permissionTitle": "إذن الكاميرا",

@@ -31,7 +31,8 @@
     "inCircleHeader": "في دائرتك",
     "onPlusOne": "على +one",
     "pendingHeader": "مدعوّين",
-    "pendingBadge": "قيد الانتظار · بيدفع برابط",
+    "pendingPill": "قيد الانتظار",
+    "pendingBadge": "مدعوّ · بيدفع برابط",
     "emptyTitle": "دائرتك فاضية",
     "emptySubtitle": "ضيف الناس اللي بتقسم معاهم الفواتير أكتر.",
     "addPhoneTitle": "إضافة لدائرتك",
@@ -42,7 +43,10 @@
     "removeMessage": "إزالة {{name}} من دائرتك؟"
   },
   "myLedger": {
+    "allGroupsSubtitle": "كل المجموعات",
     "spentThisMonth": "المصروف الشهر ده، على كل مجموعاتك",
+    "outingsLabel": "خرجات",
+    "outingsMeta": "{{count}} خرجة · {{amount}}",
     "youAreOwed": "ليك",
     "youOwe": "عليك",
     "byGroupHeader": "حسب المجموعة",
@@ -52,13 +56,18 @@
   },
   "groupLedger": {
     "spentThisMonth": "المصروف الشهر ده",
+    "outingsLabel": "خرجات",
     "youPaid": "دفعت",
     "yourFairShare": "نصيبك العادل",
-    "balance": "الرصيد"
+    "balance": "الرصيد",
+    "settledThisMonth": "متسوّى الشهر ده",
+    "settledCheckmark": "متسواة ✓"
   },
   "settleUp": {
     "netPositive": "صافي +{{amount}}",
     "netNegative": "صافي −{{amount}}",
+    "heroPositive": "+ {{amount}}",
+    "heroNegative": "− {{amount}}",
     "ifEveryoneSettles": "لو الكل سوّى النهاردة",
     "acrossGroupsPeople": "على {{groups}} مجموعات · {{people}} أشخاص",
     "toCollect": "هتحصّل",
@@ -103,7 +112,7 @@
     "statusPending": "قيد الانتظار",
     "removeAction": "إزالة",
     "paidByMeta": "دفع {{payer}} • {{date}}",
-    "tabChat": "💬 الدردشة",
+    "tabChat": "الدردشة",
     "tabBills": "الفواتير",
     "tabLedger": "الحساب",
     "tabMembers": "الأعضاء",
@@ -117,7 +126,12 @@
     "deleteBillError": "تعذر حذف الإيصال",
     "removeMemberTitle": "إزالة عضو",
     "removeMemberMessage": "هل تريد إزالة {{name}} من المجموعة؟",
-    "removeMemberError": "تعذر إزالة العضو، حاول مرة أخرى لاحقاً"
+    "removeMemberError": "تعذر إزالة العضو، حاول مرة أخرى لاحقاً",
+    "awaitingSplit": "بانتظار التقسيم",
+    "splitNow": "قسّم دلوقتي ←",
+    "fullySettled": "متسواة بالكامل ✓",
+    "paidCount": "دفع {{paid}} من {{total}}",
+    "pendingCount": "{{count}} مستني"
   },
   "createGroup": {
     "categoryFriends": "👫 أصدقاء",
@@ -168,9 +182,12 @@
     "imagePreviewLabel": "📷 صورة",
     "imageTooLarge": "الصورة كبيرة جداً (الحد الأقصى 10 ميجابايت)",
     "receiptDefaultTitle": "إيصال",
+    "receiptAddedTitle": "تمت إضافة فاتورة — {{title}}",
     "receiptItemCount": "{{count}} صنف",
     "receiptNoItemsYet": "لم تُضَف أصناف بعد",
-    "receiptOpenCta": "عرض وإضافة أصناف ‹"
+    "receiptOpenCta": "عرض وإضافة أصناف ‹",
+    "dateToday": "اليوم",
+    "dateYesterday": "أمس"
   },
   "shareToGroup": {
     "subtitle": "اختر مجموعة لمشاركة هذه الصورة معها",

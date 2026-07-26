@@ -75,7 +75,10 @@
     "chooseItemsHint": "Choose who took each item",
     "paymentSummaryTitle": "Payment summary",
     "payerQuestionLabel": "Who paid the receipt?",
-    "saveButton": "Save receipt"
+    "saveButton": "Save receipt",
+    "paidTheReceiptSuffix": "paid the receipt",
+    "assignedWithCharges": "Assigned {{amount}} + charges",
+    "unassignedLabel": "unassigned"
   },
   "billStatus": {
     "paidCount": "{{paid}}/{{total}} paid",
@@ -163,7 +166,8 @@
     "permissionRequiredSub": "Please grant permission to access the camera to scan the QR code on the receipt",
     "analyzingText": "Analyzing receipt...",
     "scanHint": "Point the camera at the QR code on the receipt",
-    "testEtaButton": "🧪 Test ETA"
+    "testEtaButton": "🧪 Test ETA",
+    "photoInsteadButton": "Photo instead"
   },
   "ocrCapture": {
     "permissionTitle": "Camera permission",

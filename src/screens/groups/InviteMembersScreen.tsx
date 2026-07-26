@@ -13,6 +13,8 @@ import { AppScreenProps } from '../../types/navigation';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import { Colors } from '../../constants/colors';
+import { Radius } from '../../constants/radius';
+import { useTypography } from '../../hooks/useTypography';
 import { isValidPhone, formatPhone } from '../../utils/validation';
 import { useInviteMembersMutation } from '../../store/api/groupsApi';
 
@@ -20,6 +22,7 @@ type Props = AppScreenProps<'InviteMembers'>;
 
 function InviteMembersScreen({ route, navigation }: Props) {
   const { t } = useTranslation('groups');
+  const typography = useTypography();
   const { groupId } = route.params;
   const [phone, setPhone] = useState('');
   const [phoneError, setPhoneError] = useState('');
@@ -71,8 +74,8 @@ function InviteMembersScreen({ route, navigation }: Props) {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.title}>{t('inviteMembers.title')}</Text>
-        <Text style={styles.subtitle}>
+        <Text style={[typography.headingLarge, styles.title]}>{t('inviteMembers.title')}</Text>
+        <Text style={[typography.bodyLarge, styles.subtitle]}>
           {t('inviteMembers.subtitle')}
         </Text>
 
@@ -100,7 +103,7 @@ function InviteMembersScreen({ route, navigation }: Props) {
             keyExtractor={(p) => p}
             renderItem={({ item }) => (
               <View style={styles.phoneTag}>
-                <Text style={styles.phoneTagText}>{item}</Text>
+                <Text style={[typography.labelMedium, styles.phoneTagText]}>{item}</Text>
                 <TouchableOpacity onPress={() => handleRemovePhone(item)}>
                   <Text style={styles.removeTag}>✕</Text>
                 </TouchableOpacity>
@@ -130,19 +133,19 @@ export default memo(InviteMembersScreen);
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   content: { flex: 1, padding: 24 },
-  title: { fontSize: 20, fontWeight: '700', color: Colors.text, marginBottom: 8 },
-  subtitle: { fontSize: 14, color: Colors.textSecondary, lineHeight: 22, marginBottom: 24 },
+  title: { color: Colors.text, marginBottom: 8 },
+  subtitle: { color: Colors.textSecondary, marginBottom: 24 },
   inputRow: { flexDirection: 'row', gap: 8, alignItems: 'flex-start' },
   phoneInput: { flex: 1, marginBottom: 0 },
   addBtn: { height: 52, paddingHorizontal: 16, marginTop: 0 },
   tags: { paddingVertical: 8, gap: 8 },
   phoneTag: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: Colors.primaryLight + '22', borderRadius: 20,
+    backgroundColor: Colors.tint, borderRadius: Radius.xl,
     paddingHorizontal: 12, paddingVertical: 8,
     borderWidth: 1, borderColor: Colors.primaryLight,
   },
-  phoneTagText: { fontSize: 13, color: Colors.primary, fontWeight: '500' },
+  phoneTagText: { color: Colors.primary },
   removeTag: { fontSize: 12, color: Colors.primary, fontWeight: '700' },
   footer: { padding: 24, paddingTop: 0 },
 });

@@ -47,7 +47,7 @@ function ShareRow({ share, payerName }: { share: Share; payerName: string }) {
 
   return (
     <View style={styles.shareRow}>
-      <Avatar uri={resolveAssetUrl(share.owner?.photoUrl)} name={name} size={40} />
+      <Avatar uri={resolveAssetUrl(share.owner?.photoUrl)} name={name} size={28} />
       <View style={styles.shareInfo}>
         <Text style={[typography.labelLarge, styles.shareName]}>{name}</Text>
         {!!subtitle && <Text style={[typography.bodySmall, styles.shareSubtitle]}>{subtitle}</Text>}
@@ -144,8 +144,8 @@ function BillStatusScreen({ route, navigation }: Props) {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.headerRow}>
-        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={12}>
-          <Text style={[typography.headingLarge, styles.back]}>‹</Text>
+        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} hitSlop={12}>
+          <Text style={styles.backBtnText}>‹</Text>
         </TouchableOpacity>
         <Text style={[typography.headingLarge, styles.title]} numberOfLines={1}>{displayName}</Text>
         <View style={styles.paidCountBadge}>
@@ -234,10 +234,23 @@ const styles = StyleSheet.create({
   loader: { flex: 1 },
 
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 8 },
-  back: { color: Colors.accent },
+  backBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  backBtnText: { fontSize: 20, color: Colors.text },
   title: { flex: 1, color: Colors.text },
   paidCountBadge: { backgroundColor: Colors.warningTint, borderRadius: Radius.pill, paddingHorizontal: 10, paddingVertical: 4 },
-  paidCountText: { color: Colors.accent },
+  paidCountText: { color: Colors.warningDark },
 
   list: { paddingHorizontal: 16, paddingBottom: 24 },
   actionsRow: { flexDirection: 'row', gap: 10, paddingHorizontal: 16, marginBottom: 12 },
@@ -253,7 +266,7 @@ const styles = StyleSheet.create({
   totalLabel: { color: Colors.textMuted, letterSpacing: 0.5 },
   totalAmount: { color: Colors.text, marginTop: 6 },
   paidBySubtitle: { color: Colors.textSecondary, marginTop: 6 },
-  progressTrack: { height: 6, backgroundColor: Colors.borderLight, borderRadius: Radius.pill, width: '100%', marginTop: 14, overflow: 'hidden' },
+  progressTrack: { height: 6, backgroundColor: Colors.surfaceElevated, borderRadius: Radius.pill, width: '100%', marginTop: 14, overflow: 'hidden' },
   progressFill: { height: '100%', backgroundColor: Colors.success, borderRadius: Radius.pill },
   progressCaption: { color: Colors.textMuted, marginTop: 8 },
 
@@ -262,7 +275,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     backgroundColor: Colors.surface,
-    borderRadius: Radius.lg,
+    borderRadius: Radius.xl,
     padding: 12,
     marginBottom: 8,
   },
@@ -274,9 +287,9 @@ const styles = StyleSheet.create({
   badgePaid: { backgroundColor: Colors.successTint },
   badgeTextPaid: { color: Colors.secondaryDark },
   badgePending: { backgroundColor: Colors.warningTint },
-  badgeTextPending: { color: Colors.accent },
+  badgeTextPending: { color: Colors.warningDark },
   badgeLinkOpened: { backgroundColor: Colors.warningTint },
-  badgeTextLinkOpened: { color: Colors.accent },
+  badgeTextLinkOpened: { color: Colors.warningDark },
 
   bottomBar: {
     flexDirection: 'row',

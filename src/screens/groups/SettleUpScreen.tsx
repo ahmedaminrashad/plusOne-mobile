@@ -66,10 +66,17 @@ function SettleUpScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.headerRow}>
-        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={12}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} hitSlop={12}>
           <Text style={[typography.headingLarge, styles.back]}>‹</Text>
         </TouchableOpacity>
         <Text style={[typography.headingLarge, styles.title]}>{t('navigation:appStack.settleUpTitle')}</Text>
+        {!isEmpty && net !== 0 && (
+          <View style={[styles.netPill, net >= 0 ? styles.netPillPositive : styles.netPillNegative]}>
+            <Text style={[typography.labelMedium, net >= 0 ? styles.netPillPositiveText : styles.netPillNegativeText]}>
+              {t(net >= 0 ? 'settleUp.netPositive' : 'settleUp.netNegative', { amount: Math.round(Math.abs(net) / 100) })}
+            </Text>
+          </View>
+        )}
       </View>
 
       {isEmpty ? (
@@ -82,7 +89,7 @@ function SettleUpScreen({ navigation }: Props) {
         <>
           <View style={styles.heroCard}>
             <Text style={[typography.amountLarge, net >= 0 ? styles.netPositive : styles.netNegative]}>
-              {t(net >= 0 ? 'settleUp.netPositive' : 'settleUp.netNegative', { amount: formatCurrency(Math.abs(net) / 100) })}
+              {t(net >= 0 ? 'settleUp.heroPositive' : 'settleUp.heroNegative', { amount: formatCurrency(Math.abs(net) / 100) })}
             </Text>
             <Text style={[typography.labelMedium, styles.heroLabel]}>{t('settleUp.ifEveryoneSettles')}</Text>
             <Text style={[typography.bodySmall, styles.heroSub]}>
@@ -101,21 +108,28 @@ function SettleUpScreen({ navigation }: Props) {
             contentContainerStyle={styles.list}
             renderItem={({ item }) => {
               if (item.type === 'header') {
-                return <Text style={[typography.labelMedium, styles.sectionHeader]}>{item.label}</Text>;
+                return <Text style={[typography.headingSmall, styles.sectionHeader]}>{item.label}</Text>;
               }
               const { row, action } = item;
               return (
                 <View style={styles.row}>
-                  <Avatar name={row.counterpartName} size={40} />
+                  <Avatar name={row.counterpartName} seed={row.counterpartId ?? row.counterpartPhone} size={28} style={styles.avatarBorder} />
                   <View style={styles.rowInfo}>
                     <Text style={[typography.labelLarge, styles.rowName]}>{row.counterpartName}</Text>
                     <Text style={[typography.bodySmall, styles.rowGroup]}>{row.groupName}</Text>
                   </View>
-                  <Text style={[typography.amountMedium, styles.rowAmount]}>{formatCurrency(row.amountPiastres / 100)}</Text>
+                  <Text
+                    style={[
+                      typography.amountMedium,
+                      styles.rowAmount,
+                      action === 'collect' ? styles.rowAmountCollect : styles.rowAmountPay,
+                    ]}>
+                    {formatCurrency(row.amountPiastres / 100)}
+                  </Text>
                   <TouchableOpacity
-                    style={styles.rowAction}
+                    style={[styles.rowAction, action === 'pay' && styles.rowActionPayBtn]}
                     onPress={() => (action === 'collect' ? handleRemind(row) : handlePay(row))}>
-                    <Text style={[typography.labelMedium, styles.rowActionText]}>
+                    <Text style={[typography.labelMedium, action === 'pay' ? styles.rowActionPayText : styles.rowActionText]}>
                       {action === 'collect'
                         ? t(row.anyInitiated ? 'settleUp.resendAction' : 'settleUp.remindAction')
                         : t('settleUp.payAction')}
@@ -149,9 +163,19 @@ export default memo(SettleUpScreen);
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   loader: { flex: 1 },
-  headerRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 8 },
-  back: { color: Colors.accent },
-  title: { color: Colors.text },
+  headerRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8 },
+  backBtn: {
+    width: 34, height: 34, borderRadius: Radius.md,
+    backgroundColor: Colors.surface,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  back: { color: Colors.text },
+  title: { color: Colors.text, flex: 1 },
+  netPill: { borderRadius: Radius.pill, paddingHorizontal: 10, paddingVertical: 4 },
+  netPillPositive: { backgroundColor: Colors.successTint },
+  netPillNegative: { backgroundColor: Colors.dangerTint },
+  netPillPositiveText: { color: Colors.secondaryDark },
+  netPillNegativeText: { color: Colors.danger },
 
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 8 },
   emptyIcon: { fontSize: 44, marginBottom: 8 },
@@ -168,28 +192,38 @@ const styles = StyleSheet.create({
   },
   netPositive: { color: Colors.secondaryLight },
   netNegative: { color: Colors.accent },
-  heroLabel: { color: 'rgba(255,255,255,0.8)', letterSpacing: 0.5, marginTop: 6 },
-  heroSub: { color: 'rgba(255,255,255,0.7)', marginTop: 4 },
+  heroLabel: { color: 'rgba(255,255,255,0.75)', letterSpacing: 0.5, marginTop: 6 },
+  heroSub: { color: 'rgba(255,255,255,0.75)', marginTop: 4 },
 
   list: { paddingHorizontal: 16, paddingBottom: 16 },
-  sectionHeader: { color: Colors.textSecondary, marginTop: 16, marginBottom: 8 },
+  sectionHeader: { color: Colors.text, marginTop: 16, marginBottom: 8 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
     backgroundColor: Colors.surface,
-    borderRadius: Radius.lg,
+    borderRadius: Radius.xl,
     padding: 12,
     marginBottom: 8,
+    shadowColor: Colors.primaryDark,
+    shadowOpacity: 0.06,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 8,
+    elevation: 2,
   },
+  avatarBorder: { borderWidth: 2, borderColor: Colors.surface },
   rowInfo: { flex: 1 },
   rowName: { color: Colors.text },
-  rowGroup: { color: Colors.textMuted, marginTop: 2 },
-  rowAmount: { color: Colors.text, marginRight: 4 },
+  rowGroup: { color: Colors.textSecondary, marginTop: 2 },
+  rowAmount: { marginRight: 4 },
+  rowAmountCollect: { color: Colors.secondary },
+  rowAmountPay: { color: Colors.danger },
   rowAction: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: Radius.pill, backgroundColor: Colors.tint },
   rowActionText: { color: Colors.primary },
+  rowActionPayBtn: { backgroundColor: Colors.primary },
+  rowActionPayText: { color: Colors.textOnPrimary },
 
-  footerNote: { color: Colors.textMuted, textAlign: 'center', marginTop: 8 },
+  footerNote: { color: Colors.textSecondary, textAlign: 'center', marginTop: 8 },
 
   bottomBar: { padding: 16, borderTopWidth: 1, borderTopColor: Colors.border, backgroundColor: Colors.surface },
   remindAllBtn: { height: 52, borderRadius: Radius.pill, backgroundColor: Colors.primary, alignItems: 'center', justifyContent: 'center' },

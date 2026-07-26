@@ -59,14 +59,23 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
       {menuOpen && (
         <Pressable style={styles.menuBackdrop} onPress={() => setMenuOpen(false)}>
           <View style={styles.menu}>
-            <TouchableOpacity style={styles.menuItem} onPress={handleNewGroup} activeOpacity={0.75}>
-              <Text style={[typography.labelLarge, styles.menuItemTitle]}>{t('quickAdd.newGroup')}</Text>
-              <Text style={[typography.bodySmall, styles.menuItemSubtitle]}>{t('quickAdd.newGroupSubtitle')}</Text>
+            <TouchableOpacity style={styles.menuCard} onPress={handleNewGroup} activeOpacity={0.75}>
+              <View style={[styles.menuIconWrap, { backgroundColor: Colors.tint }]}>
+                <Text style={styles.menuIconText}>👥</Text>
+              </View>
+              <View style={styles.menuCardText}>
+                <Text style={[typography.labelLarge, styles.menuItemTitle]}>{t('quickAdd.newGroup')}</Text>
+                <Text style={[typography.bodySmall, styles.menuItemSubtitle]}>{t('quickAdd.newGroupSubtitle')}</Text>
+              </View>
             </TouchableOpacity>
-            <View style={styles.menuDivider} />
-            <TouchableOpacity style={styles.menuItem} onPress={handleAddPlusOne} activeOpacity={0.75}>
-              <Text style={[typography.labelLarge, styles.menuItemTitle]}>{t('quickAdd.addPlusOne')}</Text>
-              <Text style={[typography.bodySmall, styles.menuItemSubtitle]}>{t('quickAdd.addPlusOneSubtitle')}</Text>
+            <TouchableOpacity style={[styles.menuCard, styles.menuCardSecond]} onPress={handleAddPlusOne} activeOpacity={0.75}>
+              <View style={[styles.menuIconWrap, { backgroundColor: Colors.warningTint }]}>
+                <Text style={styles.menuIconText}>👤</Text>
+              </View>
+              <View style={styles.menuCardText}>
+                <Text style={[typography.labelLarge, styles.menuItemTitle]}>{t('quickAdd.addPlusOne')}</Text>
+                <Text style={[typography.bodySmall, styles.menuItemSubtitle]}>{t('quickAdd.addPlusOneSubtitle')}</Text>
+              </View>
             </TouchableOpacity>
           </View>
         </Pressable>
@@ -201,27 +210,39 @@ const styles = StyleSheet.create({
   },
   fabIcon: { fontSize: 24, color: '#fff', lineHeight: 28 },
 
-  // Quick-add floating menu
+  // Quick-add floating menu — two separate cards (Figma: "New group" + "Add a +1"),
+  // not one box with an internal divider.
   menuBackdrop: {
     position: 'absolute',
     top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: Colors.menuScrim,
   },
   menu: {
     position: 'absolute',
     bottom: TAB_BAR_HEIGHT + TAB_BAR_BOTTOM + 20,
     alignSelf: 'center',
+    width: 220,
+  },
+  menuCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
     backgroundColor: Colors.surface,
     borderRadius: Radius.xl,
-    paddingVertical: 6,
-    minWidth: 220,
+    padding: 12,
     shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowOffset: { width: 0, height: 6 },
-    shadowRadius: 16,
-    elevation: 10,
+    shadowOpacity: 0.15,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 12,
+    elevation: 8,
   },
-  menuItem: { paddingHorizontal: 18, paddingVertical: 12 },
+  menuCardSecond: { marginTop: 10 },
+  menuIconWrap: {
+    width: 36, height: 36, borderRadius: Radius.md,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  menuIconText: { fontSize: 18 },
+  menuCardText: { flex: 1 },
   menuItemTitle: { color: Colors.text },
-  menuItemSubtitle: { color: Colors.textMuted, marginTop: 1 },
-  menuDivider: { height: 1, backgroundColor: Colors.borderLight, marginHorizontal: 14 },
+  menuItemSubtitle: { color: Colors.textSecondary, marginTop: 1 },
 });

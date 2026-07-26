@@ -273,57 +273,50 @@ function CreateBillScreen({ route, navigation }: Props) {
         ) : (
           <>
             {/* Items */}
-            <View style={styles.sectionHeader}>
-              <TouchableOpacity onPress={addItem} style={styles.addItemBtn}>
-                <Text style={[typography.labelMedium, styles.addItemBtnText]}>{t('createBill.addItemButton')}</Text>
-              </TouchableOpacity>
-              <Text style={[typography.labelMedium, styles.sectionLabel]}>{t('createBill.itemsLabel')}</Text>
-            </View>
-
             {items.map((item, index) => (
               <View key={item.id} style={styles.itemRow}>
-                <View style={styles.itemFields}>
-                  <View style={styles.itemNameRow}>
-                    <Text style={[typography.labelMedium, styles.itemIndex]}>{index + 1}</Text>
-                    <TextInput
-                      style={[typography.bodyLarge, styles.input, styles.itemNameInput]}
-                      value={item.name}
-                      onChangeText={(v) => updateItem(item.id, 'name', v)}
-                      placeholder={t('createBill.itemNamePlaceholder')}
-                      placeholderTextColor={Colors.textMuted}
-                      textAlign={inputAlign}
-                      maxLength={100}
-                    />
-                  </View>
-                  <View style={styles.itemPriceRow}>
-                    <TextInput
-                      style={[typography.bodyLarge, styles.input, styles.itemPriceInput]}
-                      value={item.unitPrice}
-                      onChangeText={(v) => updateItem(item.id, 'unitPrice', v)}
-                      placeholder={t('createBill.pricePlaceholder')}
-                      placeholderTextColor={Colors.textMuted}
-                      keyboardType="decimal-pad"
-                      textAlign={inputAlign}
-                    />
-                    <Text style={styles.multiplySign}>×</Text>
-                    <TextInput
-                      style={[typography.bodyLarge, styles.input, styles.itemQtyInput]}
-                      value={item.qty}
-                      onChangeText={(v) => updateItem(item.id, 'qty', v.replace(/[^0-9]/g, ''))}
-                      placeholder={t('createBill.qtyPlaceholder')}
-                      placeholderTextColor={Colors.textMuted}
-                      keyboardType="number-pad"
-                      textAlign="center"
-                    />
-                    {items.length > 1 && (
-                      <TouchableOpacity onPress={() => removeItem(item.id)} style={styles.removeItemBtn}>
-                        <Text style={styles.removeItemText}>✕</Text>
-                      </TouchableOpacity>
-                    )}
-                  </View>
+                <Text style={[typography.labelMedium, styles.itemIndex]}>{index + 1}</Text>
+                <TextInput
+                  style={[typography.bodyLarge, styles.itemNameInput]}
+                  value={item.name}
+                  onChangeText={(v) => updateItem(item.id, 'name', v)}
+                  placeholder={t('createBill.itemNamePlaceholder')}
+                  placeholderTextColor={Colors.textMuted}
+                  textAlign={inputAlign}
+                  maxLength={100}
+                />
+                <TextInput
+                  style={[typography.bodyLarge, styles.itemPriceInput]}
+                  value={item.unitPrice}
+                  onChangeText={(v) => updateItem(item.id, 'unitPrice', v)}
+                  placeholder={t('createBill.pricePlaceholder')}
+                  placeholderTextColor={Colors.textMuted}
+                  keyboardType="decimal-pad"
+                  textAlign={inputAlign}
+                />
+                <Text style={styles.multiplySign}>×</Text>
+                <View style={styles.qtyChip}>
+                  <TextInput
+                    style={[typography.labelMedium, styles.itemQtyInput]}
+                    value={item.qty}
+                    onChangeText={(v) => updateItem(item.id, 'qty', v.replace(/[^0-9]/g, ''))}
+                    placeholder={t('createBill.qtyPlaceholder')}
+                    placeholderTextColor={Colors.textMuted}
+                    keyboardType="number-pad"
+                    textAlign="center"
+                  />
                 </View>
+                {items.length > 1 && (
+                  <TouchableOpacity onPress={() => removeItem(item.id)} style={styles.removeItemBtn}>
+                    <Text style={styles.removeItemText}>✕</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             ))}
+
+            <TouchableOpacity onPress={addItem} style={styles.addItemBtn} activeOpacity={0.75}>
+              <Text style={[typography.labelMedium, styles.addItemBtnText]}>{t('createBill.addItemButton')}</Text>
+            </TouchableOpacity>
 
             {/* Subtotal */}
             <View style={styles.subtotalRow}>
@@ -459,12 +452,6 @@ const styles = StyleSheet.create({
   previewBannerText: { color: Colors.primary, textAlign: 'right' },
 
   sectionLabel: { color: Colors.textSecondary, marginBottom: 6, textAlign: 'right' },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 6,
-  },
   input: {
     backgroundColor: Colors.surface,
     borderRadius: Radius.lg,
@@ -477,49 +464,69 @@ const styles = StyleSheet.create({
   },
   flex1: { flex: 1, marginBottom: 0 },
 
+  // Figma: a segmented pill — light track, active segment is a floating white
+  // chip with a soft shadow and teal text (not a solid teal fill).
   modeRow: {
     flexDirection: 'row',
-    gap: 8,
     marginBottom: 16,
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.lg,
-    padding: 4,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    backgroundColor: Colors.neutral200,
+    borderRadius: Radius.pill,
+    padding: 3,
   },
-  modeBtn: { flex: 1, paddingVertical: 8, borderRadius: Radius.md, alignItems: 'center' },
-  modeBtnActive: { backgroundColor: Colors.primary },
+  modeBtn: { flex: 1, paddingVertical: 8, borderRadius: Radius.pill, alignItems: 'center' },
+  modeBtnActive: {
+    backgroundColor: Colors.surface,
+    shadowColor: Colors.primaryDark,
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 3,
+    elevation: 1,
+  },
   modeBtnText: { color: Colors.textSecondary },
-  modeBtnTextActive: { color: Colors.textOnPrimary },
+  modeBtnTextActive: { color: Colors.primary },
 
   lumpSumNote: { color: Colors.textMuted, textAlign: 'right', marginBottom: 8 },
 
+  // Figma: full-width outlined pill below the item list (not a small chip next
+  // to an "Items" label — that header doesn't exist in the design).
   addItemBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: Radius.sm,
-    borderWidth: 1.5,
+    borderRadius: Radius.pill,
+    borderWidth: 1,
     borderColor: Colors.primary,
-    borderStyle: 'dashed',
+    paddingVertical: 10,
+    alignItems: 'center',
+    marginBottom: 16,
   },
   addItemBtnText: { color: Colors.primary },
 
-  itemRow: { marginBottom: 6 },
-  itemFields: {
+  // Figma: each item is a single row (index · name · price × qty · remove),
+  // not a two-row stacked card.
+  itemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
     backgroundColor: Colors.surface,
-    borderRadius: Radius.lg,
+    borderRadius: Radius.xl,
     borderWidth: 1,
-    borderColor: Colors.border,
-    padding: 10,
+    borderColor: Colors.borderLight,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 8,
   },
-  itemNameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
-  itemIndex: { color: Colors.textMuted, minWidth: 20, textAlign: 'center' },
-  itemNameInput: { flex: 1, marginBottom: 0 },
-  itemPriceRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  itemPriceInput: { flex: 2, marginBottom: 0 },
-  itemQtyInput: { flex: 1, marginBottom: 0 },
-  multiplySign: { fontSize: 16, color: Colors.textMuted, fontWeight: '700' },
-  removeItemBtn: { padding: 6 },
+  itemIndex: { color: Colors.textMuted, minWidth: 16, textAlign: 'center' },
+  itemNameInput: { flex: 1, color: Colors.text, padding: 0 },
+  itemPriceInput: { width: 48, color: Colors.text, padding: 0, textAlign: 'right' },
+  multiplySign: { fontSize: 14, color: Colors.textMuted, fontWeight: '700' },
+  qtyChip: {
+    minWidth: 28,
+    height: 24,
+    borderRadius: Radius.sm,
+    backgroundColor: Colors.neutral100,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  itemQtyInput: { color: Colors.text, padding: 0, minWidth: 20, textAlign: 'center' },
+  removeItemBtn: { padding: 4 },
   removeItemText: { fontSize: 14, color: Colors.danger },
 
   subtotalRow: {
@@ -548,8 +555,8 @@ const styles = StyleSheet.create({
   toggleTextActive: { color: Colors.textOnPrimary },
 
   grandTotalBox: {
-    backgroundColor: Colors.tint,
-    borderRadius: Radius.lg,
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.xl,
     paddingVertical: 14,
     paddingHorizontal: 18,
     flexDirection: 'row',
@@ -557,10 +564,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: Colors.primary + '30',
+    borderColor: Colors.borderLight,
   },
-  grandTotalLabel: { color: Colors.primary },
-  grandTotalAmt: { color: Colors.primary },
+  grandTotalLabel: { color: Colors.text },
+  grandTotalAmt: { color: Colors.text },
 
   mismatchWarning: { color: Colors.warning, textAlign: 'right', marginBottom: 8 },
 

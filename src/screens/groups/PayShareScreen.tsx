@@ -185,20 +185,13 @@ function PayShareScreen({ route, navigation }: Props) {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.headerRow}>
-        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={12}>
-          <Text style={[typography.headingLarge, styles.back]}>‹</Text>
+        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} hitSlop={12}>
+          <Text style={styles.backBtnText}>‹</Text>
         </TouchableOpacity>
         <Text style={[typography.headingLarge, styles.title]}>{t('payShare.title')}</Text>
       </View>
 
       <View style={styles.content}>
-        <View style={styles.payerRow}>
-          <Avatar uri={resolveAssetUrl(bill.paidBy?.photoUrl)} name={payerName} size={32} />
-          <Text style={[typography.bodyMedium, styles.payerText]}>
-            {t('payShare.toPayerVenue', { payer: payerName, venue: displayName })} · {groupName}
-          </Text>
-        </View>
-
         {myShare?.status === 'settled' ? (
           <View style={styles.statusCard}>
             <Text style={[typography.headingMedium, styles.settledText]}>{t('viewReceipt.shareSettled')}</Text>
@@ -211,33 +204,43 @@ function PayShareScreen({ route, navigation }: Props) {
           </View>
         ) : myShare ? (
           <>
-            <Text style={[typography.labelMedium, styles.yourShareLabel]}>{t('viewReceipt.yourShareLabel')}</Text>
-            <Text style={[typography.amountLarge, styles.shareAmount]}>{formatCurrency(shareAmount)}</Text>
-            <Text style={[typography.bodyMedium, styles.splitCaption]}>
-              {t('payShare.splitEquallyBetween', {
-                currency: myShare.currency,
-                count: (bill.shares?.filter((s) => s.status !== 'cancelled').length ?? 1),
-              })}
-            </Text>
-
-            {(foodPortion > 0 || chargesPortion > 0) && (
-              <View style={styles.breakdownCard}>
-                {foodPortion > 0 && (
-                  <View style={styles.breakdownRow}>
-                    <Text style={[typography.labelLarge, styles.breakdownAmt]}>{formatCurrency(foodPortion)}</Text>
-                    <Text style={[typography.bodyMedium, styles.breakdownLabel]}>{t('viewReceipt.itemsTitle')}</Text>
-                  </View>
-                )}
-                {chargesPortion > 0 && (
-                  <View style={styles.breakdownRow}>
-                    <Text style={[typography.labelLarge, styles.breakdownAmt]}>{formatCurrency(chargesPortion)}</Text>
-                    <Text style={[typography.bodyMedium, styles.breakdownLabel]}>
-                      {t('viewReceipt.taxLabel')} + {t('viewReceipt.serviceLabel')}
-                    </Text>
-                  </View>
-                )}
+            <View style={styles.card}>
+              <View style={styles.payerRow}>
+                <Avatar uri={resolveAssetUrl(bill.paidBy?.photoUrl)} name={payerName} seed={bill.paidByUserId} size={28} />
+                <Text style={[typography.bodyMedium, styles.payerText]}>
+                  {t('payShare.toPayerVenue', { payer: payerName, venue: displayName })} · {groupName}
+                </Text>
               </View>
-            )}
+
+              <Text style={[typography.labelMedium, styles.yourShareLabel]}>{t('viewReceipt.yourShareLabel')}</Text>
+              <Text style={[typography.amountLarge, styles.shareAmount]}>{formatCurrency(shareAmount)}</Text>
+              <Text style={[typography.bodyMedium, styles.splitCaption]}>
+                {t('payShare.splitEquallyBetween', {
+                  currency: myShare.currency,
+                  count: (bill.shares?.filter((s) => s.status !== 'cancelled').length ?? 1),
+                })}
+              </Text>
+
+              {(foodPortion > 0 || chargesPortion > 0) && (
+                <>
+                  <View style={styles.separator} />
+                  {foodPortion > 0 && (
+                    <View style={styles.breakdownRow}>
+                      <Text style={[typography.bodyMedium, styles.breakdownLabel]}>{t('viewReceipt.itemsTitle')}</Text>
+                      <Text style={[typography.bodyMedium, styles.breakdownAmt]}>{formatCurrency(foodPortion)}</Text>
+                    </View>
+                  )}
+                  {chargesPortion > 0 && (
+                    <View style={styles.breakdownRow}>
+                      <Text style={[typography.bodyMedium, styles.breakdownLabel]}>
+                        {t('viewReceipt.taxLabel')} + {t('viewReceipt.serviceLabel')}
+                      </Text>
+                      <Text style={[typography.bodyMedium, styles.breakdownAmt]}>{formatCurrency(chargesPortion)}</Text>
+                    </View>
+                  )}
+                </>
+              )}
+            </View>
 
             <Button title={t('payShare.payWithInstaPay')} onPress={handlePayInstaPay} loading={isPaying} style={styles.payBtn} />
             <Button title={t('payShare.iPaidInCash')} onPress={handlePayCash} variant="outline" style={styles.cashBtn} />
@@ -257,27 +260,42 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   loader: { flex: 1 },
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 8 },
-  back: { color: Colors.accent },
+  backBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  backBtnText: { fontSize: 20, color: Colors.text },
   title: { color: Colors.text },
   content: { padding: 20, alignItems: 'center' },
 
-  payerRow: { flexDirection: 'row', alignItems: 'center', gap: 10, alignSelf: 'stretch', marginBottom: 20 },
-  payerText: { color: Colors.textSecondary, flex: 1 },
+  card: {
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.xl,
+    padding: 18,
+    alignSelf: 'stretch',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+
+  payerRow: { flexDirection: 'row', alignItems: 'center', gap: 10, alignSelf: 'stretch', justifyContent: 'center', marginBottom: 14 },
+  payerText: { color: Colors.textSecondary },
 
   yourShareLabel: { color: Colors.textMuted, letterSpacing: 0.5 },
-  shareAmount: { color: Colors.text, marginTop: 6 },
-  splitCaption: { color: Colors.textMuted, marginTop: 4, marginBottom: 16 },
+  shareAmount: { color: Colors.primaryDark, marginTop: 6 },
+  splitCaption: { color: Colors.textMuted, marginTop: 4 },
 
-  breakdownCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.lg,
-    padding: 14,
-    alignSelf: 'stretch',
-    marginBottom: 20,
-    gap: 8,
-  },
-  breakdownRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  breakdownAmt: { color: Colors.text },
+  separator: { height: 1, backgroundColor: Colors.borderLight, alignSelf: 'stretch', marginVertical: 14 },
+  breakdownRow: { flexDirection: 'row', justifyContent: 'space-between', alignSelf: 'stretch', marginBottom: 6 },
+  breakdownAmt: { color: Colors.textSecondary },
   breakdownLabel: { color: Colors.textSecondary },
 
   payBtn: { alignSelf: 'stretch', marginBottom: 10 },

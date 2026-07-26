@@ -177,6 +177,7 @@ function QRScannerScreen({ route, navigation }: Props) {
             <View style={[styles.corner, styles.cornerTR]} />
             <View style={[styles.corner, styles.cornerBL]} />
             <View style={[styles.corner, styles.cornerBR]} />
+            <View style={styles.scanGlowLine} />
           </View>
           <View style={styles.overlaySide} />
         </View>
@@ -196,14 +197,18 @@ function QRScannerScreen({ route, navigation }: Props) {
             activeOpacity={0.75}>
             <Text style={[typography.labelMedium, styles.testBtnText]}>{t('qrScanner.testEtaButton')}</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.manualEntryBtn}
-            onPress={() => navigation.replace('AddBill', { groupId, groupName })}>
-            <Text style={[typography.labelLarge, styles.manualEntryText]}>{t('qrScanner.manualEntryButton')}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.cancelBtn} onPress={() => navigation.goBack()}>
-            <Text style={[typography.labelLarge, styles.cancelText]}>{t('common:cancel')}</Text>
-          </TouchableOpacity>
+          <View style={styles.pillRow}>
+            <TouchableOpacity
+              style={styles.pillBtn}
+              onPress={() => navigation.replace('OCRCapture', { groupId, groupName })}>
+              <Text style={[typography.labelMedium, styles.pillBtnText]}>{t('qrScanner.photoInsteadButton')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.pillBtn}
+              onPress={() => navigation.replace('AddBill', { groupId, groupName })}>
+              <Text style={[typography.labelMedium, styles.pillBtnText]}>{t('qrScanner.manualEntryButton')}</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </View>
@@ -212,9 +217,10 @@ function QRScannerScreen({ route, navigation }: Props) {
 
 export default memo(QRScannerScreen);
 
-const WINDOW = 240;
-const CORNER = 24;
+const WINDOW = 180;
+const CORNER = 34;
 const THICKNESS = 3;
+const CORNER_RADIUS = 10;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
@@ -241,18 +247,34 @@ const styles = StyleSheet.create({
   backBtn: { paddingHorizontal: 32, paddingVertical: 12 },
   backBtnText: { color: Colors.textSecondary },
 
-  overlay: { ...StyleSheet.absoluteFillObject, flexDirection: 'column' },
-  overlayTop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)' },
+  // Figma shows a bright, minimal overlay (a subtle white radial highlight, not a
+  // darkened mask) — no dimming bars behind the corner brackets/hint/buttons.
+  overlay: { ...StyleSheet.absoluteFill, flexDirection: 'column' },
+  overlayTop: { flex: 1 },
   overlayMiddle: { height: WINDOW, flexDirection: 'row' },
-  overlaySide: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)' },
-  overlayBottom: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', paddingTop: 28, gap: 16 },
+  overlaySide: { flex: 1 },
+  overlayBottom: { flex: 1, alignItems: 'center', paddingTop: 28, gap: 16 },
   scanWindow: { width: WINDOW, height: WINDOW },
   corner: { position: 'absolute', width: CORNER, height: CORNER, borderColor: Colors.accent },
-  cornerTL: { top: 0, left: 0, borderTopWidth: THICKNESS, borderLeftWidth: THICKNESS },
-  cornerTR: { top: 0, right: 0, borderTopWidth: THICKNESS, borderRightWidth: THICKNESS },
-  cornerBL: { bottom: 0, left: 0, borderBottomWidth: THICKNESS, borderLeftWidth: THICKNESS },
-  cornerBR: { bottom: 0, right: 0, borderBottomWidth: THICKNESS, borderRightWidth: THICKNESS },
-  hint: { color: '#fff', textAlign: 'center', paddingHorizontal: 32, opacity: 0.9 },
+  cornerTL: { top: 0, left: 0, borderTopWidth: THICKNESS, borderLeftWidth: THICKNESS, borderTopLeftRadius: CORNER_RADIUS },
+  cornerTR: { top: 0, right: 0, borderTopWidth: THICKNESS, borderRightWidth: THICKNESS, borderTopRightRadius: CORNER_RADIUS },
+  cornerBL: { bottom: 0, left: 0, borderBottomWidth: THICKNESS, borderLeftWidth: THICKNESS, borderBottomLeftRadius: CORNER_RADIUS },
+  cornerBR: { bottom: 0, right: 0, borderBottomWidth: THICKNESS, borderRightWidth: THICKNESS, borderBottomRightRadius: CORNER_RADIUS },
+  scanGlowLine: {
+    position: 'absolute',
+    left: 10,
+    right: 10,
+    top: WINDOW / 2 - 1.5,
+    height: 3,
+    borderRadius: Radius.pill,
+    backgroundColor: Colors.accent,
+    shadowColor: Colors.accent,
+    shadowOpacity: 0.8,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 4,
+  },
+  hint: { color: Colors.textOnDarkMuted, textAlign: 'center', paddingHorizontal: 32 },
   parsingText: { color: '#fff', opacity: 0.9 },
   testBtn: {
     paddingHorizontal: 24,
@@ -261,20 +283,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(224,162,62,0.85)',
   },
   testBtnText: { color: '#fff' },
-  manualEntryBtn: {
-    paddingHorizontal: 32,
+  pillRow: { flexDirection: 'row', gap: 12 },
+  pillBtn: {
+    width: 160,
     paddingVertical: 10,
     borderRadius: Radius.pill,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.6)',
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    alignItems: 'center',
   },
-  manualEntryText: { color: '#fff' },
-  cancelBtn: {
-    paddingHorizontal: 40,
-    paddingVertical: 12,
-    borderRadius: Radius.pill,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.5)',
-  },
-  cancelText: { color: '#fff' },
+  pillBtnText: { color: '#fff' },
 });

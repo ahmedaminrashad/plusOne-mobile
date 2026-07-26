@@ -166,10 +166,6 @@ function OCRCaptureScreen({ route, navigation }: Props) {
       ) : (
         <View style={styles.captureContainer}>
           <View style={styles.guideFrame}>
-            <View style={[styles.guideCorner, styles.guideTL]} />
-            <View style={[styles.guideCorner, styles.guideTR]} />
-            <View style={[styles.guideCorner, styles.guideBL]} />
-            <View style={[styles.guideCorner, styles.guideBR]} />
             <Text style={[typography.bodySmall, styles.guideHint]}>{t('ocrCapture.guideHint')}</Text>
           </View>
           <View style={styles.captureActions}>
@@ -194,27 +190,20 @@ function OCRCaptureScreen({ route, navigation }: Props) {
 
 export default memo(OCRCaptureScreen);
 
-const CORNER_SIZE = 24;
-const CORNER_W = 3;
-
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
 
   captureContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 24 },
   guideFrame: {
-    width: 280,
-    height: 380,
-    borderRadius: 4,
-    position: 'relative',
+    width: 168,
+    height: 250,
+    borderRadius: Radius.lg,
+    borderWidth: 2,
+    borderColor: 'rgba(224,162,62,0.85)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  guideCorner: { position: 'absolute', width: CORNER_SIZE, height: CORNER_SIZE, borderColor: Colors.accent },
-  guideTL: { top: 0, left: 0, borderTopWidth: CORNER_W, borderLeftWidth: CORNER_W },
-  guideTR: { top: 0, right: 0, borderTopWidth: CORNER_W, borderRightWidth: CORNER_W },
-  guideBL: { bottom: 0, left: 0, borderBottomWidth: CORNER_W, borderLeftWidth: CORNER_W },
-  guideBR: { bottom: 0, right: 0, borderBottomWidth: CORNER_W, borderRightWidth: CORNER_W },
-  guideHint: { color: Colors.textMuted, textAlign: 'center' },
+  guideHint: { color: Colors.textMuted, textAlign: 'center', paddingHorizontal: 12 },
 
   captureActions: { alignItems: 'center', gap: 12, width: '100%' },
   captureTitle: { color: Colors.text },

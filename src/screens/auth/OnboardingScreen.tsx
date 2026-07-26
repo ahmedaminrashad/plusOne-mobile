@@ -25,8 +25,8 @@ function ReceiptIllustration() {
   const typography = useTypography();
   return (
     <View style={styles.illustrationCard}>
-      <Text style={[typography.labelMedium, styles.illustrationVenue]}>ZOOBA · KORBA</Text>
-      <Text style={[typography.caption, styles.illustrationMuted]}>#0412</Text>
+      <Text style={[typography.labelSmall, styles.illustrationVenue]}>ZOOBA · KORBA</Text>
+      <Text style={[typography.labelSmall, styles.illustrationMuted]}>#0412</Text>
       <View style={styles.illustrationDivider} />
       {[
         ['Taameya wrap ×2', '140'],
@@ -38,6 +38,33 @@ function ReceiptIllustration() {
           <Text style={[typography.amountMedium, styles.illustrationRowAmount]}>{price}</Text>
         </View>
       ))}
+      <View style={styles.scanAccentBar} />
+      <View style={styles.scanIcon}>
+        <View style={[styles.scanCorner, styles.scanCornerTL]} />
+        <View style={[styles.scanCorner, styles.scanCornerTR]} />
+        <View style={[styles.scanCorner, styles.scanCornerBL]} />
+        <View style={[styles.scanDot, styles.scanDot1]} />
+        <View style={[styles.scanDot, styles.scanDot2]} />
+        <View style={[styles.scanDot, styles.scanDot3]} />
+      </View>
+    </View>
+  );
+}
+
+function AssignAvatar({ name, selected }: { name: string; selected: boolean }) {
+  const typography = useTypography();
+  return (
+    <View style={[styles.assignAvatarCard, selected ? styles.assignAvatarCardSelected : styles.assignAvatarCardMuted]}>
+      <Avatar name={name} size={26} />
+      <Text
+        style={[
+          typography.labelSmall,
+          styles.assignAvatarName,
+          selected ? styles.assignAvatarNameSelected : styles.assignAvatarNameMuted,
+        ]}
+        numberOfLines={1}>
+        {name}
+      </Text>
     </View>
   );
 }
@@ -47,18 +74,18 @@ function AssignIllustration() {
   return (
     <View style={styles.illustrationCard}>
       <View style={styles.illustrationRow}>
-        <Text style={[typography.bodyMedium, styles.illustrationRowText]}>Grilled shrimp ¼</Text>
+        <Text style={[typography.labelLarge, styles.illustrationRowText]}>Grilled shrimp ¼</Text>
         <Text style={[typography.amountMedium, styles.illustrationRowAmount]}>270.00</Text>
       </View>
-      <Text style={[typography.labelMedium, styles.illustrationVenue, styles.illustrationSpacedTop]}>
+      <Text style={[typography.labelSmall, styles.illustrationVenue, styles.illustrationSpacedTop]}>
         Who took this one?
       </Text>
       <View style={styles.avatarRow}>
-        <Avatar name="Omar" size={40} />
-        <Avatar name="You" size={40} />
-        <Avatar name="Salma" size={40} />
+        <AssignAvatar name="Omar" selected />
+        <AssignAvatar name="You" selected />
+        <AssignAvatar name="Salma" selected={false} />
       </View>
-      <Text style={[typography.caption, styles.illustrationMuted, styles.illustrationSpacedTop]}>
+      <Text style={[typography.labelSmall, styles.assignSharedCaption, styles.illustrationSpacedTop]}>
         Shared by 2 · 135.00 each
       </Text>
     </View>
@@ -73,8 +100,10 @@ function SettleIllustration() {
         <Text style={styles.settleCheck}>✓</Text>
       </View>
       <Text style={[typography.amountLarge, styles.settleAmount]}>EGP 206.67</Text>
-      <Text style={[typography.bodyMedium, styles.illustrationMuted]}>sent to Omar · InstaPay</Text>
-      <Text style={[typography.labelMedium, styles.settleConfirmed]}>Settled in 4 seconds</Text>
+      <Text style={[typography.caption, styles.illustrationMuted]}>sent to Omar · InstaPay</Text>
+      <View style={styles.settledBadge}>
+        <Text style={[typography.labelSmall, styles.settledBadgeText]}>Settled in 4 seconds</Text>
+      </View>
     </View>
   );
 }
@@ -172,19 +201,50 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 3,
   },
-  illustrationVenue: { color: Colors.text },
-  illustrationMuted: { color: Colors.textMuted },
+  // Figma colours these captions textSecondary (#66706B), not the darker ink/muted tones.
+  illustrationVenue: { color: Colors.textSecondary },
+  illustrationMuted: { color: Colors.textSecondary },
   illustrationSpacedTop: { marginTop: 12 },
-  illustrationDivider: { height: 1, backgroundColor: Colors.borderLight, marginVertical: 10 },
+  illustrationDivider: { borderTopWidth: 1, borderStyle: 'dashed', borderColor: Colors.borderLight, marginVertical: 10 },
   illustrationRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 4 },
   illustrationRowText: { color: Colors.text },
   illustrationRowAmount: { color: Colors.text },
-  avatarRow: { flexDirection: 'row', gap: 8, marginTop: 10 },
 
+  // ── Slide 1 — scan accent (amber bar + QR-style viewfinder glyph) ──
+  scanAccentBar: {
+    alignSelf: 'center',
+    width: '85%',
+    height: 6,
+    borderRadius: Radius.pill,
+    backgroundColor: Colors.accent,
+    marginTop: 10,
+    marginBottom: 14,
+  },
+  scanIcon: { alignSelf: 'center', width: 45, height: 45, marginBottom: 4 },
+  scanCorner: { position: 'absolute', width: 17, height: 17, borderRadius: 3, backgroundColor: Colors.text },
+  scanCornerTL: { top: 0, left: 0 },
+  scanCornerTR: { top: 0, right: 0 },
+  scanCornerBL: { bottom: 0, left: 0 },
+  scanDot: { position: 'absolute', width: 7, height: 7, borderRadius: 2, backgroundColor: Colors.text },
+  scanDot1: { bottom: 0, right: 0 },
+  scanDot2: { bottom: 0, right: 10 },
+  scanDot3: { bottom: 10, right: 0 },
+
+  // ── Slide 2 — assign avatars (selected vs unselected participant tint) ──
+  avatarRow: { flexDirection: 'row', gap: 8, marginTop: 10 },
+  assignAvatarCard: { width: 54, paddingVertical: 8, paddingHorizontal: 4, borderRadius: Radius.lg, alignItems: 'center', gap: 4 },
+  assignAvatarCardSelected: { backgroundColor: Colors.tint },
+  assignAvatarCardMuted: { backgroundColor: Colors.surfaceElevated },
+  assignAvatarName: {},
+  assignAvatarNameSelected: { color: Colors.primary },
+  assignAvatarNameMuted: { color: Colors.textSecondary },
+  assignSharedCaption: { color: Colors.primary },
+
+  // ── Slide 3 — settle confirmation ──
   settleBadge: {
     alignSelf: 'center',
-    width: 48,
-    height: 48,
+    width: 52,
+    height: 52,
     borderRadius: Radius.pill,
     backgroundColor: Colors.successTint,
     justifyContent: 'center',
@@ -192,12 +252,20 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   settleCheck: { color: Colors.success, fontSize: 24 },
-  settleAmount: { color: Colors.text, textAlign: 'center' },
-  settleConfirmed: { color: Colors.success, textAlign: 'center', marginTop: 4 },
+  settleAmount: { color: Colors.primaryDark, textAlign: 'center' },
+  settledBadge: {
+    alignSelf: 'center',
+    backgroundColor: Colors.successTint,
+    borderRadius: Radius.pill,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    marginTop: 8,
+  },
+  settledBadgeText: { color: Colors.secondaryDark },
 
   footer: { paddingHorizontal: 24, paddingBottom: 24, gap: 20 },
   dots: { flexDirection: 'row', justifyContent: 'center', gap: 8 },
-  dot: { width: 8, height: 8, borderRadius: Radius.pill, backgroundColor: Colors.border },
+  dot: { width: 6, height: 6, borderRadius: Radius.pill, backgroundColor: Colors.border },
   dotActive: { backgroundColor: Colors.primary, width: 20 },
   nextButton: { width: '100%' },
 });

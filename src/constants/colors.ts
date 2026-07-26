@@ -12,6 +12,7 @@ export const Colors = {
   success: '#2E9B6E',
   successLight: '#8FD9B6',
   warning: '#E0A23E',
+  warningDark: '#9A6A1B',   // Text on warningTint pills (pending/link-opened/paid-count badges)
   danger: '#C24B31',
   dangerLight: '#D97656',
   dangerDark: '#9E3A24',
@@ -23,6 +24,7 @@ export const Colors = {
   surfaceElevated: '#F1F6F5',
   tint: '#E0EBEA',             // Light teal tint (icon wraps, subtle highlights)
   overlay: 'rgba(0,0,0,0.5)',
+  menuScrim: 'rgba(14,25,22,0.42)', // Quick-add backdrop (Figma: #0E1916 @ 42%)
 
   // Neutral scale (teal-tinted, replaces Slate)
   neutral50: '#F8F7F4',
@@ -46,6 +48,7 @@ export const Colors = {
   textMuted: '#98A19C',
   textOnPrimary: '#FFFFFF',
   textOnDark: '#FFFFFF',
+  textOnDarkMuted: '#CFE0D8', // Muted mint text on dark/camera surfaces (QR/OCR capture hints)
 
   // Tinted surfaces for status badges/pills
   successTint: '#E1F2EA',
