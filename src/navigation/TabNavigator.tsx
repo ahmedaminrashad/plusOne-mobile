@@ -13,12 +13,10 @@ import { createBottomTabNavigator, BottomTabBarProps } from '@react-navigation/b
 import { TabParamList } from '../types/navigation';
 import AppStack from './AppStack';
 import SettingsStack from './SettingsStack';
-import BillsTabScreen from '../screens/groups/BillsTabScreen';
-import ActivityScreen from '../screens/groups/ActivityScreen';
 import { Colors } from '../constants/colors';
 import { Radius } from '../constants/radius';
 import { useTypography } from '../hooks/useTypography';
-import { HomeIcon, ReceiptIcon, ActivityIcon, PersonIcon, PeopleIcon, AddPersonIcon } from '../components/icons';
+import { HomeIcon, PersonIcon, PeopleIcon, AddPersonIcon } from '../components/icons';
 
 const Tab = createBottomTabNavigator<TabParamList>();
 
@@ -36,8 +34,6 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
     navigation.navigate('Home', { screen: 'Home' } as any);
   }, [navigation]);
 
-  const handleBillsPress = useCallback(() => navigation.navigate('Bills'), [navigation]);
-  const handleActivityPress = useCallback(() => navigation.navigate('Activity'), [navigation]);
   const handleProfilePress = useCallback(() => navigation.navigate('SettingsTab'), [navigation]);
   const handleFabPress = useCallback(() => setMenuOpen((v) => !v), []);
 
@@ -51,10 +47,9 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
     navigation.navigate('Home', { screen: 'MyCircle' } as any);
   }, [navigation]);
 
+  // Indices after removing Bills/Activity: Home=0, QuickAdd=1, SettingsTab=2
   const homeActive = state.index === 0;
-  const billsActive = state.index === 1;
-  const activityActive = state.index === 3;
-  const profileActive = state.index === 4;
+  const profileActive = state.index === 2;
 
   return (
     <>
@@ -93,24 +88,8 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
             </View>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.tabItem} onPress={handleBillsPress} activeOpacity={0.7}>
-            <View style={styles.tabItemInner}>
-              <ReceiptIcon size={20} color={billsActive ? Colors.navActive : Colors.navInactive} />
-              <Text style={[typography.labelSmall, styles.tabLabel, billsActive && styles.tabLabelActive]}>{t('tabBar.billsLabel')}</Text>
-              {billsActive && <View style={styles.tabActiveDot} />}
-            </View>
-          </TouchableOpacity>
-
           {/* Spacer under the raised FAB */}
           <View style={styles.fabSpacer} />
-
-          <TouchableOpacity style={styles.tabItem} onPress={handleActivityPress} activeOpacity={0.7}>
-            <View style={styles.tabItemInner}>
-              <ActivityIcon size={20} color={activityActive ? Colors.navActive : Colors.navInactive} />
-              <Text style={[typography.labelSmall, styles.tabLabel, activityActive && styles.tabLabelActive]}>{t('tabBar.activityLabel')}</Text>
-              {activityActive && <View style={styles.tabActiveDot} />}
-            </View>
-          </TouchableOpacity>
 
           <TouchableOpacity style={styles.tabItem} onPress={handleProfilePress} activeOpacity={0.7}>
             <View style={styles.tabItemInner}>
@@ -121,10 +100,6 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
           </TouchableOpacity>
         </View>
 
-        {/* FAB — raised, punched through the bar's top edge. Uses the real
-            brand mark (teal disc with a plus cut through it) rather than a
-            plain "+" glyph — matches Figma's tab-bar FAB exactly. Rotating
-            it 45° doubles as the "close menu" (×) state. */}
         <View style={styles.fabRing} pointerEvents="box-none">
           <TouchableOpacity style={styles.fabTouchable} onPress={handleFabPress} activeOpacity={0.85} hitSlop={8}>
             <Image
@@ -146,9 +121,7 @@ export default function TabNavigator() {
       tabBar={(props) => <CustomTabBar {...props} />}
       screenOptions={{ headerShown: false }}>
       <Tab.Screen name="Home" component={AppStack} />
-      <Tab.Screen name="Bills" component={BillsTabScreen} />
       <Tab.Screen name="QuickAdd" component={EmptyScreen} />
-      <Tab.Screen name="Activity" component={ActivityScreen} />
       <Tab.Screen name="SettingsTab" component={SettingsStack} />
     </Tab.Navigator>
   );
@@ -159,12 +132,10 @@ const TAB_BAR_MARGIN = 23;
 const TAB_BAR_BOTTOM = Platform.OS === 'ios' ? 22 : 14;
 const FAB_SIZE = 54;
 const FAB_INNER_SIZE = 44;
-const FAB_OVERLAP = 12; // how far the FAB pokes above the bar's top edge
+const FAB_OVERLAP = 12;
 const TAB_BAR_WRAP_HEIGHT = TAB_BAR_HEIGHT + TAB_BAR_BOTTOM + FAB_OVERLAP;
 
 const styles = StyleSheet.create({
-  // Stays in normal flow so React Navigation reserves real height for it;
-  // the pill bar and FAB float inside via absolute positioning.
   tabBarWrap: {
     height: TAB_BAR_WRAP_HEIGHT,
     backgroundColor: 'transparent',
@@ -204,11 +175,7 @@ const styles = StyleSheet.create({
   },
   tabLabel: { color: Colors.navInactive },
   tabLabelActive: { color: Colors.navActive },
-
-  // FAB spacer — keeps the two flanking tab items from crowding the raised FAB
   fabSpacer: { width: FAB_SIZE + 10 },
-
-  // FAB — raised above the bar's top edge, punched through with a canvas-colored ring
   fabRing: {
     position: 'absolute',
     top: 0,
@@ -229,9 +196,6 @@ const styles = StyleSheet.create({
   },
   fabMark: { width: FAB_INNER_SIZE, height: FAB_INNER_SIZE },
   fabMarkRotated: { transform: [{ rotate: '45deg' }] },
-
-  // Quick-add floating menu — two separate cards (Figma: "New group" + "Add a +1"),
-  // not one box with an internal divider.
   menuBackdrop: {
     position: 'absolute',
     top: 0, left: 0, right: 0, bottom: 0,

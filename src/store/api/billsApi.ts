@@ -16,6 +16,12 @@ interface UpdateBillItemsPayload {
   billId: string;
   lineItems: BillLineItem[];
   shares: CreateSharePayload[];
+  tax?: number | null;
+  taxType?: TaxServiceType | null;
+  delivery?: number | null;
+  deliveryType?: TaxServiceType | null;
+  vat?: number | null;
+  vatType?: TaxServiceType | null;
 }
 
 interface CreateBillPayload {
@@ -32,10 +38,10 @@ interface CreateBillPayload {
   lineItems?: BillLineItem[];
   tax?: number;
   taxType?: TaxServiceType;
-  service?: number;
-  serviceType?: TaxServiceType;
-  tip?: number;
-  tipType?: TaxServiceType;
+  delivery?: number;
+  deliveryType?: TaxServiceType;
+  vat?: number;
+  vatType?: TaxServiceType;
   shares?: CreateSharePayload[];
 }
 
@@ -52,8 +58,8 @@ interface ParsedBillResult {
     subtotal?: number;
     tax?: number;
     taxType?: TaxServiceType;
-    service?: number;
-    serviceType?: TaxServiceType;
+    delivery?: number;
+    deliveryType?: TaxServiceType;
     captureMethod: 'qr';
     sourceRef: string;
   };

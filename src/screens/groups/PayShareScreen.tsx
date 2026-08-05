@@ -58,8 +58,8 @@ function PayShareScreen({ route, navigation }: Props) {
   const chargesAmt = useMemo(() => {
     if (!bill) return 0;
     const tax = bill.tax != null ? (bill.taxType === 'percent' ? subtotal * bill.tax / 100 : bill.tax) : 0;
-    const service = bill.service != null ? (bill.serviceType === 'percent' ? subtotal * bill.service / 100 : bill.service) : 0;
-    return tax + service;
+    const delivery = bill.delivery != null ? (bill.deliveryType === 'percent' ? subtotal * bill.delivery / 100 : bill.delivery) : 0;
+    return tax + delivery;
   }, [bill, subtotal]);
 
   const shareAmount = myShare ? myShare.amountPiastres / 100 : 0;
@@ -234,7 +234,7 @@ function PayShareScreen({ route, navigation }: Props) {
                   {chargesPortion > 0 && (
                     <View style={styles.breakdownRow}>
                       <Text style={[typography.bodyMedium, styles.breakdownLabel]}>
-                        {t('viewReceipt.taxLabel')} + {t('viewReceipt.serviceLabel')}
+                        {t('viewReceipt.taxLabel')} + {t('viewReceipt.deliveryLabel')}
                       </Text>
                       <Text style={[typography.bodyMedium, styles.breakdownAmt]}>{formatCurrency(chargesPortion)}</Text>
                     </View>

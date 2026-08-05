@@ -11,6 +11,7 @@ export type AuthStackParamList = {
 
 export type AppStackParamList = {
   Home: undefined;
+  Notifications: undefined;
   Invitations: undefined;
   CreateGroup: undefined;
   GroupDetail: { groupId: string; groupName: string };
@@ -41,9 +42,7 @@ export type SettingsStackParamList = {
 
 export type TabParamList = {
   Home: undefined;
-  Bills: undefined;
   QuickAdd: undefined;
-  Activity: undefined;
   SettingsTab: undefined;
 };
 

@@ -20,7 +20,26 @@
     "yourGroups": "Your groups",
     "viewAll": "View all",
     "cardMeta": "{{members}} members · {{bills}} open bills",
-    "cardMetaNoBills": "{{members}} members"
+    "cardMetaNoBills": "{{members}} members",
+    "cardMembersOnly": "{{count}} members"
+  },
+  "contacts": {
+    "pickerTitle": "Choose from contacts",
+    "searchPlaceholder": "Search contacts…",
+    "empty": "No contacts with phone numbers found",
+    "confirm": "Add {{count}}"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "subtitle": "Payment approvals and group invites",
+    "approvalTitle": "{{name}} paid {{amount}}",
+    "approvalSubtitle": "Confirm you received this payment",
+    "viewBill": "View",
+    "confirmPayment": "Approve",
+    "confirmFailed": "Couldn't confirm payment",
+    "emptyTitle": "All caught up",
+    "emptySubtitle": "Payment approvals and invitations will show up here",
+    "viewInvitations": "Group invitations"
   },
   "myCircle": {
     "peopleCount": "{{count}} people",
@@ -28,6 +47,8 @@
     "growTitle": "Grow your Circle",
     "growSubtitle": "Add someone by phone — they join as a \"+1\" if they're not on +one yet",
     "addButton": "Add",
+    "fromContacts": "Contacts",
+    "fromContactsTitle": "Add from contacts",
     "inCircleHeader": "In your Circle",
     "onPlusOne": "On +one",
     "pendingHeader": "Invited",
@@ -163,7 +184,8 @@
     "subtitle": "Registered users will be added immediately, others will receive an invitation link via SMS",
     "phonePlaceholder": "+20 10 XXXX XXXX",
     "sendCta": "Send",
-    "invitationsWord": "invitation(s)"
+    "invitationsWord": "invitation(s)",
+    "fromContacts": "Add from contacts"
   },
   "invitations": {
     "invitedToJoin": "You've been invited to join",

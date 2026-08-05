@@ -1,0 +1,71 @@
+import { Platform, PermissionsAndroid, Alert } from 'react-native';
+import Contacts from 'react-native-contacts';
+import { formatPhone, isValidPhone } from './validation';
+
+export interface DeviceContact {
+  id: string;
+  name: string;
+  phone: string;
+}
+
+async function requestContactsPermission(): Promise<boolean> {
+  if (Platform.OS === 'android') {
+    const result = await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
+      {
+        title: 'Contacts permission',
+        message: 'PlusOne needs access to your contacts so you can invite people you already know.',
+        buttonPositive: 'Allow',
+        buttonNegative: 'Deny',
+      },
+    );
+    return result === PermissionsAndroid.RESULTS.GRANTED;
+  }
+
+  const permission = await Contacts.checkPermission();
+  if (permission === 'authorized' || permission === 'limited') return true;
+  const requested = await Contacts.requestPermission();
+  return requested === 'authorized' || requested === 'limited';
+}
+
+function firstValidPhone(rawNumbers: Array<{ number?: string } | string> | undefined): string | null {
+  if (!rawNumbers?.length) return null;
+  for (const entry of rawNumbers) {
+    const raw = typeof entry === 'string' ? entry : entry.number ?? '';
+    const formatted = formatPhone(raw.trim());
+    if (isValidPhone(formatted)) return formatted;
+  }
+  return null;
+}
+
+/** Loads device contacts that have a usable phone number. */
+export async function loadDeviceContacts(): Promise<DeviceContact[]> {
+  const granted = await requestContactsPermission();
+  if (!granted) {
+    Alert.alert(
+      'Permission needed',
+      'Allow contacts access in Settings to invite people from your phone book.',
+    );
+    return [];
+  }
+
+  const contacts = await Contacts.getAllWithoutPhotos();
+  const mapped: DeviceContact[] = [];
+
+  for (const contact of contacts) {
+    const phone = firstValidPhone(contact.phoneNumbers as any);
+    if (!phone) continue;
+    const name =
+      contact.displayName?.trim() ||
+      [contact.givenName, contact.familyName].filter(Boolean).join(' ').trim() ||
+      phone;
+    mapped.push({
+      id: contact.recordID,
+      name,
+      phone,
+    });
+  }
+
+  mapped.sort((a, b) => a.name.localeCompare(b.name));
+  return mapped;
+}

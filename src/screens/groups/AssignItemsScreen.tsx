@@ -17,6 +17,7 @@ import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
 import Avatar from '../../components/common/Avatar';
 import Button from '../../components/common/Button';
+import DraggablePriceInput from '../../components/common/DraggablePriceInput';
 import { useGetGroupMembersQuery } from '../../store/api/groupsApi';
 import { useGetMeQuery } from '../../store/api/usersApi';
 import { useCreateBillMutation } from '../../store/api/billsApi';
@@ -58,11 +59,15 @@ function ItemRow({
   item,
   members,
   mode,
+  selected,
+  onSelect,
   onToggle,
 }: {
   item: ReceiptItem;
   members: GroupMember[];
   mode: SplitMode;
+  selected: boolean;
+  onSelect: () => void;
   onToggle: (itemId: string, memberId: string) => void;
 }) {
   const { t } = useTranslation('billing');
@@ -70,7 +75,10 @@ function ItemRow({
   const subtotal = item.price * item.qty;
   const unclaimed = item.claimedBy.length === 0;
   return (
-    <View style={[styles.itemCard, mode === 'byItem' && unclaimed && styles.itemCardUnclaimed]}>
+    <TouchableOpacity
+      style={[styles.itemCard, mode === 'byItem' && unclaimed && styles.itemCardUnclaimed, selected && styles.itemCardSelected]}
+      onPress={onSelect}
+      activeOpacity={0.85}>
       <View style={styles.itemHeader}>
         <View style={styles.itemNameBlock}>
           <Text style={[typography.labelLarge, styles.itemName]}>{item.name}</Text>
@@ -100,7 +108,7 @@ function ItemRow({
           )}
         </>
       )}
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -118,6 +126,8 @@ function AssignItemsScreen({ route, navigation }: Props) {
   const [paidByUserId, setPaidByUserId] = useState('');
   const [payerModalVisible, setPayerModalVisible] = useState(false);
   const [mode, setMode] = useState<SplitMode>('byItem');
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [dragPrice, setDragPrice] = useState('');
 
   const activeMembers = useMemo(
     () => (members ?? []).filter((m) => m.status === 'active' && (m.userId || m.pendingPhone)),
@@ -128,25 +138,42 @@ function AssignItemsScreen({ route, navigation }: Props) {
     try {
       const parsed: ParsedReceiptData = JSON.parse(receiptJson);
       setReceipt(parsed);
-      setItems(
-        parsed.items.map((it, idx) => ({
-          id: it.id ?? String(idx),
-          name: it.name,
-          price: Number(it.price),
-          qty: Number(it.qty ?? 1),
-          claimedBy: [],
-        })),
-      );
+      const mapped = parsed.items.map((it, idx) => ({
+        id: it.id ?? String(idx),
+        name: it.name,
+        price: Number(it.price),
+        qty: Number(it.qty ?? 1),
+        claimedBy: [],
+      }));
+      setItems(mapped);
+      if (mapped[0]) {
+        setSelectedItemId(mapped[0].id);
+        setDragPrice(String(mapped[0].price));
+      }
     } catch {
       Alert.alert(t('common:error'), t('receiptSplit.parseFailed'), [
         { text: t('common:back'), onPress: () => navigation.goBack() },
       ]);
     }
-  }, [receiptJson, navigation]);
+  }, [receiptJson, navigation, t]);
 
   useEffect(() => {
     if (me && !paidByUserId) setPaidByUserId(me.id);
   }, [me, paidByUserId]);
+
+  const commitDragPrice = useCallback(() => {
+    if (!selectedItemId) return;
+    const next = parseFloat(dragPrice.replace(',', '.'));
+    if (!Number.isFinite(next) || next < 0) return;
+    setItems((prev) =>
+      prev.map((item) => (item.id === selectedItemId ? { ...item, price: next } : item)),
+    );
+  }, [selectedItemId, dragPrice]);
+
+  const selectItemForPrice = useCallback((item: ReceiptItem) => {
+    setSelectedItemId(item.id);
+    setDragPrice(String(item.price));
+  }, []);
 
   const subtotal = useMemo(() => items.reduce((sum, it) => sum + it.price * it.qty, 0), [items]);
 
@@ -155,17 +182,17 @@ function AssignItemsScreen({ route, navigation }: Props) {
     return receipt.taxType === 'percent' ? subtotal * receipt.tax / 100 : receipt.tax;
   }, [receipt.tax, receipt.taxType, subtotal]);
 
-  const serviceAmt = useMemo(() => {
-    if (receipt.service == null) return 0;
-    return receipt.serviceType === 'percent' ? subtotal * receipt.service / 100 : receipt.service;
-  }, [receipt.service, receipt.serviceType, subtotal]);
+  const deliveryAmt = useMemo(() => {
+    if (receipt.delivery == null) return 0;
+    return receipt.deliveryType === 'percent' ? subtotal * receipt.delivery / 100 : receipt.delivery;
+  }, [receipt.delivery, receipt.deliveryType, subtotal]);
 
-  const tipAmt = useMemo(() => {
-    if (receipt.tip == null) return 0;
-    return receipt.tipType === 'percent' ? (subtotal + taxAmt + serviceAmt) * receipt.tip / 100 : receipt.tip;
-  }, [receipt.tip, receipt.tipType, subtotal, taxAmt, serviceAmt]);
+  const vatAmt = useMemo(() => {
+    if (receipt.vat == null) return 0;
+    return receipt.vatType === 'percent' ? (subtotal + taxAmt + deliveryAmt) * receipt.vat / 100 : receipt.vat;
+  }, [receipt.vat, receipt.vatType, subtotal, taxAmt, deliveryAmt]);
 
-  const grandTotal = receipt.grandTotal ?? (subtotal + taxAmt + serviceAmt + tipAmt);
+  const grandTotal = receipt.grandTotal ?? (subtotal + taxAmt + deliveryAmt + vatAmt);
 
   const memberTotals = useMemo(() => {
     if (mode === 'equally') {
@@ -182,7 +209,7 @@ function AssignItemsScreen({ route, navigation }: Props) {
       const share = (item.price * item.qty) / item.claimedBy.length;
       for (const id of item.claimedBy) totals[id] = (totals[id] ?? 0) + share;
     }
-    const extras = taxAmt + serviceAmt + tipAmt;
+    const extras = taxAmt + deliveryAmt + vatAmt;
     if (extras > 0 && subtotal > 0) {
       for (const id of Object.keys(totals)) {
         const share = totals[id]! / subtotal;
@@ -190,7 +217,7 @@ function AssignItemsScreen({ route, navigation }: Props) {
       }
     }
     return totals;
-  }, [mode, activeMembers, grandTotal, items, taxAmt, serviceAmt, tipAmt, subtotal]);
+  }, [mode, activeMembers, grandTotal, items, taxAmt, deliveryAmt, vatAmt, subtotal]);
 
   const unassignedTotal = useMemo(() => {
     if (mode !== 'byItem') return 0;
@@ -248,10 +275,10 @@ function AssignItemsScreen({ route, navigation }: Props) {
         lineItems: items.map((it) => ({ name: it.name, qty: it.qty, unitPrice: it.price })),
         tax: receipt.tax,
         taxType: receipt.taxType,
-        service: receipt.service,
-        serviceType: receipt.serviceType,
-        tip: receipt.tip,
-        tipType: receipt.tipType,
+        delivery: receipt.delivery,
+        deliveryType: receipt.deliveryType,
+        vat: receipt.vat,
+        vatType: receipt.vatType,
         shares,
       }).unwrap();
       navigation.navigate('GroupDetail', { groupId, groupName });
@@ -286,9 +313,16 @@ function AssignItemsScreen({ route, navigation }: Props) {
 
   const renderItem = useCallback(
     ({ item }: { item: ReceiptItem }) => (
-      <ItemRow item={item} members={activeMembers} mode={mode} onToggle={toggleClaim} />
+      <ItemRow
+        item={item}
+        members={activeMembers}
+        mode={mode}
+        selected={item.id === selectedItemId}
+        onSelect={() => selectItemForPrice(item)}
+        onToggle={toggleClaim}
+      />
     ),
-    [activeMembers, mode, toggleClaim],
+    [activeMembers, mode, selectedItemId, selectItemForPrice, toggleClaim],
   );
 
   const ListHeader = useMemo(
@@ -414,6 +448,14 @@ function AssignItemsScreen({ route, navigation }: Props) {
           </View>
         </TouchableOpacity>
       </Modal>
+
+      {selectedItemId && (
+        <DraggablePriceInput
+          value={dragPrice}
+          onChange={setDragPrice}
+          onCommit={commitDragPrice}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -489,6 +531,7 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   itemCardUnclaimed: { borderWidth: 1.5, borderColor: Colors.dangerTint },
+  itemCardSelected: { borderWidth: 1.5, borderColor: Colors.primary },
   itemHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 },
   itemNameBlock: { flex: 1, alignItems: 'flex-start' },
   itemName: { color: Colors.text, textAlign: 'left' },

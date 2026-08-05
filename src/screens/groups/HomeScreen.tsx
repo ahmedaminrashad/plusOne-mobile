@@ -5,7 +5,6 @@ import {
   Text,
   FlatList,
   TouchableOpacity,
-  TextInput,
   StyleSheet,
   SafeAreaView,
   StatusBar,
@@ -24,11 +23,12 @@ import GroupBalanceCollector from '../../components/groups/GroupBalanceCollector
 import Button from '../../components/common/Button';
 import Avatar from '../../components/common/Avatar';
 import InvitationPromptModal from '../../components/groups/InvitationPromptModal';
-import { PeopleIcon, BellIcon, SearchIcon, ReceiptIcon, PersonIcon } from '../../components/icons';
+import { PeopleIcon, BellIcon, ReceiptIcon, PersonIcon } from '../../components/icons';
 import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
 import { useGetMeQuery } from '../../store/api/usersApi';
+import { useGetMySharesQuery } from '../../store/api/sharesApi';
 import { formatCurrency, resolveAssetUrl } from '../../utils/format';
 
 type Props = AppScreenProps<'Home'>;
@@ -41,10 +41,15 @@ function HomeScreen({ navigation }: Props) {
   const { data: me } = useGetMeQuery();
   const { data: groups, isLoading, isFetching, refetch, isError } = useGetGroupsQuery();
   const { data: invitations } = useGetMyInvitationsQuery();
+  const { data: myShares } = useGetMySharesQuery();
   const [accept] = useAcceptInvitationMutation();
   const [decline] = useDeclineInvitationMutation();
 
-  const pendingCount = invitations?.length ?? 0;
+  const approvalCount = useMemo(
+    () => (myShares ?? []).filter((s) => s.status === 'initiated' && s.initiatorUserId === me?.id).length,
+    [myShares, me?.id],
+  );
+  const pendingCount = (invitations?.length ?? 0) + approvalCount;
   const [showModal, setShowModal] = useState(false);
   const shownRef = useRef(false);
 
@@ -120,24 +125,20 @@ function HomeScreen({ navigation }: Props) {
               </View>
               <TouchableOpacity
                 style={styles.headerIconBtn}
-                onPress={() => navigation.navigate('Invitations')}
+                onPress={() => navigation.navigate('Notifications')}
                 activeOpacity={0.7}>
                 <BellIcon size={20} color={Colors.text} />
                 {pendingCount > 0 && <View style={styles.badgeDot} />}
               </TouchableOpacity>
             </View>
 
-            <View style={styles.searchBar}>
-              <SearchIcon size={16} color={Colors.textMuted} />
-              <TextInput
-                style={[typography.bodyMedium, styles.searchInput]}
-                placeholder={t('home.searchPlaceholder')}
-                placeholderTextColor={Colors.textMuted}
-              />
-            </View>
-
             <View style={styles.heroCard}>
-              <Text style={[typography.labelMedium, styles.heroLabel]}>{t('home.acrossAllGroups')}</Text>
+              <View style={styles.heroTopRow}>
+                <Text style={[typography.labelMedium, styles.heroLabel]}>{t('home.acrossAllGroups')}</Text>
+                <TouchableOpacity style={styles.settleBtn} onPress={() => navigation.navigate('SettleUp')} activeOpacity={0.8}>
+                  <Text style={[typography.labelMedium, styles.settleBtnText]}>{t('home.settleUp')}</Text>
+                </TouchableOpacity>
+              </View>
               <View style={styles.heroRow}>
                 <View style={styles.heroAmounts}>
                   <View>
@@ -149,9 +150,6 @@ function HomeScreen({ navigation }: Props) {
                     <Text style={[typography.amountMedium, styles.heroAmount]}>{formatCurrency(owe / 100)}</Text>
                   </View>
                 </View>
-                <TouchableOpacity style={styles.settleBtn} onPress={() => navigation.navigate('SettleUp')} activeOpacity={0.8}>
-                  <Text style={[typography.labelMedium, styles.settleBtnText]}>{t('home.settleUp')}</Text>
-                </TouchableOpacity>
               </View>
             </View>
 
@@ -234,27 +232,23 @@ const styles = StyleSheet.create({
     width: 7, height: 7, borderRadius: 3.5,
     backgroundColor: Colors.danger,
   },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.pill,
-    marginHorizontal: 16,
-    paddingHorizontal: 16,
-    height: 39,
-    gap: 8,
-  },
-  searchInput: { flex: 1, color: Colors.text, padding: 0 },
 
   // ── Hero balance card — self-contained inset card, not a banner ──
   heroCard: {
     backgroundColor: Colors.primary,
     borderRadius: Radius.xl,
     marginHorizontal: 16,
-    marginTop: 12,
+    marginTop: 4,
     padding: 16,
   },
-  heroLabel: { color: 'rgba(255,255,255,0.7)', letterSpacing: 0.5, marginBottom: 10 },
+  heroTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+    gap: 8,
+  },
+  heroLabel: { color: 'rgba(255,255,255,0.7)', letterSpacing: 0.5, flexShrink: 1 },
   heroRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   heroAmounts: { flexDirection: 'row', gap: 24 },
   heroAmountLabel: { color: 'rgba(255,255,255,0.7)', marginBottom: 2 },
@@ -263,7 +257,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primaryDark,
     borderRadius: Radius.pill,
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingVertical: 8,
   },
   settleBtnText: { color: '#FFFFFF' },
 

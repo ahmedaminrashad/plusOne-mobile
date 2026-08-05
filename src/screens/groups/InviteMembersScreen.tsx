@@ -12,12 +12,14 @@ import {
 import { AppScreenProps } from '../../types/navigation';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
+import ContactPickerModal from '../../components/common/ContactPickerModal';
 import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
-import { CloseIcon } from '../../components/icons';
+import { CloseIcon, PeopleIcon } from '../../components/icons';
 import { isValidPhone, formatPhone } from '../../utils/validation';
 import { useInviteMembersMutation } from '../../store/api/groupsApi';
+import { DeviceContact } from '../../utils/contacts';
 
 type Props = AppScreenProps<'InviteMembers'>;
 
@@ -28,6 +30,8 @@ function InviteMembersScreen({ route, navigation }: Props) {
   const [phone, setPhone] = useState('');
   const [phoneError, setPhoneError] = useState('');
   const [selected, setSelected] = useState<string[]>([]);
+  const [contactNames, setContactNames] = useState<Record<string, string>>({});
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const [inviteMembers, { isLoading }] = useInviteMembersMutation();
 
@@ -48,6 +52,27 @@ function InviteMembersScreen({ route, navigation }: Props) {
 
   const handleRemovePhone = useCallback((p: string) => {
     setSelected((prev) => prev.filter((s) => s !== p));
+    setContactNames((prev) => {
+      const next = { ...prev };
+      delete next[p];
+      return next;
+    });
+  }, []);
+
+  const handleContactsPicked = useCallback((contacts: DeviceContact[]) => {
+    setSelected((prev) => {
+      const next = [...prev];
+      for (const c of contacts) {
+        if (!next.includes(c.phone)) next.push(c.phone);
+      }
+      return next;
+    });
+    setContactNames((prev) => {
+      const next = { ...prev };
+      for (const c of contacts) next[c.phone] = c.name;
+      return next;
+    });
+    setPickerOpen(false);
   }, []);
 
   const handleSendInvites = useCallback(async () => {
@@ -80,6 +105,13 @@ function InviteMembersScreen({ route, navigation }: Props) {
           {t('inviteMembers.subtitle')}
         </Text>
 
+        <TouchableOpacity style={styles.contactsBtn} onPress={() => setPickerOpen(true)} activeOpacity={0.8}>
+          <PeopleIcon size={18} color={Colors.primary} />
+          <Text style={[typography.labelLarge, styles.contactsBtnText]}>
+            {t('inviteMembers.fromContacts', { defaultValue: 'Add from contacts' })}
+          </Text>
+        </TouchableOpacity>
+
         <View style={styles.inputRow}>
           <Input
             value={phone}
@@ -104,7 +136,9 @@ function InviteMembersScreen({ route, navigation }: Props) {
             keyExtractor={(p) => p}
             renderItem={({ item }) => (
               <View style={styles.phoneTag}>
-                <Text style={[typography.labelMedium, styles.phoneTagText]}>{item}</Text>
+                <Text style={[typography.labelMedium, styles.phoneTagText]}>
+                  {contactNames[item] ? `${contactNames[item]} · ${item}` : item}
+                </Text>
                 <TouchableOpacity onPress={() => handleRemovePhone(item)}>
                   <CloseIcon size={12} color={Colors.primary} />
                 </TouchableOpacity>
@@ -125,6 +159,13 @@ function InviteMembersScreen({ route, navigation }: Props) {
           disabled={selected.length === 0}
         />
       </View>
+
+      <ContactPickerModal
+        visible={pickerOpen}
+        alreadySelected={selected}
+        onClose={() => setPickerOpen(false)}
+        onConfirm={handleContactsPicked}
+      />
     </SafeAreaView>
   );
 }
@@ -135,7 +176,20 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   content: { flex: 1, padding: 24 },
   title: { color: Colors.text, marginBottom: 8 },
-  subtitle: { color: Colors.textSecondary, marginBottom: 24 },
+  subtitle: { color: Colors.textSecondary, marginBottom: 20 },
+  contactsBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: Colors.tint,
+    borderRadius: Radius.pill,
+    paddingVertical: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: Colors.primaryLight,
+  },
+  contactsBtnText: { color: Colors.primary },
   inputRow: { flexDirection: 'row', gap: 8, alignItems: 'flex-start' },
   phoneInput: { flex: 1, marginBottom: 0 },
   addBtn: { height: 52, paddingHorizontal: 16, marginTop: 0 },

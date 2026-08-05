@@ -10,6 +10,7 @@ import {
   Alert,
   ScrollView,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { AppScreenProps } from '../../types/navigation';
@@ -20,8 +21,9 @@ import Button from '../../components/common/Button';
 import Avatar from '../../components/common/Avatar';
 import { useGetGroupMembersQuery } from '../../store/api/groupsApi';
 import { useGetBillDetailQuery, useUpdateBillItemsMutation } from '../../store/api/billsApi';
-import { GroupMember } from '../../types/models';
+import { GroupMember, TaxServiceType } from '../../types/models';
 import { formatCurrency, resolveAssetUrl } from '../../utils/format';
+import { useInputTextAlign } from '../../utils/rtl';
 import i18n from '../../i18n';
 import { LockIcon, PlusIcon } from '../../components/icons';
 
@@ -42,6 +44,31 @@ function parseNum(s: string): number {
 const getMemberId = (m: GroupMember) => m.userId ?? m.id;
 const getMemberName = (m: GroupMember) =>
   m.user?.displayName ?? m.pendingPhone ?? i18n.t('billing:receiptSplit.defaultMemberName');
+
+function AmountTypeToggle({
+  value,
+  onChange,
+}: {
+  value: TaxServiceType;
+  onChange: (v: TaxServiceType) => void;
+}) {
+  const { t } = useTranslation('billing');
+  const typography = useTypography();
+  return (
+    <View style={styles.toggle}>
+      <TouchableOpacity
+        style={[styles.toggleBtn, value === 'percent' && styles.toggleBtnActive]}
+        onPress={() => onChange('percent')}>
+        <Text style={[typography.labelLarge, styles.toggleText, value === 'percent' && styles.toggleTextActive]}>%</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.toggleBtn, value === 'amount' && styles.toggleBtnActive]}
+        onPress={() => onChange('amount')}>
+        <Text style={[typography.labelLarge, styles.toggleText, value === 'amount' && styles.toggleTextActive]}>{t('common:currencyEGP')}</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
 
 function MemberChip({
   member,
@@ -124,6 +151,7 @@ function ItemRow({
 function EditBillItemsScreen({ route, navigation }: Props) {
   const { t } = useTranslation('billing');
   const typography = useTypography();
+  const inputAlign = useInputTextAlign();
   const { billId } = route.params;
 
   const { data: bill, isLoading } = useGetBillDetailQuery(billId);
@@ -135,6 +163,12 @@ function EditBillItemsScreen({ route, navigation }: Props) {
   const [newItemName, setNewItemName] = useState('');
   const [newItemQty, setNewItemQty] = useState('1');
   const [newItemPrice, setNewItemPrice] = useState('');
+  const [taxValue, setTaxValue] = useState('');
+  const [taxType, setTaxType] = useState<TaxServiceType>('percent');
+  const [deliveryValue, setDeliveryValue] = useState('');
+  const [deliveryType, setDeliveryType] = useState<TaxServiceType>('percent');
+  const [vatValue, setVatValue] = useState('');
+  const [vatType, setVatType] = useState<TaxServiceType>('percent');
 
   const activeMembers = useMemo(
     () => (members ?? []).filter((m) => m.status === 'active' && (m.userId || m.pendingPhone)),
@@ -152,6 +186,12 @@ function EditBillItemsScreen({ route, navigation }: Props) {
         claimedBy: it.claimedBy ?? [],
       })),
     );
+    setTaxValue(bill.tax != null ? String(bill.tax) : '');
+    setTaxType(bill.taxType ?? 'percent');
+    setDeliveryValue(bill.delivery != null ? String(bill.delivery) : '');
+    setDeliveryType(bill.deliveryType ?? 'percent');
+    setVatValue(bill.vat != null ? String(bill.vat) : '');
+    setVatType(bill.vatType ?? 'percent');
     setHydrated(true);
   }, [bill, hydrated]);
 
@@ -161,21 +201,23 @@ function EditBillItemsScreen({ route, navigation }: Props) {
   );
 
   const taxAmt = useMemo(() => {
-    if (!bill || bill.tax == null) return 0;
-    return bill.taxType === 'percent' ? subtotal * bill.tax / 100 : bill.tax;
-  }, [bill, subtotal]);
+    if (!taxValue.trim()) return 0;
+    return taxType === 'percent' ? subtotal * parseNum(taxValue) / 100 : parseNum(taxValue);
+  }, [taxValue, taxType, subtotal]);
 
-  const serviceAmt = useMemo(() => {
-    if (!bill || bill.service == null) return 0;
-    return bill.serviceType === 'percent' ? subtotal * bill.service / 100 : bill.service;
-  }, [bill, subtotal]);
+  const deliveryAmt = useMemo(() => {
+    if (!deliveryValue.trim()) return 0;
+    return deliveryType === 'percent' ? subtotal * parseNum(deliveryValue) / 100 : parseNum(deliveryValue);
+  }, [deliveryValue, deliveryType, subtotal]);
 
-  const tipAmt = useMemo(() => {
-    if (!bill || bill.tip == null) return 0;
-    return bill.tipType === 'percent'
-      ? (subtotal + taxAmt + serviceAmt) * bill.tip / 100
-      : bill.tip;
-  }, [bill, subtotal, taxAmt, serviceAmt]);
+  const vatAmt = useMemo(() => {
+    if (!vatValue.trim()) return 0;
+    return vatType === 'percent'
+      ? (subtotal + taxAmt + deliveryAmt) * parseNum(vatValue) / 100
+      : parseNum(vatValue);
+  }, [vatValue, vatType, subtotal, taxAmt, deliveryAmt]);
+
+  const grandTotal = subtotal + taxAmt + deliveryAmt + vatAmt;
 
   const memberTotals = useMemo(() => {
     const totals: Record<string, number> = {};
@@ -186,7 +228,7 @@ function EditBillItemsScreen({ route, navigation }: Props) {
         totals[id] = (totals[id] ?? 0) + share;
       }
     }
-    const extras = taxAmt + serviceAmt + tipAmt;
+    const extras = taxAmt + deliveryAmt + vatAmt;
     if (extras > 0 && subtotal > 0) {
       for (const id of Object.keys(totals)) {
         const share = totals[id]! / subtotal;
@@ -194,7 +236,7 @@ function EditBillItemsScreen({ route, navigation }: Props) {
       }
     }
     return totals;
-  }, [items, taxAmt, serviceAmt, tipAmt, subtotal]);
+  }, [items, taxAmt, deliveryAmt, vatAmt, subtotal]);
 
   const handleAddItem = useCallback(() => {
     const name = newItemName.trim();
@@ -248,6 +290,12 @@ function EditBillItemsScreen({ route, navigation }: Props) {
           unitPrice: parseNum(it.price),
           claimedBy: it.claimedBy,
         })),
+        tax: taxValue.trim() ? parseNum(taxValue) : null,
+        taxType: taxValue.trim() ? taxType : null,
+        delivery: deliveryValue.trim() ? parseNum(deliveryValue) : null,
+        deliveryType: deliveryValue.trim() ? deliveryType : null,
+        vat: vatValue.trim() ? parseNum(vatValue) : null,
+        vatType: vatValue.trim() ? vatType : null,
         shares,
       }).unwrap();
       navigation.goBack();
@@ -255,7 +303,10 @@ function EditBillItemsScreen({ route, navigation }: Props) {
       Alert.alert(t('common:error'), t('editBillItems.saveFailed'));
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bill, activeMembers, memberTotals, items, billId, updateBillItems, navigation]);
+  }, [
+    bill, activeMembers, memberTotals, items, billId, updateBillItems, navigation,
+    taxValue, taxType, deliveryValue, deliveryType, vatValue, vatType,
+  ]);
 
   const handleSave = useCallback(() => {
     const unclaimedItems = items.filter((i) => i.claimedBy.length === 0);
@@ -305,41 +356,87 @@ function EditBillItemsScreen({ route, navigation }: Props) {
   const ListHeader = (
     <View style={styles.receiptHeader}>
       <Text style={[typography.caption, styles.totalLabel]}>{t('receiptSplit.grandTotalLabel')}</Text>
-      <Text style={[typography.amountLarge, styles.totalAmount]}>{formatCurrency(Number(bill.amount), bill.currency)}</Text>
+      <Text style={[typography.amountLarge, styles.totalAmount]}>{formatCurrency(grandTotal, bill.currency)}</Text>
       <Text style={[typography.labelMedium, styles.sectionTitle]}>{t('receiptSplit.chooseItemsHint')}</Text>
     </View>
   );
 
   const ListFooter = (
-    <View style={styles.addItemPanel}>
-      <Text style={[typography.labelMedium, styles.addItemTitle]}>{t('editBillItems.addItemTitle')}</Text>
-      <View style={styles.addItemRow}>
-        <TextInput
-          style={[typography.bodyMedium, styles.addItemInput, styles.addItemInputName]}
-          placeholder={t('createBill.itemNamePlaceholder')}
-          placeholderTextColor={Colors.textMuted}
-          value={newItemName}
-          onChangeText={setNewItemName}
-        />
-        <TextInput
-          style={[typography.bodyMedium, styles.addItemInput, styles.addItemInputQty]}
-          placeholder={t('createBill.qtyPlaceholder')}
-          placeholderTextColor={Colors.textMuted}
-          value={newItemQty}
-          onChangeText={setNewItemQty}
-          keyboardType="number-pad"
-        />
-        <TextInput
-          style={[typography.bodyMedium, styles.addItemInput, styles.addItemInputPrice]}
-          placeholder={t('createBill.pricePlaceholder')}
-          placeholderTextColor={Colors.textMuted}
-          value={newItemPrice}
-          onChangeText={setNewItemPrice}
-          keyboardType="decimal-pad"
-        />
-        <TouchableOpacity style={styles.addItemBtn} onPress={handleAddItem} activeOpacity={0.8}>
-          <PlusIcon size={18} color={Colors.textOnPrimary} />
-        </TouchableOpacity>
+    <View>
+      <View style={styles.extrasPanel}>
+        <Text style={[typography.labelMedium, styles.extrasLabel]}>{t('createBill.taxLabel')}</Text>
+        <View style={styles.amountTypeRow}>
+          <TextInput
+            style={[typography.bodyLarge, styles.extrasInput, styles.flex1]}
+            value={taxValue}
+            onChangeText={setTaxValue}
+            placeholder={taxType === 'percent' ? t('createBill.taxPlaceholderPercent') : t('createBill.taxPlaceholderAmount')}
+            placeholderTextColor={Colors.textMuted}
+            keyboardType="decimal-pad"
+            textAlign={inputAlign}
+          />
+          <AmountTypeToggle value={taxType} onChange={setTaxType} />
+        </View>
+
+        <Text style={[typography.labelMedium, styles.extrasLabel]}>{t('createBill.vatLabel')}</Text>
+        <View style={styles.amountTypeRow}>
+          <TextInput
+            style={[typography.bodyLarge, styles.extrasInput, styles.flex1]}
+            value={vatValue}
+            onChangeText={setVatValue}
+            placeholder={vatType === 'percent' ? t('createBill.vatPlaceholderPercent') : t('createBill.vatPlaceholderAmount')}
+            placeholderTextColor={Colors.textMuted}
+            keyboardType="decimal-pad"
+            textAlign={inputAlign}
+          />
+          <AmountTypeToggle value={vatType} onChange={setVatType} />
+        </View>
+
+        <Text style={[typography.labelMedium, styles.extrasLabel]}>{t('createBill.deliveryLabel')}</Text>
+        <View style={styles.amountTypeRow}>
+          <TextInput
+            style={[typography.bodyLarge, styles.extrasInput, styles.flex1]}
+            value={deliveryValue}
+            onChangeText={setDeliveryValue}
+            placeholder={deliveryType === 'percent' ? t('createBill.deliveryPlaceholderPercent') : t('createBill.deliveryPlaceholderAmount')}
+            placeholderTextColor={Colors.textMuted}
+            keyboardType="decimal-pad"
+            textAlign={inputAlign}
+          />
+          <AmountTypeToggle value={deliveryType} onChange={setDeliveryType} />
+        </View>
+      </View>
+
+      <View style={styles.addItemPanel}>
+        <Text style={[typography.labelMedium, styles.addItemTitle]}>{t('editBillItems.addItemTitle')}</Text>
+        <View style={styles.addItemRow}>
+          <TextInput
+            style={[typography.bodyMedium, styles.addItemInput, styles.addItemInputName]}
+            placeholder={t('createBill.itemNamePlaceholder')}
+            placeholderTextColor={Colors.textMuted}
+            value={newItemName}
+            onChangeText={setNewItemName}
+          />
+          <TextInput
+            style={[typography.bodyMedium, styles.addItemInput, styles.addItemInputQty]}
+            placeholder={t('createBill.qtyPlaceholder')}
+            placeholderTextColor={Colors.textMuted}
+            value={newItemQty}
+            onChangeText={setNewItemQty}
+            keyboardType="number-pad"
+          />
+          <TextInput
+            style={[typography.bodyMedium, styles.addItemInput, styles.addItemInputPrice]}
+            placeholder={t('createBill.pricePlaceholder')}
+            placeholderTextColor={Colors.textMuted}
+            value={newItemPrice}
+            onChangeText={setNewItemPrice}
+            keyboardType="decimal-pad"
+          />
+          <TouchableOpacity style={styles.addItemBtn} onPress={handleAddItem} activeOpacity={0.8}>
+            <PlusIcon size={18} color={Colors.textOnPrimary} />
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -446,6 +543,39 @@ const styles = StyleSheet.create({
 
   unclaimedNote: { color: Colors.danger, textAlign: 'left', marginTop: 6 },
   splitNote: { color: Colors.textMuted, textAlign: 'left', marginTop: 4 },
+
+  extrasPanel: {
+    backgroundColor: Colors.surface,
+    marginHorizontal: 16,
+    marginTop: 4,
+    marginBottom: 10,
+    borderRadius: Radius.xl,
+    padding: 14,
+  },
+  extrasLabel: { color: Colors.textSecondary, marginBottom: 6, textAlign: 'right' },
+  amountTypeRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
+  extrasInput: {
+    backgroundColor: Colors.background,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    paddingHorizontal: 14,
+    paddingVertical: Platform.OS === 'ios' ? 13 : 10,
+    color: Colors.text,
+  },
+  flex1: { flex: 1 },
+  toggle: {
+    flexDirection: 'row',
+    backgroundColor: Colors.background,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    overflow: 'hidden',
+  },
+  toggleBtn: { paddingHorizontal: 12, paddingVertical: 10 },
+  toggleBtnActive: { backgroundColor: Colors.primary },
+  toggleText: { color: Colors.textSecondary },
+  toggleTextActive: { color: Colors.textOnPrimary },
 
   addItemPanel: {
     backgroundColor: Colors.surface,

@@ -20,7 +20,26 @@
     "yourGroups": "مجموعاتك",
     "viewAll": "عرض الكل",
     "cardMeta": "{{members}} عضو · {{bills}} فاتورة مفتوحة",
-    "cardMetaNoBills": "{{members}} عضو"
+    "cardMetaNoBills": "{{members}} عضو",
+    "cardMembersOnly": "{{count}} أعضاء"
+  },
+  "contacts": {
+    "pickerTitle": "اختر من جهات الاتصال",
+    "searchPlaceholder": "ابحث في جهات الاتصال…",
+    "empty": "لا توجد جهات اتصال بأرقام هواتف",
+    "confirm": "إضافة {{count}}"
+  },
+  "notifications": {
+    "title": "الإشعارات",
+    "subtitle": "موافقات الدفع ودعوات المجموعات",
+    "approvalTitle": "{{name}} دفع {{amount}}",
+    "approvalSubtitle": "أكّد استلامك لهذا الدفع",
+    "viewBill": "عرض",
+    "confirmPayment": "موافقة",
+    "confirmFailed": "تعذّر تأكيد الدفع",
+    "emptyTitle": "كل شيء تمام",
+    "emptySubtitle": "موافقات الدفع والدعوات هتظهر هنا",
+    "viewInvitations": "دعوات المجموعات"
   },
   "myCircle": {
     "peopleCount": "{{count}} أشخاص",
@@ -28,6 +47,8 @@
     "growTitle": "كبّر دائرتك",
     "growSubtitle": "ضيف حد برقم تليفونه — هينضم كـ \"+1\" لو لسه مش على +one",
     "addButton": "إضافة",
+    "fromContacts": "جهات الاتصال",
+    "fromContactsTitle": "إضافة من جهات الاتصال",
     "inCircleHeader": "في دائرتك",
     "onPlusOne": "على +one",
     "pendingHeader": "مدعوّين",
@@ -163,7 +184,8 @@
     "subtitle": "سيتم إضافة المستخدمين المسجّلين فوراً، وسيتلقى الباقون رابط دعوة عبر SMS",
     "phonePlaceholder": "+20 10 XXXX XXXX",
     "sendCta": "إرسال",
-    "invitationsWord": "دعوة"
+    "invitationsWord": "دعوة",
+    "fromContacts": "إضافة من جهات الاتصال"
   },
   "invitations": {
     "invitedToJoin": "تمت دعوتك للانضمام",

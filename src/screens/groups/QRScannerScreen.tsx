@@ -78,8 +78,8 @@ function QRScannerScreen({ route, navigation }: Props) {
             lineItems: result.bill.lineItems,
             tax: result.bill.tax,
             taxType: result.bill.taxType,
-            service: result.bill.service,
-            serviceType: result.bill.serviceType,
+            delivery: result.bill.delivery,
+            deliveryType: result.bill.deliveryType,
             captureMethod: 'qr',
             sourceRef: result.bill.sourceRef,
           };

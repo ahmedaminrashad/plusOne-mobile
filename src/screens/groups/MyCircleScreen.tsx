@@ -19,8 +19,11 @@ import { useTypography } from '../../hooks/useTypography';
 import { useInputTextAlign } from '../../utils/rtl';
 import Avatar from '../../components/common/Avatar';
 import Button from '../../components/common/Button';
+import ContactPickerModal from '../../components/common/ContactPickerModal';
 import { PeopleIcon, ChevronLeftIcon, SearchIcon, CloseIcon, AddPersonIcon } from '../../components/icons';
 import { useGetMyCircleQuery, useAddFriendMutation, useRemoveFriendMutation, Friend } from '../../store/api/friendsApi';
+import { DeviceContact } from '../../utils/contacts';
+import { formatPhone } from '../../utils/validation';
 
 type Props = AppScreenProps<'MyCircle'>;
 
@@ -34,6 +37,7 @@ function MyCircleScreen({ navigation }: Props) {
 
   const [query, setQuery] = useState('');
   const [addModalVisible, setAddModalVisible] = useState(false);
+  const [contactPickerOpen, setContactPickerOpen] = useState(false);
   const [newPhone, setNewPhone] = useState('');
 
   const friendName = (f: Friend) => f.friend?.displayName ?? f.displayName ?? f.pendingPhone ?? '';
@@ -53,13 +57,31 @@ function MyCircleScreen({ navigation }: Props) {
     const phone = newPhone.trim();
     if (!phone) return;
     try {
-      await addFriend({ phone }).unwrap();
+      await addFriend({ phone: formatPhone(phone) }).unwrap();
       setNewPhone('');
       setAddModalVisible(false);
     } catch {
       Alert.alert(t('common:error'), t('myCircle.addFailed'));
     }
   }, [newPhone, addFriend, t]);
+
+  const handleContactsPicked = useCallback(async (contacts: DeviceContact[]) => {
+    setContactPickerOpen(false);
+    let failed = 0;
+    for (const contact of contacts) {
+      try {
+        await addFriend({
+          phone: contact.phone,
+          displayName: contact.name,
+        }).unwrap();
+      } catch {
+        failed += 1;
+      }
+    }
+    if (failed > 0) {
+      Alert.alert(t('common:error'), t('myCircle.addFailed'));
+    }
+  }, [addFriend, t]);
 
   const handleRemove = useCallback((friend: Friend) => {
     Alert.alert(
@@ -142,9 +164,16 @@ function MyCircleScreen({ navigation }: Props) {
           <Text style={[typography.labelLarge, styles.growTitle]}>{t('myCircle.growTitle')}</Text>
           <Text style={[typography.bodySmall, styles.growSubtitle]}>{t('myCircle.growSubtitle')}</Text>
         </View>
-        <TouchableOpacity style={styles.growBtn} onPress={() => setAddModalVisible(true)}>
-          <Text style={[typography.labelLarge, styles.growBtnText]}>{t('myCircle.addButton')}</Text>
-        </TouchableOpacity>
+        <View style={styles.growActions}>
+          <TouchableOpacity style={styles.growBtnOutline} onPress={() => setContactPickerOpen(true)}>
+            <Text style={[typography.labelMedium, styles.growBtnOutlineText]}>
+              {t('myCircle.fromContacts', { defaultValue: 'Contacts' })}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.growBtn} onPress={() => setAddModalVisible(true)}>
+            <Text style={[typography.labelLarge, styles.growBtnText]}>{t('myCircle.addButton')}</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {members.length === 0 ? (
@@ -194,6 +223,13 @@ function MyCircleScreen({ navigation }: Props) {
           </View>
         </View>
       </Modal>
+
+      <ContactPickerModal
+        visible={contactPickerOpen}
+        onClose={() => setContactPickerOpen(false)}
+        onConfirm={handleContactsPicked}
+        title={t('myCircle.fromContactsTitle', { defaultValue: 'Add from contacts' })}
+      />
     </SafeAreaView>
   );
 }
@@ -233,6 +269,16 @@ const styles = StyleSheet.create({
   growInfo: { flex: 1 },
   growTitle: { color: Colors.text },
   growSubtitle: { color: Colors.warningDark, marginTop: 2 },
+  growActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  growBtnOutline: {
+    borderRadius: Radius.pill,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: Colors.accent,
+    backgroundColor: Colors.surface,
+  },
+  growBtnOutlineText: { color: Colors.accent },
   growBtn: { backgroundColor: Colors.accent, borderRadius: Radius.pill, paddingHorizontal: 16, paddingVertical: 10 },
   growBtnText: { color: Colors.textOnPrimary },
 

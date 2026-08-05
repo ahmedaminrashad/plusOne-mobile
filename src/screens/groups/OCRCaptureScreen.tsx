@@ -17,10 +17,7 @@ import { AppScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
-import { API_BASE_URL } from '../../config';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../store';
-import { PrefilledBillData } from '../../types/models';
+import { recognizeReceiptImage } from '../../utils/localOcr';
 
 type Props = AppScreenProps<'OCRCapture'>;
 
@@ -30,7 +27,6 @@ function OCRCaptureScreen({ route, navigation }: Props) {
   const { groupId, groupName } = route.params;
   const [capturedUri, setCapturedUri] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
-  const accessToken = useSelector((s: RootState) => s.auth.accessToken);
 
   const requestCameraPermission = useCallback(async (): Promise<boolean> => {
     if (Platform.OS === 'ios') return true;
@@ -73,58 +69,33 @@ function OCRCaptureScreen({ route, navigation }: Props) {
         }
       },
     );
-  }, [requestCameraPermission]);
+  }, [requestCameraPermission, t]);
 
   const handleProcess = useCallback(async () => {
     if (!capturedUri) return;
     setProcessing(true);
 
     try {
-      const formData = new FormData();
-      formData.append('image', {
-        uri: capturedUri,
-        type: 'image/jpeg',
-        name: 'receipt.jpg',
-      } as any);
+      const prefilledData = await recognizeReceiptImage(capturedUri);
+      const hasItems = (prefilledData.lineItems?.length ?? 0) > 0;
 
-      const res = await fetch(`${API_BASE_URL}/bills/group/${groupId}/parse-receipt`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${accessToken}` },
-        body: formData,
-      });
-
-      const data = await res.json();
-
-      if (data.success && data.bill) {
-        const prefilledData: PrefilledBillData = {
-          venueName: data.bill.venueName,
-          lineItems: data.bill.lineItems,
-          tax: data.bill.tax,
-          taxType: data.bill.taxType,
-          service: data.bill.service,
-          serviceType: data.bill.serviceType,
-          captureMethod: 'ocr',
-          sourceRef: data.bill.sourceRef,
-        };
-        navigation.replace('AddBill', { groupId, groupName, prefilledData });
+      if (!hasItems) {
+        Alert.alert(
+          t('ocrCapture.processFailedTitle'),
+          t('ocrCapture.ocrReadFailedMessage'),
+          [
+            { text: t('ocrCapture.manualEntryButton'), onPress: () => navigation.replace('AddBill', { groupId, groupName }) },
+            { text: t('common:retry'), onPress: () => { setCapturedUri(null); } },
+          ],
+        );
         return;
       }
 
-      // OCR service not configured or failed — go to manual
-      Alert.alert(
-        t('ocrCapture.processFailedTitle'),
-        data.reason === 'OCR service not configured'
-          ? t('ocrCapture.ocrNotConfiguredMessage')
-          : t('ocrCapture.ocrReadFailedMessage'),
-        [
-          { text: t('ocrCapture.manualEntryButton'), onPress: () => navigation.replace('AddBill', { groupId, groupName }) },
-          { text: t('common:retry'), onPress: () => { setCapturedUri(null); } },
-        ],
-      );
+      navigation.replace('AddBill', { groupId, groupName, prefilledData });
     } catch {
       Alert.alert(
-        t('ocrCapture.connectionFailedTitle'),
-        t('ocrCapture.connectionFailedMessage'),
+        t('ocrCapture.processFailedTitle'),
+        t('ocrCapture.ocrReadFailedMessage'),
         [
           { text: t('ocrCapture.manualEntryButton'), onPress: () => navigation.replace('AddBill', { groupId, groupName }) },
           { text: t('common:retry'), onPress: () => { setCapturedUri(null); } },
@@ -133,7 +104,7 @@ function OCRCaptureScreen({ route, navigation }: Props) {
     } finally {
       setProcessing(false);
     }
-  }, [capturedUri, groupId, groupName, accessToken, navigation, t]);
+  }, [capturedUri, groupId, groupName, navigation, t]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -144,7 +115,9 @@ function OCRCaptureScreen({ route, navigation }: Props) {
             {processing ? (
               <View style={styles.processingRow}>
                 <ActivityIndicator color={Colors.primary} />
-                <Text style={[typography.bodyLarge, styles.processingText]}>{t('ocrCapture.processingText')}</Text>
+                <Text style={[typography.bodyLarge, styles.processingText]}>
+                  {t('ocrCapture.processingLocalText', { defaultValue: 'Reading receipt on device…' })}
+                </Text>
               </View>
             ) : (
               <>
@@ -171,7 +144,9 @@ function OCRCaptureScreen({ route, navigation }: Props) {
           <View style={styles.captureActions}>
             <Text style={[typography.headingLarge, styles.captureTitle]}>{t('ocrCapture.captureTitle')}</Text>
             <Text style={[typography.bodyLarge, styles.captureSub]}>
-              {t('ocrCapture.captureSubtitle')}
+              {t('ocrCapture.captureLocalSubtitle', {
+                defaultValue: 'Take a clear photo. Text is read on your phone with Tesseract — no upload required.',
+              })}
             </Text>
             <TouchableOpacity style={styles.captureBtn} onPress={handleCapture}>
               <Text style={[typography.labelLarge, styles.captureBtnText]}>{t('ocrCapture.captureButton')}</Text>
@@ -192,7 +167,6 @@ export default memo(OCRCaptureScreen);
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-
   captureContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 24 },
   guideFrame: {
     width: 168,
@@ -204,7 +178,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   guideHint: { color: Colors.textMuted, textAlign: 'center', paddingHorizontal: 12 },
-
   captureActions: { alignItems: 'center', gap: 12, width: '100%' },
   captureTitle: { color: Colors.text },
   captureSub: { color: Colors.textSecondary, textAlign: 'center' },
@@ -217,7 +190,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   captureBtnText: { color: '#fff' },
-
   previewContainer: { flex: 1 },
   previewImage: { flex: 1, backgroundColor: '#000' },
   previewActions: {

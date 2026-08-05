@@ -67,8 +67,6 @@ function SecurityScreen({ navigation }: Props) {
     }
   }, [t]);
 
-  const score = biometrics && loginAlerts ? 8 : loginAlerts ? 5 : 3;
-
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.primaryDark} />
@@ -82,17 +80,6 @@ function SecurityScreen({ navigation }: Props) {
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <View style={styles.scoreCard}>
-          <View style={styles.scoreRing}>
-            <Text style={styles.scoreValue}>{score}</Text>
-            <Text style={styles.scoreMax}>/10</Text>
-          </View>
-          <View style={styles.scoreInfo}>
-            <Text style={styles.scoreLabel}>{t('security.securityScoreLabel')}</Text>
-            <Text style={styles.scoreHint}>{t('security.securityScoreHint')}</Text>
-          </View>
-        </View>
-
         <View style={styles.card}>
           <ToggleRow
             icon={BellIcon}
@@ -160,25 +147,6 @@ const styles = StyleSheet.create({
   backBtnText: { color: Colors.secondary, fontSize: 15, fontWeight: '600' },
   headerTitle: { fontSize: 22, fontWeight: '800', color: '#fff' },
   scroll: { padding: 16, paddingBottom: 40 },
-  scoreCard: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: Colors.surface, borderRadius: 18,
-    padding: 18, marginBottom: 20,
-    shadowColor: Colors.primaryDark, shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 4 }, shadowRadius: 12,
-    elevation: 4, borderWidth: 1, borderColor: Colors.border, gap: 16,
-  },
-  scoreRing: {
-    width: 68, height: 68, borderRadius: 34,
-    borderWidth: 4, borderColor: Colors.secondary,
-    justifyContent: 'center', alignItems: 'center',
-    flexDirection: 'row',
-  },
-  scoreValue: { fontSize: 24, fontWeight: '800', color: Colors.text },
-  scoreMax: { fontSize: 13, color: Colors.textMuted, alignSelf: 'flex-end', marginBottom: 6 },
-  scoreInfo: { flex: 1 },
-  scoreLabel: { fontSize: 16, fontWeight: '700', color: Colors.text },
-  scoreHint: { fontSize: 12, color: Colors.textSecondary, marginTop: 2, lineHeight: 18 },
   card: {
     backgroundColor: Colors.surface, borderRadius: 16,
     overflow: 'hidden', marginBottom: 20,

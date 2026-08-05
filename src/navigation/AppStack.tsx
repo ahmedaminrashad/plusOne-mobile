@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AppStackParamList } from '../types/navigation';
 import HomeScreen from '../screens/groups/HomeScreen';
+import NotificationsScreen from '../screens/groups/NotificationsScreen';
 import InvitationsScreen from '../screens/groups/InvitationsScreen';
 import CreateGroupScreen from '../screens/groups/CreateGroupScreen';
 import GroupDetailScreen from '../screens/groups/GroupDetailScreen';
@@ -38,6 +39,7 @@ export default function AppStack() {
         contentStyle: { backgroundColor: Colors.background },
       }}>
       <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Invitations" component={InvitationsScreen} options={{ title: t('appStack.invitationsTitle') }} />
       <Stack.Screen name="CreateGroup" component={CreateGroupScreen} options={{ headerShown: false }} />
       <Stack.Screen name="GroupDetail" component={GroupDetailScreen} options={{ headerShown: false }} />

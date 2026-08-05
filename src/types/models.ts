@@ -67,10 +67,10 @@ export interface Bill {
   lineItems: BillLineItem[] | null;
   tax: number | null;
   taxType: TaxServiceType | null;
-  service: number | null;
-  serviceType: TaxServiceType | null;
-  tip: number | null;
-  tipType: TaxServiceType | null;
+  delivery: number | null;
+  deliveryType: TaxServiceType | null;
+  vat: number | null;
+  vatType: TaxServiceType | null;
   closedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -132,8 +132,10 @@ export interface PrefilledBillData {
   lineItems?: BillLineItem[];
   tax?: number;
   taxType?: TaxServiceType;
-  service?: number;
-  serviceType?: TaxServiceType;
+  delivery?: number;
+  deliveryType?: TaxServiceType;
+  vat?: number;
+  vatType?: TaxServiceType;
   captureMethod?: CaptureMethod;
   sourceRef?: string;
 }
@@ -145,10 +147,10 @@ export interface ParsedReceiptData {
   items: { id?: string; name: string; price: number; qty?: number }[];
   tax?: number;
   taxType?: TaxServiceType;
-  service?: number;
-  serviceType?: TaxServiceType;
-  tip?: number;
-  tipType?: TaxServiceType;
+  delivery?: number;
+  deliveryType?: TaxServiceType;
+  vat?: number;
+  vatType?: TaxServiceType;
   grandTotal?: number;
   captureMethod?: CaptureMethod;
   sourceRef?: string;

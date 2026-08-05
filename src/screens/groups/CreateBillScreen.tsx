@@ -89,10 +89,10 @@ function CreateBillScreen({ route, navigation }: Props) {
   });
   const [taxValue, setTaxValue] = useState(prefilledData?.tax != null ? String(prefilledData.tax) : '');
   const [taxType, setTaxType] = useState<TaxServiceType>(prefilledData?.taxType ?? 'percent');
-  const [serviceValue, setServiceValue] = useState(prefilledData?.service != null ? String(prefilledData.service) : '');
-  const [serviceType, setServiceType] = useState<TaxServiceType>(prefilledData?.serviceType ?? 'percent');
-  const [tipValue, setTipValue] = useState('');
-  const [tipType, setTipType] = useState<TaxServiceType>('percent');
+  const [deliveryValue, setDeliveryValue] = useState(prefilledData?.delivery != null ? String(prefilledData.delivery) : '');
+  const [deliveryType, setDeliveryType] = useState<TaxServiceType>(prefilledData?.deliveryType ?? 'percent');
+  const [vatValue, setVatValue] = useState(prefilledData?.vat != null ? String(prefilledData.vat) : '');
+  const [vatType, setVatType] = useState<TaxServiceType>(prefilledData?.vatType ?? 'percent');
   const [grandTotalOverride, setGrandTotalOverride] = useState('');
   const [paidByUserId, setPaidByUserId] = useState('');
   const [payerPickerVisible, setPayerPickerVisible] = useState(false);
@@ -113,13 +113,13 @@ function CreateBillScreen({ route, navigation }: Props) {
   const taxAmt = taxValue
     ? taxType === 'percent' ? subtotal * parseNum(taxValue) / 100 : parseNum(taxValue)
     : 0;
-  const serviceAmt = serviceValue
-    ? serviceType === 'percent' ? subtotal * parseNum(serviceValue) / 100 : parseNum(serviceValue)
+  const deliveryAmt = deliveryValue
+    ? deliveryType === 'percent' ? subtotal * parseNum(deliveryValue) / 100 : parseNum(deliveryValue)
     : 0;
-  const tipAmt = tipValue
-    ? tipType === 'percent' ? (subtotal + taxAmt + serviceAmt) * parseNum(tipValue) / 100 : parseNum(tipValue)
+  const vatAmt = vatValue
+    ? vatType === 'percent' ? (subtotal + taxAmt + deliveryAmt) * parseNum(vatValue) / 100 : parseNum(vatValue)
     : 0;
-  const calculatedTotal = subtotal + taxAmt + serviceAmt + tipAmt;
+  const calculatedTotal = subtotal + taxAmt + deliveryAmt + vatAmt;
   const hasOverride = grandTotalOverride.trim().length > 0;
   const grandTotal = hasOverride ? parseNum(grandTotalOverride) : calculatedTotal;
   const totalMismatch = hasOverride && Math.abs(grandTotal - calculatedTotal) > 0.01;
@@ -184,10 +184,10 @@ function CreateBillScreen({ route, navigation }: Props) {
       })),
       tax: taxValue ? parseNum(taxValue) : undefined,
       taxType: taxValue ? taxType : undefined,
-      service: serviceValue ? parseNum(serviceValue) : undefined,
-      serviceType: serviceValue ? serviceType : undefined,
-      tip: tipValue ? parseNum(tipValue) : undefined,
-      tipType: tipValue ? tipType : undefined,
+      delivery: deliveryValue ? parseNum(deliveryValue) : undefined,
+      deliveryType: deliveryValue ? deliveryType : undefined,
+      vat: vatValue ? parseNum(vatValue) : undefined,
+      vatType: vatValue ? vatType : undefined,
       grandTotal: hasOverride ? grandTotal : undefined,
       captureMethod: prefilledData?.captureMethod ?? 'manual',
       sourceRef: prefilledData?.sourceRef,
@@ -200,7 +200,7 @@ function CreateBillScreen({ route, navigation }: Props) {
     });
   }, [
     canContinue, isLumpSum, lumpSumTotal, items, venueName, taxValue, taxType,
-    serviceValue, serviceType, tipValue, tipType, hasOverride, grandTotal,
+    deliveryValue, deliveryType, vatValue, vatType, hasOverride, grandTotal,
     paidByUserId, groupId, groupName, prefilledData, createBill, navigation,
   ]);
 
@@ -344,34 +344,34 @@ function CreateBillScreen({ route, navigation }: Props) {
               <AmountTypeToggle value={taxType} onChange={setTaxType} />
             </View>
 
-            {/* Service */}
-            <Text style={[typography.labelMedium, styles.sectionLabel]}>{t('createBill.serviceLabel')}</Text>
+            {/* Delivery */}
+            <Text style={[typography.labelMedium, styles.sectionLabel]}>{t('createBill.deliveryLabel')}</Text>
             <View style={styles.amountTypeRow}>
               <TextInput
                 style={[typography.bodyLarge, styles.input, styles.flex1]}
-                value={serviceValue}
-                onChangeText={setServiceValue}
-                placeholder={serviceType === 'percent' ? t('createBill.servicePlaceholderPercent') : t('createBill.servicePlaceholderAmount')}
+                value={deliveryValue}
+                onChangeText={setDeliveryValue}
+                placeholder={deliveryType === 'percent' ? t('createBill.deliveryPlaceholderPercent') : t('createBill.deliveryPlaceholderAmount')}
                 placeholderTextColor={Colors.textMuted}
                 keyboardType="decimal-pad"
                 textAlign={inputAlign}
               />
-              <AmountTypeToggle value={serviceType} onChange={setServiceType} />
+              <AmountTypeToggle value={deliveryType} onChange={setDeliveryType} />
             </View>
 
-            {/* Tip */}
-            <Text style={[typography.labelMedium, styles.sectionLabel]}>{t('createBill.tipLabel')}</Text>
+            {/* VAT */}
+            <Text style={[typography.labelMedium, styles.sectionLabel]}>{t('createBill.vatLabel')}</Text>
             <View style={styles.amountTypeRow}>
               <TextInput
                 style={[typography.bodyLarge, styles.input, styles.flex1]}
-                value={tipValue}
-                onChangeText={setTipValue}
-                placeholder={tipType === 'percent' ? t('createBill.tipPlaceholderPercent') : t('createBill.tipPlaceholderAmount')}
+                value={vatValue}
+                onChangeText={setVatValue}
+                placeholder={vatType === 'percent' ? t('createBill.vatPlaceholderPercent') : t('createBill.vatPlaceholderAmount')}
                 placeholderTextColor={Colors.textMuted}
                 keyboardType="decimal-pad"
                 textAlign={inputAlign}
               />
-              <AmountTypeToggle value={tipType} onChange={setTipType} />
+              <AmountTypeToggle value={vatType} onChange={setVatType} />
             </View>
 
             {/* Grand total */}
