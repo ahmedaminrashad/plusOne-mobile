@@ -8,7 +8,7 @@ EXTENSION_IDENTIFIER = "com.refaat.plusone.ShareExtension"
 XCODEPROJ = "ios/PlusOne.xcodeproj"
 WORKSPACE = "ios/PlusOne.xcworkspace"
 SCHEME = "PlusOne"
-P12_PATH = File.expand_path("ci_distribution.p12")
+P12_PATH = File.expand_path(ENV["GITHUB_WORKSPACE"] ? File.join(ENV["GITHUB_WORKSPACE"], "ci_distribution.p12") : "ci_distribution.p12")
 P12_PASSWORD = "plusone-ci"
 
 platform :ios do
@@ -96,6 +96,7 @@ platform :ios do
       configuration: "Release",
       clean: true,
       export_method: "app-store",
+      xcodebuild_formatter: "",
       export_options: {
         signingStyle: "manual",
         provisioningProfiles: {
