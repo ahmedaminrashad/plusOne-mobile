@@ -7,7 +7,7 @@ import Social
 // read on next launch/foreground — see ShareIntentModule on the main app side.
 class ShareViewController: SLComposeServiceViewController {
 
-  private static let appGroupId = "group.org.reactjs.native.example.PlusOne"
+  private static let appGroupId = "group.com.refaat.plusone"
   private static let sharedTextKey = "sharedInstaPayText"
   private static let sharedImageFileNameKey = "sharedReceiptImageFileName"
 

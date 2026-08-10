@@ -8,7 +8,7 @@ import React
 @objc(ShareIntentModule)
 class ShareIntentModule: NSObject {
 
-  static let appGroupId = "group.org.reactjs.native.example.PlusOne"
+  static let appGroupId = "group.com.refaat.plusone"
   static let sharedTextKey = "sharedInstaPayText"
   static let sharedImageFileNameKey = "sharedReceiptImageFileName"
 

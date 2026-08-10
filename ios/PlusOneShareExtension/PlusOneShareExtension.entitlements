@@ -4,7 +4,7 @@
 <dict>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.org.reactjs.native.example.PlusOne</string>
+		<string>group.com.refaat.plusone</string>
 	</array>
 </dict>
 </plist>

@@ -1,0 +1,2 @@
+app_identifier("com.refaat.plusone")
+team_id(ENV["APPLE_TEAM_ID"])
