@@ -113,6 +113,75 @@ platform :ios do
     )
   end
 
+  desc "Invite an external TestFlight tester by email (TESTFLIGHT_TESTER_EMAIL)"
+  lane :invite_tester do |options|
+    ensure_env_vars(
+      env_vars: [
+        "APP_STORE_CONNECT_KEY_ID",
+        "APP_STORE_CONNECT_ISSUER_ID",
+        "APP_STORE_CONNECT_API_KEY"
+      ]
+    )
+
+    email = (options[:email] || ENV["TESTFLIGHT_TESTER_EMAIL"]).to_s.strip
+    UI.user_error!("Pass email: or set TESTFLIGHT_TESTER_EMAIL") if email.empty?
+
+    first_name = (options[:first_name] || ENV["TESTFLIGHT_TESTER_FIRST_NAME"] || email.split("@").first || "Tester").to_s
+    last_name = (options[:last_name] || ENV["TESTFLIGHT_TESTER_LAST_NAME"] || "User").to_s
+    group_name = (options[:group] || ENV["TESTFLIGHT_GROUP"] || "External Testers").to_s
+
+    app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
+      key_content: ENV["APP_STORE_CONNECT_API_KEY"],
+      is_key_content_base64: true
+    )
+
+    require "spaceship"
+
+    token = Spaceship::ConnectAPI::Token.create(
+      key_id: ENV["APP_STORE_CONNECT_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
+      key: Base64.decode64(ENV["APP_STORE_CONNECT_API_KEY"])
+    )
+    Spaceship::ConnectAPI.token = token
+
+    app = Spaceship::ConnectAPI::App.find(APP_IDENTIFIER)
+    UI.user_error!("App #{APP_IDENTIFIER} not found in App Store Connect") unless app
+
+    groups = Spaceship::ConnectAPI.get_beta_groups(
+      filter: { app: app.id, name: group_name }
+    ).to_a
+    group = groups.first
+    unless group
+      UI.message("Creating beta group '#{group_name}'")
+      group = Spaceship::ConnectAPI.create_beta_group(
+        app_id: app.id,
+        group_name: group_name,
+        is_internal_group: false,
+        has_access_to_all_builds: true
+      )
+    end
+
+    existing = Spaceship::ConnectAPI.get_beta_testers(filter: { email: email }).to_a.first
+    if existing
+      UI.message("Adding existing tester #{email} to '#{group_name}'")
+      Spaceship::ConnectAPI.add_beta_tester_to_group(
+        beta_group_id: group.id,
+        beta_tester_ids: [existing.id]
+      )
+    else
+      UI.message("Inviting #{email} to '#{group_name}'")
+      Spaceship::ConnectAPI::BetaTester.create(
+        email: email,
+        first_name: first_name,
+        last_name: last_name,
+        group_ids: [group.id]
+      )
+    end
+    UI.success("Invited #{email} to TestFlight group '#{group_name}'")
+  end
+
   private_lane :install_distribution_certificate do |options|
     api_key = options[:api_key]
     keychain_path = options[:keychain_path]
