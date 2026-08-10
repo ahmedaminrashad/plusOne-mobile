@@ -44,13 +44,14 @@ platform :ios do
 
     keychain_name = ENV.fetch("MATCH_KEYCHAIN_NAME", "login.keychain")
     keychain_password = ENV.fetch("MATCH_KEYCHAIN_PASSWORD", "")
+    keychain_path = File.expand_path("~/Library/Keychains/#{keychain_name}-db")
 
     # force: true creates a new cert on this runner so the private key exists in CI.
     # Needed after a previous CI attempt created a portal cert without installing it.
     get_certificates(
       api_key: api_key,
       force: true,
-      keychain_path: keychain_name,
+      keychain_path: keychain_path,
       keychain_password: keychain_password
     )
 
