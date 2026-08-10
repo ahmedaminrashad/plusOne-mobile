@@ -30,6 +30,8 @@
 	<false/>
 	<key>NSCameraUsageDescription</key>
 	<string>PlusOne needs camera access to capture receipts for OCR.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>PlusOne needs photo library access so you can share receipts, chat images, and profile photos.</string>
 	<key>NSContactsUsageDescription</key>
 	<string>PlusOne needs contacts access so you can invite people you already know to groups and your Circle.</string>
 	<key>NSAppTransportSecurity</key>
