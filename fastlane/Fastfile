@@ -149,27 +149,20 @@ platform :ios do
     app = Spaceship::ConnectAPI::App.find(APP_IDENTIFIER)
     UI.user_error!("App #{APP_IDENTIFIER} not found in App Store Connect") unless app
 
-    groups = Spaceship::ConnectAPI.get_beta_groups(
-      filter: { app: app.id, name: group_name }
-    ).to_a
-    group = groups.first
+    group = app.get_beta_groups(filter: { name: group_name }).first
     unless group
       UI.message("Creating beta group '#{group_name}'")
-      group = Spaceship::ConnectAPI.create_beta_group(
-        app_id: app.id,
+      group = app.create_beta_group(
         group_name: group_name,
-        is_internal_group: false,
-        has_access_to_all_builds: true
+        is_internal_group: false
       )
     end
+    UI.user_error!("Could not find or create beta group '#{group_name}'") unless group&.id
 
-    existing = Spaceship::ConnectAPI.get_beta_testers(filter: { email: email }).to_a.first
+    existing = Spaceship::ConnectAPI.get_beta_testers(filter: { email: email }).first
     if existing
       UI.message("Adding existing tester #{email} to '#{group_name}'")
-      Spaceship::ConnectAPI.add_beta_tester_to_group(
-        beta_group_id: group.id,
-        beta_tester_ids: [existing.id]
-      )
+      group.add_beta_testers(beta_tester_ids: [existing.id])
     else
       UI.message("Inviting #{email} to '#{group_name}'")
       Spaceship::ConnectAPI::BetaTester.create(
