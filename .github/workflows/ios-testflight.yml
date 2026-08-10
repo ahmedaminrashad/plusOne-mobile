@@ -2,9 +2,6 @@ name: iOS TestFlight
 
 on:
   workflow_dispatch:
-  push:
-    tags:
-      - "ios-*"
 
 concurrency:
   group: ios-testflight
