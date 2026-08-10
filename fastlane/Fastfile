@@ -46,9 +46,10 @@ platform :ios do
     keychain_password = ENV.fetch("MATCH_KEYCHAIN_PASSWORD", "")
     keychain_path = File.expand_path("~/Library/Keychains/#{keychain_name}-db")
 
-    # Reuse the distribution cert already installed on this CI keychain.
+    # Ephemeral CI runners need a cert whose private key is created on this machine.
     get_certificates(
       api_key: api_key,
+      force: true,
       keychain_path: keychain_path,
       keychain_password: keychain_password
     )
