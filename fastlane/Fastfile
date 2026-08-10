@@ -162,14 +162,19 @@ platform :ios do
     existing = Spaceship::ConnectAPI.get_beta_testers(filter: { email: email }).first
     if existing
       UI.message("Adding existing tester #{email} to '#{group_name}'")
-      group.add_beta_testers(beta_tester_ids: [existing.id])
+      Spaceship::ConnectAPI.add_beta_tester_to_group(
+        beta_group_id: group.id,
+        beta_tester_ids: [existing.id]
+      )
     else
       UI.message("Inviting #{email} to '#{group_name}'")
-      Spaceship::ConnectAPI::BetaTester.create(
-        email: email,
-        first_name: first_name,
-        last_name: last_name,
-        group_ids: [group.id]
+      Spaceship::ConnectAPI.post_beta_tester_assignment(
+        beta_group_ids: [group.id],
+        attributes: {
+          email: email,
+          firstName: first_name,
+          lastName: last_name
+        }
       )
     end
     UI.success("Invited #{email} to TestFlight group '#{group_name}'")
