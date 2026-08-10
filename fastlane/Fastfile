@@ -46,15 +46,14 @@ platform :ios do
     keychain_password = ENV.fetch("MATCH_KEYCHAIN_PASSWORD", "")
     keychain_path = File.expand_path("~/Library/Keychains/#{keychain_name}-db")
 
-    # force: true creates a new cert on this runner so the private key exists in CI.
-    # Needed after a previous CI attempt created a portal cert without installing it.
+    # Reuse the distribution cert already installed on this CI keychain.
     get_certificates(
       api_key: api_key,
-      force: true,
       keychain_path: keychain_path,
       keychain_password: keychain_password
     )
 
+    # force: true so profiles pick up latest App ID capabilities (App Groups).
     get_provisioning_profile(
       api_key: api_key,
       app_identifier: APP_IDENTIFIER,
