@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, memo } from 'react';
+import React, { useState, useCallback, memo } from 'react';
 import {
   View,
   Text,
@@ -116,7 +116,7 @@ function OCRCaptureScreen({ route, navigation }: Props) {
               <View style={styles.processingRow}>
                 <ActivityIndicator color={Colors.primary} />
                 <Text style={[typography.bodyLarge, styles.processingText]}>
-                  {t('ocrCapture.processingLocalText', { defaultValue: 'Reading receipt on device…' })}
+                  {t('ocrCapture.processingText')}
                 </Text>
               </View>
             ) : (
@@ -144,9 +144,7 @@ function OCRCaptureScreen({ route, navigation }: Props) {
           <View style={styles.captureActions}>
             <Text style={[typography.headingLarge, styles.captureTitle]}>{t('ocrCapture.captureTitle')}</Text>
             <Text style={[typography.bodyLarge, styles.captureSub]}>
-              {t('ocrCapture.captureLocalSubtitle', {
-                defaultValue: 'Take a clear photo. Text is read on your phone with Tesseract — no upload required.',
-              })}
+              {t('ocrCapture.captureSubtitle')}
             </Text>
             <TouchableOpacity style={styles.captureBtn} onPress={handleCapture}>
               <Text style={[typography.labelLarge, styles.captureBtnText]}>{t('ocrCapture.captureButton')}</Text>

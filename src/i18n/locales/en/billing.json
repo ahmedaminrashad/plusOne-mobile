@@ -181,12 +181,12 @@
     "ocrReadFailedMessage": "Couldn't read the receipt, please enter manually.",
     "connectionFailedTitle": "Couldn't connect",
     "connectionFailedMessage": "Couldn't connect to the server. Check your internet connection and try again.",
-    "processingText": "Processing receipt...",
+    "processingText": "Reading receipt on device…",
     "processButton": "Process receipt",
     "retakePhotoButton": "Retake photo",
     "guideHint": "Fit the whole receipt · avoid shadows",
     "captureTitle": "Photo the receipt",
-    "captureSubtitle": "Take a clear photo of the receipt. The OCR service will automatically extract the items and prices.",
+    "captureSubtitle": "Take a clear photo. Text is read on your phone — no upload required. Review every line before saving.",
     "captureButton": "📷  Take photo"
   }
 }
