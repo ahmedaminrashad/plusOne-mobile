@@ -1,10 +1,15 @@
 default_platform(:ios)
 
+require "base64"
+require "shellwords"
+
 APP_IDENTIFIER = "com.refaat.plusone"
 EXTENSION_IDENTIFIER = "com.refaat.plusone.ShareExtension"
 XCODEPROJ = "ios/PlusOne.xcodeproj"
 WORKSPACE = "ios/PlusOne.xcworkspace"
 SCHEME = "PlusOne"
+P12_PATH = "ci_distribution.p12"
+P12_PASSWORD = "plusone-ci"
 
 platform :ios do
   desc "Build and upload PlusOne to TestFlight"
@@ -46,15 +51,12 @@ platform :ios do
     keychain_password = ENV.fetch("MATCH_KEYCHAIN_PASSWORD", "")
     keychain_path = File.expand_path("~/Library/Keychains/#{keychain_name}-db")
 
-    # Ephemeral CI runners need a cert whose private key is created on this machine.
-    get_certificates(
+    install_distribution_certificate(
       api_key: api_key,
-      force: true,
       keychain_path: keychain_path,
       keychain_password: keychain_password
     )
 
-    # force: true so profiles pick up latest App ID capabilities (App Groups).
     get_provisioning_profile(
       api_key: api_key,
       app_identifier: APP_IDENTIFIER,
@@ -108,5 +110,70 @@ platform :ios do
       app_identifier: APP_IDENTIFIER,
       skip_waiting_for_build_processing: true
     )
+  end
+
+  private_lane :install_distribution_certificate do |options|
+    api_key = options[:api_key]
+    keychain_path = options[:keychain_path]
+    keychain_password = options[:keychain_password]
+
+    if ENV["IOS_DISTRIBUTION_P12_BASE64"].to_s.strip.empty?
+      UI.message("No IOS_DISTRIBUTION_P12_BASE64 secret — revoking old certs and creating a new one")
+      revoke_ios_distribution_certificates
+      get_certificates(
+        api_key: api_key,
+        keychain_path: keychain_path,
+        keychain_password: keychain_password
+      )
+      export_distribution_p12(
+        keychain_path: keychain_path,
+        keychain_password: keychain_password
+      )
+    else
+      UI.message("Importing distribution certificate from IOS_DISTRIBUTION_P12_BASE64")
+      File.binwrite(P12_PATH, Base64.decode64(ENV["IOS_DISTRIBUTION_P12_BASE64"]))
+      import_certificate(
+        certificate_path: P12_PATH,
+        certificate_password: ENV.fetch("IOS_DISTRIBUTION_P12_PASSWORD", P12_PASSWORD),
+        keychain_path: keychain_path,
+        keychain_password: keychain_password
+      )
+    end
+  end
+
+  private_lane :revoke_ios_distribution_certificates do
+    require "spaceship"
+
+    token = Spaceship::ConnectAPI::Token.create(
+      key_id: ENV["APP_STORE_CONNECT_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
+      key: Base64.decode64(ENV["APP_STORE_CONNECT_API_KEY"])
+    )
+    Spaceship::ConnectAPI.token = token
+
+    types = %w[DISTRIBUTION IOS_DISTRIBUTION]
+    Spaceship::ConnectAPI::Certificate.all.each do |cert|
+      next unless types.include?(cert.certificate_type)
+
+      UI.important("Revoking distribution certificate #{cert.id} (#{cert.certificate_type})")
+      Spaceship::ConnectAPI.delete_certificate(certificate_id: cert.id)
+    end
+  end
+
+  private_lane :export_distribution_p12 do |options|
+    keychain_path = options[:keychain_path]
+    password = P12_PASSWORD
+
+    sh(
+      [
+        "security", "export",
+        "-k", keychain_path,
+        "-t", "identities",
+        "-f", "pkcs12",
+        "-P", password,
+        "-o", P12_PATH
+      ].shelljoin
+    )
+    UI.success("Exported #{P12_PATH} (password: #{P12_PASSWORD}). Upload artifact and store as GitHub secrets for future runs.")
   end
 end

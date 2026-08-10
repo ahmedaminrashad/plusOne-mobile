@@ -21,6 +21,8 @@ jobs:
       APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
       APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
       APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+      IOS_DISTRIBUTION_P12_BASE64: ${{ secrets.IOS_DISTRIBUTION_P12_BASE64 }}
+      IOS_DISTRIBUTION_P12_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_P12_PASSWORD }}
 
     steps:
       - name: Checkout
@@ -47,3 +49,12 @@ jobs:
 
       - name: Build and upload to TestFlight
         run: bundle exec fastlane ios beta
+
+      - name: Upload distribution certificate
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-distribution-p12
+          path: ci_distribution.p12
+          if-no-files-found: ignore
+          retention-days: 7
