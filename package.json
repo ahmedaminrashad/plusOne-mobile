@@ -26,7 +26,7 @@
     "react": "19.2.3",
     "react-i18next": "^17.0.9",
     "react-native": "0.86.0",
-    "react-native-camera-kit": "^18.0.0",
+    "react-native-camera-kit": "16.2.1",
     "react-native-contacts": "^8.0.10",
     "react-native-gesture-handler": "^3.0.1",
     "react-native-image-picker": "^8.2.1",
