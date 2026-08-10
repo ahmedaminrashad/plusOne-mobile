@@ -40,6 +40,14 @@ jobs:
           ruby-version: "3.3"
           bundler-cache: true
 
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "26"
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
       - name: Install JS dependencies
         run: npm ci
 
