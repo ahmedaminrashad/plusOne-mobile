@@ -176,6 +176,7 @@
     "permissionDeniedMessage": "Please grant permission to access the camera.",
     "manualEntryButton": "Manual entry",
     "cameraOpenFailed": "Couldn't open the camera. Try again.",
+    "galleryOpenFailed": "Couldn't open the photo library. Try again.",
     "processFailedTitle": "Couldn't process the image",
     "ocrNotConfiguredMessage": "The OCR service isn't currently enabled, please enter manually.",
     "ocrReadFailedMessage": "Couldn't read the receipt, please enter manually.",
@@ -184,9 +185,11 @@
     "processingText": "Reading receipt…",
     "processButton": "Process receipt",
     "retakePhotoButton": "Retake photo",
+    "chooseAnotherButton": "Choose another",
     "guideHint": "Fit the whole receipt · avoid shadows",
     "captureTitle": "Photo the receipt",
-    "captureSubtitle": "Take a clear photo. We’ll read it with OCR — you confirm every line before saving.",
-    "captureButton": "📷  Take photo"
+    "captureSubtitle": "Take a photo or choose one from your library. We’ll read it with OCR — you confirm every line before saving.",
+    "captureButton": "📷  Take photo",
+    "galleryButton": "Choose from gallery"
   }
 }

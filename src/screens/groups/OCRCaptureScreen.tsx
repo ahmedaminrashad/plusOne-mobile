@@ -12,7 +12,7 @@ import {
   Image,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { launchCamera } from 'react-native-image-picker';
+import { launchCamera, launchImageLibrary, Asset } from 'react-native-image-picker';
 import { AppScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/radius';
@@ -22,13 +22,28 @@ import { PrefilledBillData } from '../../types/models';
 
 type Props = AppScreenProps<'OCRCapture'>;
 
+type CapturedImage = {
+  uri: string;
+  fileName?: string;
+  mimeType?: string;
+};
+
 function OCRCaptureScreen({ route, navigation }: Props) {
   const { t } = useTranslation('billing');
   const typography = useTypography();
   const { groupId, groupName } = route.params;
-  const [capturedUri, setCapturedUri] = useState<string | null>(null);
+  const [captured, setCaptured] = useState<CapturedImage | null>(null);
   const [processing, setProcessing] = useState(false);
   const [parseReceipt] = useParseReceiptBillMutation();
+
+  const applyAsset = useCallback((asset?: Asset) => {
+    if (!asset?.uri) return;
+    setCaptured({
+      uri: asset.uri,
+      fileName: asset.fileName ?? 'receipt.jpg',
+      mimeType: asset.type ?? 'image/jpeg',
+    });
+  }, []);
 
   const requestCameraPermission = useCallback(async (): Promise<boolean> => {
     if (Platform.OS === 'ios') return true;
@@ -62,27 +77,40 @@ function OCRCaptureScreen({ route, navigation }: Props) {
     launchCamera(
       { mediaType: 'photo', quality: 1.0, includeBase64: false },
       (response) => {
+        if (response.didCancel) return;
         if (response.errorCode) {
           Alert.alert(t('common:error'), t('ocrCapture.cameraOpenFailed'));
           return;
         }
-        if (response.assets?.[0]?.uri) {
-          setCapturedUri(response.assets[0].uri);
-        }
+        applyAsset(response.assets?.[0]);
       },
     );
-  }, [requestCameraPermission, t]);
+  }, [requestCameraPermission, applyAsset, t]);
+
+  const handlePickGallery = useCallback(() => {
+    launchImageLibrary(
+      { mediaType: 'photo', quality: 1.0, selectionLimit: 1, includeBase64: false },
+      (response) => {
+        if (response.didCancel) return;
+        if (response.errorCode) {
+          Alert.alert(t('common:error'), t('ocrCapture.galleryOpenFailed'));
+          return;
+        }
+        applyAsset(response.assets?.[0]);
+      },
+    );
+  }, [applyAsset, t]);
 
   const handleProcess = useCallback(async () => {
-    if (!capturedUri) return;
+    if (!captured) return;
     setProcessing(true);
 
     try {
       const result = await parseReceipt({
         groupId,
-        uri: capturedUri,
-        fileName: 'receipt.jpg',
-        mimeType: 'image/jpeg',
+        uri: captured.uri,
+        fileName: captured.fileName ?? 'receipt.jpg',
+        mimeType: captured.mimeType ?? 'image/jpeg',
       }).unwrap();
 
       if (result.success && result.bill) {
@@ -107,7 +135,7 @@ function OCRCaptureScreen({ route, navigation }: Props) {
 
       Alert.alert(t('ocrCapture.processFailedTitle'), message, [
         { text: t('ocrCapture.manualEntryButton'), onPress: () => navigation.replace('AddBill', { groupId, groupName }) },
-        { text: t('common:retry'), onPress: () => { setCapturedUri(null); } },
+        { text: t('common:retry'), onPress: () => { setCaptured(null); } },
       ]);
     } catch {
       Alert.alert(
@@ -115,19 +143,19 @@ function OCRCaptureScreen({ route, navigation }: Props) {
         t('ocrCapture.connectionFailedMessage'),
         [
           { text: t('ocrCapture.manualEntryButton'), onPress: () => navigation.replace('AddBill', { groupId, groupName }) },
-          { text: t('common:retry'), onPress: () => { setCapturedUri(null); } },
+          { text: t('common:retry'), onPress: () => { setCaptured(null); } },
         ],
       );
     } finally {
       setProcessing(false);
     }
-  }, [capturedUri, groupId, groupName, navigation, parseReceipt, t]);
+  }, [captured, groupId, groupName, navigation, parseReceipt, t]);
 
   return (
     <SafeAreaView style={styles.container}>
-      {capturedUri ? (
+      {captured ? (
         <View style={styles.previewContainer}>
-          <Image source={{ uri: capturedUri }} style={styles.previewImage} resizeMode="contain" />
+          <Image source={{ uri: captured.uri }} style={styles.previewImage} resizeMode="contain" />
           <View style={styles.previewActions}>
             {processing ? (
               <View style={styles.processingRow}>
@@ -141,8 +169,8 @@ function OCRCaptureScreen({ route, navigation }: Props) {
                 <TouchableOpacity style={styles.primaryBtn} onPress={handleProcess}>
                   <Text style={[typography.labelLarge, styles.primaryBtnText]}>{t('ocrCapture.processButton')}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.secondaryBtn} onPress={() => setCapturedUri(null)}>
-                  <Text style={[typography.labelLarge, styles.secondaryBtnText]}>{t('ocrCapture.retakePhotoButton')}</Text>
+                <TouchableOpacity style={styles.secondaryBtn} onPress={() => setCaptured(null)}>
+                  <Text style={[typography.labelLarge, styles.secondaryBtnText]}>{t('ocrCapture.chooseAnotherButton')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.linkBtn}
@@ -165,6 +193,9 @@ function OCRCaptureScreen({ route, navigation }: Props) {
             </Text>
             <TouchableOpacity style={styles.captureBtn} onPress={handleCapture}>
               <Text style={[typography.labelLarge, styles.captureBtnText]}>{t('ocrCapture.captureButton')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.secondaryBtn} onPress={handlePickGallery}>
+              <Text style={[typography.labelLarge, styles.secondaryBtnText]}>{t('ocrCapture.galleryButton')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.linkBtn}
@@ -229,6 +260,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1.5,
     borderColor: Colors.border,
+    width: '100%',
   },
   secondaryBtnText: { color: Colors.text },
   linkBtn: { alignItems: 'center', paddingVertical: 8 },

@@ -176,6 +176,7 @@
     "permissionDeniedMessage": "يرجى منح الإذن للوصول إلى الكاميرا.",
     "manualEntryButton": "إدخال يدوي",
     "cameraOpenFailed": "تعذر فتح الكاميرا. حاول مرة أخرى.",
+    "galleryOpenFailed": "تعذر فتح معرض الصور. حاول مرة أخرى.",
     "processFailedTitle": "تعذر معالجة الصورة",
     "ocrNotConfiguredMessage": "خدمة OCR غير مفعّلة حالياً، يرجى الإدخال اليدوي.",
     "ocrReadFailedMessage": "تعذرت قراءة الإيصال، يرجى الإدخال اليدوي.",
@@ -184,9 +185,11 @@
     "processingText": "جارٍ قراءة الإيصال…",
     "processButton": "معالجة الإيصال",
     "retakePhotoButton": "التقاط صورة جديدة",
+    "chooseAnotherButton": "اختيار صورة أخرى",
     "guideHint": "خلي الإيصال كله في الإطار · ابعد عن الضل",
     "captureTitle": "صوّر الإيصال",
-    "captureSubtitle": "التقط صورة واضحة. هنقراها بـ OCR — وانت تأكد كل سطر قبل الحفظ.",
-    "captureButton": "📷  التقاط صورة"
+    "captureSubtitle": "التقط صورة أو اختر من المعرض. هنقراها بـ OCR — وانت تأكد كل سطر قبل الحفظ.",
+    "captureButton": "📷  التقاط صورة",
+    "galleryButton": "اختيار من المعرض"
   }
 }
