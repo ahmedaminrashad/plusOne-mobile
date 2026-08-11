@@ -181,12 +181,12 @@
     "ocrReadFailedMessage": "تعذرت قراءة الإيصال، يرجى الإدخال اليدوي.",
     "connectionFailedTitle": "تعذر الاتصال",
     "connectionFailedMessage": "تعذر الاتصال بالخادم. تحقق من الاتصال بالإنترنت وحاول مرة أخرى.",
-    "processingText": "جارٍ قراءة الإيصال على الجهاز…",
+    "processingText": "جارٍ قراءة الإيصال…",
     "processButton": "معالجة الإيصال",
     "retakePhotoButton": "التقاط صورة جديدة",
     "guideHint": "خلي الإيصال كله في الإطار · ابعد عن الضل",
     "captureTitle": "صوّر الإيصال",
-    "captureSubtitle": "التقط صورة واضحة. النص بيتقري على تليفونك — من غير رفع. راجع كل سطر قبل الحفظ.",
+    "captureSubtitle": "التقط صورة واضحة. هنقراها بـ OCR — وانت تأكد كل سطر قبل الحفظ.",
     "captureButton": "📷  التقاط صورة"
   }
 }

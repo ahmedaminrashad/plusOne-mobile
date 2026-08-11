@@ -17,7 +17,8 @@ import { AppScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
-import { recognizeReceiptImage } from '../../utils/localOcr';
+import { useParseReceiptBillMutation } from '../../store/api/billsApi';
+import { PrefilledBillData } from '../../types/models';
 
 type Props = AppScreenProps<'OCRCapture'>;
 
@@ -27,6 +28,7 @@ function OCRCaptureScreen({ route, navigation }: Props) {
   const { groupId, groupName } = route.params;
   const [capturedUri, setCapturedUri] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
+  const [parseReceipt] = useParseReceiptBillMutation();
 
   const requestCameraPermission = useCallback(async (): Promise<boolean> => {
     if (Platform.OS === 'ios') return true;
@@ -76,26 +78,41 @@ function OCRCaptureScreen({ route, navigation }: Props) {
     setProcessing(true);
 
     try {
-      const prefilledData = await recognizeReceiptImage(capturedUri);
-      const hasItems = (prefilledData.lineItems?.length ?? 0) > 0;
+      const result = await parseReceipt({
+        groupId,
+        uri: capturedUri,
+        fileName: 'receipt.jpg',
+        mimeType: 'image/jpeg',
+      }).unwrap();
 
-      if (!hasItems) {
-        Alert.alert(
-          t('ocrCapture.processFailedTitle'),
-          t('ocrCapture.ocrReadFailedMessage'),
-          [
-            { text: t('ocrCapture.manualEntryButton'), onPress: () => navigation.replace('AddBill', { groupId, groupName }) },
-            { text: t('common:retry'), onPress: () => { setCapturedUri(null); } },
-          ],
-        );
+      if (result.success && result.bill) {
+        const prefilledData: PrefilledBillData = {
+          venueName: result.bill.venueName,
+          lineItems: result.bill.lineItems,
+          tax: result.bill.tax,
+          taxType: result.bill.taxType,
+          delivery: result.bill.delivery,
+          deliveryType: result.bill.deliveryType,
+          captureMethod: 'ocr',
+          sourceRef: result.bill.sourceRef,
+        };
+        navigation.replace('AddBill', { groupId, groupName, prefilledData });
         return;
       }
 
-      navigation.replace('AddBill', { groupId, groupName, prefilledData });
+      const message =
+        result.reason?.toLowerCase().includes('not configured')
+          ? t('ocrCapture.ocrNotConfiguredMessage')
+          : t('ocrCapture.ocrReadFailedMessage');
+
+      Alert.alert(t('ocrCapture.processFailedTitle'), message, [
+        { text: t('ocrCapture.manualEntryButton'), onPress: () => navigation.replace('AddBill', { groupId, groupName }) },
+        { text: t('common:retry'), onPress: () => { setCapturedUri(null); } },
+      ]);
     } catch {
       Alert.alert(
-        t('ocrCapture.processFailedTitle'),
-        t('ocrCapture.ocrReadFailedMessage'),
+        t('ocrCapture.connectionFailedTitle'),
+        t('ocrCapture.connectionFailedMessage'),
         [
           { text: t('ocrCapture.manualEntryButton'), onPress: () => navigation.replace('AddBill', { groupId, groupName }) },
           { text: t('common:retry'), onPress: () => { setCapturedUri(null); } },
@@ -104,7 +121,7 @@ function OCRCaptureScreen({ route, navigation }: Props) {
     } finally {
       setProcessing(false);
     }
-  }, [capturedUri, groupId, groupName, navigation, t]);
+  }, [capturedUri, groupId, groupName, navigation, parseReceipt, t]);
 
   return (
     <SafeAreaView style={styles.container}>

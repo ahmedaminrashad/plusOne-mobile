@@ -60,12 +60,19 @@ interface ParsedBillResult {
     taxType?: TaxServiceType;
     delivery?: number;
     deliveryType?: TaxServiceType;
-    captureMethod: 'qr';
+    captureMethod: 'qr' | 'ocr';
     sourceRef: string;
   };
   fallback?: 'webview' | 'manual';
   url?: string;
   reason?: string;
+}
+
+interface ParseReceiptPayload {
+  groupId: string;
+  uri: string;
+  fileName?: string;
+  mimeType?: string;
 }
 
 export const billsApi = baseApi.injectEndpoints({
@@ -110,6 +117,21 @@ export const billsApi = baseApi.injectEndpoints({
         body: { payload },
       }),
     }),
+    parseReceiptBill: builder.mutation<ParsedBillResult, ParseReceiptPayload>({
+      query: ({ groupId, uri, fileName, mimeType }) => {
+        const formData = new FormData();
+        formData.append('image', {
+          uri,
+          name: fileName ?? 'receipt.jpg',
+          type: mimeType ?? 'image/jpeg',
+        } as unknown as Blob);
+        return {
+          url: `/bills/group/${groupId}/parse-receipt`,
+          method: 'POST',
+          body: formData,
+        };
+      },
+    }),
   }),
 });
 
@@ -121,4 +143,5 @@ export const {
   useUpdateBillItemsMutation,
   useCloseBillMutation,
   useParseQrBillMutation,
+  useParseReceiptBillMutation,
 } = billsApi;
