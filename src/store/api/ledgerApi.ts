@@ -18,6 +18,8 @@ export interface LedgerBillSummary {
 
 export interface GroupLedgerResponse {
   groupMonthlyTotal: number;
+  youPaidPiastres: number;
+  yourSharePiastres: number;
   currentUserNetBalance: number;
   perCounterpartBreakdown: CounterpartBreakdown[];
   bills: LedgerBillSummary[];

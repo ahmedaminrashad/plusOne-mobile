@@ -1,12 +1,13 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
-  Image,
   TouchableOpacity,
   Pressable,
   StyleSheet,
   Platform,
+  Animated,
+  Easing,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { createBottomTabNavigator, BottomTabBarProps } from '@react-navigation/bottom-tabs';
@@ -29,6 +30,16 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const { t } = useTranslation('navigation');
   const typography = useTypography();
   const [menuOpen, setMenuOpen] = useState(false);
+  const fabRotate = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(fabRotate, {
+      toValue: menuOpen ? 1 : 0,
+      duration: 360,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [menuOpen, fabRotate]);
 
   const handleHomePress = useCallback(() => {
     navigation.navigate('Home', { screen: 'Home' } as any);
@@ -46,6 +57,11 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
     setMenuOpen(false);
     navigation.navigate('Home', { screen: 'MyCircle' } as any);
   }, [navigation]);
+
+  const fabSpin = fabRotate.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '180deg'],
+  });
 
   // Indices after removing Bills/Activity: Home=0, QuickAdd=1, SettingsTab=2
   const homeActive = state.index === 0;
@@ -102,11 +118,11 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
 
         <View style={styles.fabRing} pointerEvents="box-none">
           <TouchableOpacity style={styles.fabTouchable} onPress={handleFabPress} activeOpacity={0.85} hitSlop={8}>
-            <Image
+            <Animated.Image
               source={require('../../assets/PlusOne.png')}
               tintColor={Colors.navActive}
               resizeMode="contain"
-              style={[styles.fabMark, menuOpen && styles.fabMarkRotated]}
+              style={[styles.fabMark, { transform: [{ rotate: fabSpin }] }]}
             />
           </TouchableOpacity>
         </View>
@@ -131,7 +147,7 @@ const TAB_BAR_HEIGHT = 62;
 const TAB_BAR_MARGIN = 23;
 const TAB_BAR_BOTTOM = Platform.OS === 'ios' ? 22 : 14;
 const FAB_SIZE = 54;
-const FAB_INNER_SIZE = 44;
+const FAB_INNER_SIZE = 28;
 const FAB_OVERLAP = 12;
 const TAB_BAR_WRAP_HEIGHT = TAB_BAR_HEIGHT + TAB_BAR_BOTTOM + FAB_OVERLAP;
 
@@ -195,7 +211,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
   },
   fabMark: { width: FAB_INNER_SIZE, height: FAB_INNER_SIZE },
-  fabMarkRotated: { transform: [{ rotate: '45deg' }] },
   menuBackdrop: {
     position: 'absolute',
     top: 0, left: 0, right: 0, bottom: 0,

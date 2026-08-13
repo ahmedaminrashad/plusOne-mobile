@@ -208,6 +208,7 @@
     "receiptItemCount": "{{count}} صنف",
     "receiptNoItemsYet": "لم تُضَف أصناف بعد",
     "receiptOpenCta": "عرض وإضافة أصناف ‹",
+    "receiptViewCta": "عرض الحالة ‹",
     "dateToday": "اليوم",
     "dateYesterday": "أمس"
   },

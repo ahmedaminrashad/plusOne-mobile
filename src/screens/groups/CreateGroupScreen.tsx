@@ -47,7 +47,7 @@ function CreateGroupScreen({ navigation }: Props) {
 
     try {
       const group = await createGroup({ name: trimmed, category }).unwrap();
-      navigation.replace('GroupDetail', { groupId: group.id, groupName: group.name });
+      navigation.replace('InviteMembers', { groupId: group.id });
     } catch {
       Alert.alert(t('common:error'), t('createGroup.createError'));
     }

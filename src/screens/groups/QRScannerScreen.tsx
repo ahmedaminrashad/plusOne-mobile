@@ -127,13 +127,6 @@ function QRScannerScreen({ route, navigation }: Props) {
     [handlePayload],
   );
 
-  const handleTestEta = useCallback(
-    () => handlePayload(
-      'https://invoicing.eta.gov.eg/receipts/search/ff700ca9ac9eeb3f4d2e19b4726bceb23eb1761ae861a8546fdc2a3481437aa9/share/2026-07-11T00:01:42Z',
-    ),
-    [handlePayload],
-  );
-
   if (hasPermission === null) {
     return (
       <View style={styles.centered}>
@@ -164,7 +157,7 @@ function QRScannerScreen({ route, navigation }: Props) {
         style={StyleSheet.absoluteFill}
         scanBarcode
         onReadCode={handleReadCode}
-        showFrame
+        showFrame={false}
         laserColor="transparent"
         frameColor={Colors.accent}
       />
@@ -191,13 +184,6 @@ function QRScannerScreen({ route, navigation }: Props) {
           ) : (
             <Text style={[typography.bodyMedium, styles.hint]}>{t('qrScanner.scanHint')}</Text>
           )}
-          <TouchableOpacity
-            style={styles.testBtn}
-            onPress={handleTestEta}
-            disabled={parsing}
-            activeOpacity={0.75}>
-            <Text style={[typography.labelMedium, styles.testBtnText]}>{t('qrScanner.testEtaButton')}</Text>
-          </TouchableOpacity>
           <View style={styles.pillRow}>
             <TouchableOpacity
               style={styles.pillBtn}

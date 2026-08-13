@@ -1,4 +1,4 @@
-import { Platform, PermissionsAndroid, Alert } from 'react-native';
+import { Platform, PermissionsAndroid, Alert, Linking } from 'react-native';
 import Contacts from 'react-native-contacts';
 import { formatPhone, isValidPhone } from './validation';
 
@@ -8,7 +8,11 @@ export interface DeviceContact {
   phone: string;
 }
 
-async function requestContactsPermission(): Promise<boolean> {
+let contactsCache: DeviceContact[] | null = null;
+let contactsCacheAt = 0;
+const CACHE_TTL_MS = 5 * 60 * 1000;
+
+export async function requestContactsPermission(): Promise<boolean> {
   if (Platform.OS === 'android') {
     const result = await PermissionsAndroid.request(
       PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
@@ -39,14 +43,26 @@ function firstValidPhone(rawNumbers: Array<{ number?: string } | string> | undef
 }
 
 /** Loads device contacts that have a usable phone number. */
-export async function loadDeviceContacts(): Promise<DeviceContact[]> {
+export async function loadDeviceContacts(options?: { force?: boolean }): Promise<DeviceContact[]> {
   const granted = await requestContactsPermission();
   if (!granted) {
     Alert.alert(
       'Permission needed',
       'Allow contacts access in Settings to invite people from your phone book.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Open Settings', onPress: () => { void Linking.openSettings(); } },
+      ],
     );
     return [];
+  }
+
+  if (
+    !options?.force &&
+    contactsCache &&
+    Date.now() - contactsCacheAt < CACHE_TTL_MS
+  ) {
+    return contactsCache;
   }
 
   const contacts = await Contacts.getAllWithoutPhotos();
@@ -67,5 +83,7 @@ export async function loadDeviceContacts(): Promise<DeviceContact[]> {
   }
 
   mapped.sort((a, b) => a.name.localeCompare(b.name));
+  contactsCache = mapped;
+  contactsCacheAt = Date.now();
   return mapped;
 }

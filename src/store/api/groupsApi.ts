@@ -29,7 +29,11 @@ export const groupsApi = baseApi.injectEndpoints({
         method: 'POST',
         body: { phones },
       }),
-      invalidatesTags: (_r, _e, { groupId }) => [{ type: 'GroupMember', id: groupId }],
+      invalidatesTags: (_r, _e, { groupId }) => [
+        { type: 'GroupMember', id: groupId },
+        { type: 'Group', id: groupId },
+        'Group',
+      ],
     }),
 
     removeMember: builder.mutation<void, { groupId: string; memberId: string }>({
@@ -37,7 +41,11 @@ export const groupsApi = baseApi.injectEndpoints({
         url: `/groups/${groupId}/members/${memberId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: (_r, _e, { groupId }) => [{ type: 'GroupMember', id: groupId }],
+      invalidatesTags: (_r, _e, { groupId }) => [
+        { type: 'GroupMember', id: groupId },
+        { type: 'Group', id: groupId },
+        'Group',
+      ],
     }),
 
     getMyInvitations: builder.query<GroupMember[], void>({
@@ -50,7 +58,7 @@ export const groupsApi = baseApi.injectEndpoints({
         url: `/groups/invitations/${membershipId}/accept`,
         method: 'PATCH',
       }),
-      invalidatesTags: ['Invitation', 'Group'],
+      invalidatesTags: ['Invitation', 'Group', 'GroupMember'],
     }),
 
     declineInvitation: builder.mutation<void, string>({

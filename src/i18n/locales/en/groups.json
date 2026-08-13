@@ -208,6 +208,7 @@
     "receiptItemCount": "{{count}} item(s)",
     "receiptNoItemsYet": "No items added yet",
     "receiptOpenCta": "View & add items ›",
+    "receiptViewCta": "View status ›",
     "dateToday": "Today",
     "dateYesterday": "Yesterday"
   },

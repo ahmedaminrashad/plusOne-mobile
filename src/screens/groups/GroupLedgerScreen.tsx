@@ -5,7 +5,6 @@ import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
 import { useGetGroupLedgerQuery } from '../../store/api/ledgerApi';
-import { useGetGroupMembersQuery } from '../../store/api/groupsApi';
 import { formatCurrency, formatDate } from '../../utils/format';
 
 interface Props {
@@ -16,14 +15,13 @@ function GroupLedgerScreen({ groupId }: Props) {
   const { t } = useTranslation('groups');
   const typography = useTypography();
   const { data: ledger, isLoading } = useGetGroupLedgerQuery(groupId);
-  const { data: members } = useGetGroupMembersQuery(groupId);
 
   if (isLoading || !ledger) {
     return <ActivityIndicator color={Colors.primary} style={styles.loader} />;
   }
 
-  const activeMemberCount = Math.max(1, (members ?? []).filter((m) => m.status === 'active').length);
-  const yourFairShare = ledger.groupMonthlyTotal / activeMemberCount;
+  const youPaid = ledger.youPaidPiastres ?? 0;
+  const yourFairShare = ledger.yourSharePiastres ?? 0;
 
   const now = new Date();
   const isThisMonth = (dateStr: string) => {
@@ -56,7 +54,7 @@ function GroupLedgerScreen({ groupId }: Props) {
             <View style={[styles.statCard, styles.statCardNeutral]}>
               <Text style={[typography.labelMedium, styles.statLabelNeutral]}>{t('groupLedger.youPaid')}</Text>
               <Text style={[typography.labelLarge, styles.statValueNeutral]}>
-                {formatCurrency(Math.max(0, ledger.currentUserNetBalance) / 100)}
+                {formatCurrency(youPaid / 100)}
               </Text>
             </View>
             <View style={[styles.statCard, styles.statCardNeutral]}>

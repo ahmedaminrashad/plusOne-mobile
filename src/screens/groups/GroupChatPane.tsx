@@ -129,7 +129,7 @@ function MessageBubble({
 
   return (
     <View style={[styles.bubbleRow, isMine && styles.bubbleRowMine]}>
-      <View style={styles.bubbleCol}>
+      <View style={[styles.bubbleCol, isMine && styles.bubbleColMine]}>
         {!isMine && showSender && (
           <Text style={[typography.bodySmall, styles.senderName]}>{msg.senderName}</Text>
         )}
@@ -151,7 +151,9 @@ function MessageBubble({
                   : t('chat.receiptNoItemsYet')}
               </Text>
               <View style={styles.receiptCtaPill}>
-                <Text style={[typography.labelSmall, styles.receiptCta]}>{t('chat.receiptOpenCta')}</Text>
+                <Text style={[typography.labelSmall, styles.receiptCta]}>
+                  {msg.bill.closedAt ? t('chat.receiptViewCta') : t('chat.receiptOpenCta')}
+                </Text>
               </View>
             </View>
             <Text style={[typography.labelLarge, styles.receiptAmount]}>{formatCurrency(Number(msg.bill.amount), msg.bill.currency)}</Text>
@@ -430,6 +432,7 @@ const styles = StyleSheet.create({
   bubbleRow: { flexDirection: 'row', alignItems: 'flex-end', marginBottom: 8 },
   bubbleRowMine: { flexDirection: 'row-reverse' },
   bubbleCol: { flex: 1, alignItems: 'flex-start' },
+  bubbleColMine: { alignItems: 'flex-end' },
   senderName: { color: Colors.textSecondary, marginBottom: 3, marginLeft: 4 },
   // Corner radii match Figma's asymmetric rectangleCornerRadii exactly: [18,18,18,6]
   // for received bubbles (tail bottom-left) and [18,18,6,18] for sent (tail bottom-right).

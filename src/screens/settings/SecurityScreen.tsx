@@ -1,4 +1,4 @@
-import React, { useState, useCallback, memo } from 'react';
+import React, { useState, useCallback, memo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { SettingsScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
 import { IconProps, BellIcon, FingerprintIcon, ShieldLockIcon, PhoneIcon } from '../../components/icons';
+import { AppStorage } from '../../utils/storage';
 
 type Props = SettingsScreenProps<'SecuritySettings'>;
 
@@ -51,6 +52,21 @@ function SecurityScreen({ navigation }: Props) {
   const [biometrics, setBiometrics] = useState(false);
   const [loginAlerts, setLoginAlerts] = useState(true);
   const [twoFactor, setTwoFactor] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const [bio, alerts, tfa] = await Promise.all([
+        AppStorage.getBiometricsEnabled(),
+        AppStorage.getLoginAlertsEnabled(),
+        AppStorage.getTwoFactorEnabled(),
+      ]);
+      setBiometrics(bio);
+      setLoginAlerts(alerts);
+      setTwoFactor(tfa);
+      setLoaded(true);
+    })();
+  }, []);
 
   const handleBiometricsToggle = useCallback((v: boolean) => {
     if (v) {
@@ -59,13 +75,30 @@ function SecurityScreen({ navigation }: Props) {
         t('security.enableBiometricsMessage'),
         [
           { text: t('security.cancelButton'), style: 'cancel' },
-          { text: t('security.enableButton'), onPress: () => setBiometrics(true) },
+          {
+            text: t('security.enableButton'),
+            onPress: async () => {
+              setBiometrics(true);
+              await AppStorage.setBiometricsEnabled(true);
+            },
+          },
         ],
       );
     } else {
       setBiometrics(false);
+      void AppStorage.setBiometricsEnabled(false);
     }
   }, [t]);
+
+  const handleLoginAlertsToggle = useCallback((v: boolean) => {
+    setLoginAlerts(v);
+    void AppStorage.setLoginAlertsEnabled(v);
+  }, []);
+
+  const handleTwoFactorToggle = useCallback((v: boolean) => {
+    setTwoFactor(v);
+    void AppStorage.setTwoFactorEnabled(v);
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -85,8 +118,8 @@ function SecurityScreen({ navigation }: Props) {
             icon={BellIcon}
             title={t('security.loginAlertsTitle')}
             subtitle={t('security.loginAlertsSubtitle')}
-            value={loginAlerts}
-            onToggle={setLoginAlerts}
+            value={loaded ? loginAlerts : false}
+            onToggle={handleLoginAlertsToggle}
             accentColor={Colors.secondary}
           />
           <View style={styles.divider} />
@@ -94,7 +127,7 @@ function SecurityScreen({ navigation }: Props) {
             icon={FingerprintIcon}
             title={t('security.biometricsTitle')}
             subtitle={t('security.biometricsSubtitle')}
-            value={biometrics}
+            value={loaded ? biometrics : false}
             onToggle={handleBiometricsToggle}
             accentColor={Colors.accent}
           />
@@ -103,8 +136,8 @@ function SecurityScreen({ navigation }: Props) {
             icon={ShieldLockIcon}
             title={t('security.twoFactorTitle')}
             subtitle={t('security.twoFactorSubtitle')}
-            value={twoFactor}
-            onToggle={setTwoFactor}
+            value={loaded ? twoFactor : false}
+            onToggle={handleTwoFactorToggle}
             accentColor={Colors.primary}
           />
         </View>

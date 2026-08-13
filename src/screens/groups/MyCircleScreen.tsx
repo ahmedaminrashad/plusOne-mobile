@@ -22,7 +22,7 @@ import Button from '../../components/common/Button';
 import ContactPickerModal from '../../components/common/ContactPickerModal';
 import { PeopleIcon, ChevronLeftIcon, SearchIcon, CloseIcon, AddPersonIcon } from '../../components/icons';
 import { useGetMyCircleQuery, useAddFriendMutation, useRemoveFriendMutation, Friend } from '../../store/api/friendsApi';
-import { DeviceContact } from '../../utils/contacts';
+import { DeviceContact, requestContactsPermission } from '../../utils/contacts';
 import { formatPhone } from '../../utils/validation';
 
 type Props = AppScreenProps<'MyCircle'>;
@@ -165,7 +165,12 @@ function MyCircleScreen({ navigation }: Props) {
           <Text style={[typography.bodySmall, styles.growSubtitle]}>{t('myCircle.growSubtitle')}</Text>
         </View>
         <View style={styles.growActions}>
-          <TouchableOpacity style={styles.growBtnOutline} onPress={() => setContactPickerOpen(true)}>
+          <TouchableOpacity
+            style={styles.growBtnOutline}
+            onPress={async () => {
+              const granted = await requestContactsPermission();
+              if (granted) setContactPickerOpen(true);
+            }}>
             <Text style={[typography.labelMedium, styles.growBtnOutlineText]}>
               {t('myCircle.fromContacts', { defaultValue: 'Contacts' })}
             </Text>

@@ -21,6 +21,7 @@ import { consumePendingSharedText, consumePendingSharedImage } from '../services
 import { isChatGroupActive } from '../services/activeChat';
 import { extractInstaPayIdentifierFromSharedText } from '../utils/instapay';
 import { TabParamList } from '../types/navigation';
+import { baseApi } from '../store/api/baseApi';
 
 export default function RootNavigator() {
   const { t } = useTranslation('navigation');
@@ -101,6 +102,28 @@ export default function RootNavigator() {
   // surface it ourselves via an alert with a "View" action that reuses the same navigation.
   useEffect(() => {
     const unsub = onForegroundMessage((notification, data) => {
+      // Keep group/member caches fresh across devices without requiring an app restart.
+      if (
+        data.type === 'member_joined' ||
+        data.type === 'invitation' ||
+        data.type === 'chat_message' ||
+        data.type === 'share_assigned' ||
+        data.type === 'share_initiated' ||
+        data.type === 'share_settled'
+      ) {
+        dispatch(
+          baseApi.util.invalidateTags([
+            'Group',
+            'GroupMember',
+            'Invitation',
+            'Message',
+            'Bill',
+            'Share',
+            'Ledger',
+          ]),
+        );
+      }
+
       // The chat itself already reflects new messages via polling — don't also
       // pop an alert over the same conversation the user is currently looking at.
       if (data.type === 'chat_message' && data.groupId && isChatGroupActive(data.groupId)) return;
@@ -115,7 +138,7 @@ export default function RootNavigator() {
       );
     });
     return unsub;
-  }, [navigateFromNotification]);
+  }, [dispatch, navigateFromNotification, t]);
 
   // When the user shares InstaPay's "Click the link to send money to..." text into
   // PlusOne (from the InstaPay app's own Share sheet), route straight to Edit Profile

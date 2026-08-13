@@ -113,13 +113,13 @@ function CreateBillScreen({ route, navigation }: Props) {
   const taxAmt = taxValue
     ? taxType === 'percent' ? subtotal * parseNum(taxValue) / 100 : parseNum(taxValue)
     : 0;
-  const deliveryAmt = deliveryValue
-    ? deliveryType === 'percent' ? subtotal * parseNum(deliveryValue) / 100 : parseNum(deliveryValue)
-    : 0;
   const vatAmt = vatValue
-    ? vatType === 'percent' ? (subtotal + taxAmt + deliveryAmt) * parseNum(vatValue) / 100 : parseNum(vatValue)
+    ? vatType === 'percent' ? (subtotal + taxAmt) * parseNum(vatValue) / 100 : parseNum(vatValue)
     : 0;
-  const calculatedTotal = subtotal + taxAmt + deliveryAmt + vatAmt;
+  const deliveryAmt = deliveryValue
+    ? deliveryType === 'percent' ? (subtotal + taxAmt + vatAmt) * parseNum(deliveryValue) / 100 : parseNum(deliveryValue)
+    : 0;
+  const calculatedTotal = subtotal + taxAmt + vatAmt + deliveryAmt;
   const hasOverride = grandTotalOverride.trim().length > 0;
   const grandTotal = hasOverride ? parseNum(grandTotalOverride) : calculatedTotal;
   const totalMismatch = hasOverride && Math.abs(grandTotal - calculatedTotal) > 0.01;
@@ -344,21 +344,6 @@ function CreateBillScreen({ route, navigation }: Props) {
               <AmountTypeToggle value={taxType} onChange={setTaxType} />
             </View>
 
-            {/* Delivery */}
-            <Text style={[typography.labelMedium, styles.sectionLabel]}>{t('createBill.deliveryLabel')}</Text>
-            <View style={styles.amountTypeRow}>
-              <TextInput
-                style={[typography.bodyLarge, styles.input, styles.flex1]}
-                value={deliveryValue}
-                onChangeText={setDeliveryValue}
-                placeholder={deliveryType === 'percent' ? t('createBill.deliveryPlaceholderPercent') : t('createBill.deliveryPlaceholderAmount')}
-                placeholderTextColor={Colors.textMuted}
-                keyboardType="decimal-pad"
-                textAlign={inputAlign}
-              />
-              <AmountTypeToggle value={deliveryType} onChange={setDeliveryType} />
-            </View>
-
             {/* VAT */}
             <Text style={[typography.labelMedium, styles.sectionLabel]}>{t('createBill.vatLabel')}</Text>
             <View style={styles.amountTypeRow}>
@@ -372,6 +357,21 @@ function CreateBillScreen({ route, navigation }: Props) {
                 textAlign={inputAlign}
               />
               <AmountTypeToggle value={vatType} onChange={setVatType} />
+            </View>
+
+            {/* Delivery */}
+            <Text style={[typography.labelMedium, styles.sectionLabel]}>{t('createBill.deliveryLabel')}</Text>
+            <View style={styles.amountTypeRow}>
+              <TextInput
+                style={[typography.bodyLarge, styles.input, styles.flex1]}
+                value={deliveryValue}
+                onChangeText={setDeliveryValue}
+                placeholder={deliveryType === 'percent' ? t('createBill.deliveryPlaceholderPercent') : t('createBill.deliveryPlaceholderAmount')}
+                placeholderTextColor={Colors.textMuted}
+                keyboardType="decimal-pad"
+                textAlign={inputAlign}
+              />
+              <AmountTypeToggle value={deliveryType} onChange={setDeliveryType} />
             </View>
 
             {/* Grand total */}
@@ -518,19 +518,31 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     marginBottom: 8,
   },
-  itemIndex: { color: Colors.textMuted, minWidth: 16, textAlign: 'center' },
+  itemIndex: { color: Colors.textMuted, minWidth: 22, textAlign: 'center' },
   itemNameInput: { flex: 1, color: Colors.text, padding: 0 },
-  itemPriceInput: { width: 48, color: Colors.text, padding: 0, textAlign: 'right' },
-  multiplySign: { fontSize: 14, color: Colors.textMuted, fontWeight: '700' },
-  qtyChip: {
-    minWidth: 28,
-    height: 24,
+  itemPriceInput: {
+    minWidth: 72,
+    color: Colors.text,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    textAlign: 'right',
+    borderWidth: 1,
+    borderColor: Colors.border,
     borderRadius: Radius.sm,
     backgroundColor: Colors.neutral100,
+  },
+  multiplySign: { fontSize: 14, color: Colors.textMuted, fontWeight: '700' },
+  qtyChip: {
+    minWidth: 36,
+    height: 28,
+    borderRadius: Radius.sm,
+    backgroundColor: Colors.neutral100,
+    borderWidth: 1,
+    borderColor: Colors.border,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  itemQtyInput: { color: Colors.text, padding: 0, minWidth: 20, textAlign: 'center' },
+  itemQtyInput: { color: Colors.text, padding: 0, minWidth: 24, textAlign: 'center' },
   removeItemBtn: { padding: 4 },
 
   subtotalRow: {

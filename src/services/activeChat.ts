@@ -6,7 +6,6 @@ let activeChatGroupId: string | null = null;
 export function setActiveChatGroupId(groupId: string | null) {
   activeChatGroupId = groupId;
 }
-
 export function isChatGroupActive(groupId: string): boolean {
   return activeChatGroupId === groupId;
 }

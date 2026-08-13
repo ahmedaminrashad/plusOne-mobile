@@ -18,15 +18,46 @@ export const sharesApi = baseApi.injectEndpoints({
     }),
     payShare: builder.mutation<Share, { shareId: string; method?: ShareMethod }>({
       query: ({ shareId, method }) => ({ url: `/shares/${shareId}/pay`, method: 'POST', body: { method } }),
-      invalidatesTags: (result) => (result ? [{ type: 'Share', id: result.billId }, 'Share'] : ['Share']),
+      invalidatesTags: (result) =>
+        result
+          ? [
+              { type: 'Share', id: result.billId },
+              'Share',
+              { type: 'Bill', id: result.billId },
+              'Bill',
+              { type: 'Ledger', id: result.groupId },
+              'Ledger',
+              { type: 'Message', id: result.groupId },
+            ]
+          : ['Share', 'Bill', 'Ledger'],
     }),
     cancelShareInitiation: builder.mutation<Share, string>({
       query: (shareId) => ({ url: `/shares/${shareId}/cancel-initiation`, method: 'POST' }),
-      invalidatesTags: (result) => (result ? [{ type: 'Share', id: result.billId }, 'Share'] : ['Share']),
+      invalidatesTags: (result) =>
+        result
+          ? [
+              { type: 'Share', id: result.billId },
+              'Share',
+              { type: 'Bill', id: result.billId },
+              'Bill',
+              { type: 'Ledger', id: result.groupId },
+            ]
+          : ['Share', 'Bill', 'Ledger'],
     }),
     confirmShare: builder.mutation<Share, string>({
       query: (shareId) => ({ url: `/shares/${shareId}/confirm`, method: 'POST' }),
-      invalidatesTags: (result) => (result ? [{ type: 'Share', id: result.billId }, 'Share'] : ['Share']),
+      invalidatesTags: (result) =>
+        result
+          ? [
+              { type: 'Share', id: result.billId },
+              'Share',
+              { type: 'Bill', id: result.billId },
+              'Bill',
+              { type: 'Ledger', id: result.groupId },
+              'Ledger',
+              { type: 'Message', id: result.groupId },
+            ]
+          : ['Share', 'Bill', 'Ledger', 'Message'],
     }),
     sendShareReminder: builder.mutation<{ sent: boolean; rateLimited: boolean }, string>({
       query: (shareId) => ({ url: `/shares/${shareId}/remind`, method: 'POST' }),

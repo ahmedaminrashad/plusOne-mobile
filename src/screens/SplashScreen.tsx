@@ -36,7 +36,7 @@ export default function SplashScreen({ onFinish }: Props) {
         />
       </View>
 
-      <Text style={styles.appName}>+1 App</Text>
+      <Text style={styles.appName}>+One</Text>
       <Text style={styles.tagline}>
         Simplifying payments, empowering connections
       </Text>

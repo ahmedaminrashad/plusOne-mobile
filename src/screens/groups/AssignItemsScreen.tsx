@@ -258,15 +258,19 @@ function AssignItemsScreen({ route, navigation }: Props) {
       .filter((m) => m.userId !== paidByUserId && memberTotals[getMemberId(m)] !== undefined)
       .map((m) => ({
         groupMemberId: m.id,
-        amountPiastres: Math.floor(memberTotals[getMemberId(m)]! * 100),
+        amountPiastres: Math.round(memberTotals[getMemberId(m)]! * 100),
       }))
       .filter((s) => s.amountPiastres > 0);
+
+    const sharesTotalPiastres = shares.reduce((sum, s) => sum + s.amountPiastres, 0);
+    // Bill amount must cover share sum (SHARES_EXCEED_BILL_TOTAL); prefer computed total over a stale OCR override.
+    const amount = Math.max(grandTotal, sharesTotalPiastres / 100);
 
     try {
       await createBill({
         groupId,
         venueName: receipt.venueName ?? receipt.storeName,
-        amount: grandTotal,
+        amount,
         paidByUserId,
         notes: notesParts.join('\n') || undefined,
         captureMethod: receipt.captureMethod ?? 'manual',

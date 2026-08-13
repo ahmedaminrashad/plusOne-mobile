@@ -19,7 +19,7 @@ import { useTypography } from '../../hooks/useTypography';
 import { CloseIcon, PeopleIcon } from '../../components/icons';
 import { isValidPhone, formatPhone } from '../../utils/validation';
 import { useInviteMembersMutation } from '../../store/api/groupsApi';
-import { DeviceContact } from '../../utils/contacts';
+import { DeviceContact, requestContactsPermission } from '../../utils/contacts';
 
 type Props = AppScreenProps<'InviteMembers'>;
 
@@ -105,7 +105,13 @@ function InviteMembersScreen({ route, navigation }: Props) {
           {t('inviteMembers.subtitle')}
         </Text>
 
-        <TouchableOpacity style={styles.contactsBtn} onPress={() => setPickerOpen(true)} activeOpacity={0.8}>
+        <TouchableOpacity
+          style={styles.contactsBtn}
+          onPress={async () => {
+            const granted = await requestContactsPermission();
+            if (granted) setPickerOpen(true);
+          }}
+          activeOpacity={0.8}>
           <PeopleIcon size={18} color={Colors.primary} />
           <Text style={[typography.labelLarge, styles.contactsBtnText]}>
             {t('inviteMembers.fromContacts', { defaultValue: 'Add from contacts' })}

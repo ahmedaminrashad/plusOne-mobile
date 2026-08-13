@@ -7,6 +7,7 @@ import {
   SafeAreaView,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { AuthScreenProps } from '../../types/navigation';
@@ -47,46 +48,60 @@ function PhoneEntryScreen({ navigation }: Props) {
     } catch (err: any) {
       setError(resolveErrorMessage(err));
     }
-  }, [fullPhone, sendOtp, navigation]);
+  }, [fullPhone, sendOtp, navigation, t]);
+
+  const handlePhoneChange = useCallback((v: string) => {
+    // Keep only digits in the editable field — country code lives in the prefix chip.
+    setPhone(v.replace(/\D/g, ''));
+    setError('');
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
-        style={styles.content}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <Image
-          source={require('../../../assets/PlusOne.png')}
-          style={styles.logo}
-          tintColor={Colors.primaryDark}
-          resizeMode="contain"
-        />
-        <Text style={[typography.headingLarge, styles.headline]}>{t('phoneEntry.tagline')}</Text>
-
-        <View style={styles.form}>
-          <Input
-            label={t('phoneEntry.phoneLabel')}
-            prefix={countryCode}
-            value={phone}
-            onChangeText={(v) => { setPhone(v); setError(''); }}
-            keyboardType="phone-pad"
-            placeholder={t('phoneEntry.phonePlaceholder')}
-            maxLength={11}
-            error={error}
-            autoFocus
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}>
+        <ScrollView
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+          bounces={false}>
+          <Image
+            source={require('../../../assets/PlusOne.png')}
+            style={styles.logo}
+            tintColor={Colors.primaryDark}
+            resizeMode="contain"
           />
-        </View>
+          <Text style={[typography.headingLarge, styles.headline]}>{t('phoneEntry.tagline')}</Text>
 
-        <Button
-          title={t('common:continue')}
-          onPress={handleContinue}
-          loading={isLoading}
-          disabled={phone.length < 7}
-        />
-        <Text style={[typography.caption, styles.hint]}>{t('phoneEntry.hint')}</Text>
+          <View style={styles.form}>
+            <Input
+              label={t('phoneEntry.phoneLabel')}
+              prefix={countryCode}
+              value={phone}
+              onChangeText={handlePhoneChange}
+              keyboardType="number-pad"
+              placeholder={t('phoneEntry.phonePlaceholder')}
+              maxLength={11}
+              error={error}
+              autoFocus
+              returnKeyType="done"
+              onSubmitEditing={handleContinue}
+            />
+          </View>
 
-        <View style={styles.spacer} />
+          <Button
+            title={t('common:continue')}
+            onPress={handleContinue}
+            loading={isLoading}
+            disabled={phone.length < 7}
+          />
+          <Text style={[typography.caption, styles.hint]}>{t('phoneEntry.hint')}</Text>
 
-        <Text style={[typography.caption, styles.terms]}>{t('phoneEntry.terms')}</Text>
+          <View style={styles.spacer} />
+
+          <Text style={[typography.caption, styles.terms]}>{t('phoneEntry.terms')}</Text>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -96,11 +111,17 @@ export default memo(PhoneEntryScreen);
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-  content: { flex: 1, paddingHorizontal: 24, paddingTop: 32, paddingBottom: 24 },
+  flex: { flex: 1 },
+  content: {
+    flexGrow: 1,
+    paddingHorizontal: 24,
+    paddingTop: 32,
+    paddingBottom: 24,
+  },
   logo: { width: 56, height: 56, marginBottom: 20 },
   headline: { color: Colors.text, textAlign: 'left', marginBottom: 24 },
   form: { marginBottom: 4 },
   hint: { color: Colors.textSecondary, marginTop: 10 },
-  spacer: { flex: 1 },
+  spacer: { flexGrow: 1, minHeight: 24 },
   terms: { color: Colors.textSecondary, textAlign: 'center' },
 });

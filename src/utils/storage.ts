@@ -6,6 +6,9 @@ const ACCESS_TOKEN_KEY = 'plusone_access_token';
 const REFRESH_TOKEN_KEY = 'plusone_refresh_token';
 const LANGUAGE_KEY = 'plusone_language';
 const ONBOARDING_SEEN_KEY = 'plusone_onboarding_seen';
+const BIOMETRICS_KEY = 'plusone_biometrics_enabled';
+const TWO_FACTOR_KEY = 'plusone_two_factor_enabled';
+const LOGIN_ALERTS_KEY = 'plusone_login_alerts_enabled';
 
 export const SecureStorage = {
   async saveTokens(accessToken: string, refreshToken: string, isProfileComplete: boolean): Promise<void> {
@@ -44,5 +47,30 @@ export const AppStorage = {
 
   async setHasSeenOnboarding(): Promise<void> {
     await AsyncStorage.setItem(ONBOARDING_SEEN_KEY, 'true');
+  },
+
+  async getBiometricsEnabled(): Promise<boolean> {
+    return (await AsyncStorage.getItem(BIOMETRICS_KEY)) === 'true';
+  },
+
+  async setBiometricsEnabled(enabled: boolean): Promise<void> {
+    await AsyncStorage.setItem(BIOMETRICS_KEY, enabled ? 'true' : 'false');
+  },
+
+  async getTwoFactorEnabled(): Promise<boolean> {
+    return (await AsyncStorage.getItem(TWO_FACTOR_KEY)) === 'true';
+  },
+
+  async setTwoFactorEnabled(enabled: boolean): Promise<void> {
+    await AsyncStorage.setItem(TWO_FACTOR_KEY, enabled ? 'true' : 'false');
+  },
+
+  async getLoginAlertsEnabled(): Promise<boolean> {
+    const value = await AsyncStorage.getItem(LOGIN_ALERTS_KEY);
+    return value !== 'false';
+  },
+
+  async setLoginAlertsEnabled(enabled: boolean): Promise<void> {
+    await AsyncStorage.setItem(LOGIN_ALERTS_KEY, enabled ? 'true' : 'false');
   },
 };
