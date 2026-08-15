@@ -6,12 +6,11 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   Alert,
   ScrollView,
   ActivityIndicator,
-  Platform,
 } from 'react-native';
+import SafeScreen from '../../components/common/SafeScreen';
 import { useTranslation } from 'react-i18next';
 import { AppScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
@@ -24,6 +23,7 @@ import { useGetBillDetailQuery, useUpdateBillItemsMutation } from '../../store/a
 import { GroupMember, TaxServiceType } from '../../types/models';
 import { formatCurrency, resolveAssetUrl } from '../../utils/format';
 import { useInputTextAlign } from '../../utils/rtl';
+import { useKeyboardInsetHeight } from '../../services/keyboardInsets';
 import i18n from '../../i18n';
 import { LockIcon, PlusIcon } from '../../components/icons';
 
@@ -169,6 +169,7 @@ function EditBillItemsScreen({ route, navigation }: Props) {
   const [deliveryType, setDeliveryType] = useState<TaxServiceType>('percent');
   const [vatValue, setVatValue] = useState('');
   const [vatType, setVatType] = useState<TaxServiceType>('percent');
+  const keyboardInset = useKeyboardInsetHeight();
 
   const activeMembers = useMemo(
     () => (members ?? []).filter((m) => m.status === 'active' && (m.userId || m.pendingPhone)),
@@ -334,20 +335,20 @@ function EditBillItemsScreen({ route, navigation }: Props) {
 
   if (isLoading || !bill) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeScreen style={styles.container}>
         <ActivityIndicator color={Colors.primary} style={styles.loader} />
-      </SafeAreaView>
+      </SafeScreen>
     );
   }
 
   if (!bill.isEditable) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeScreen style={styles.container}>
         <View style={styles.emptyState}>
           <LockIcon size={44} color={Colors.textMuted} />
           <Text style={[typography.bodyLarge, styles.emptyText]}>{t('editBillItems.billClosedMessage')}</Text>
         </View>
-      </SafeAreaView>
+      </SafeScreen>
     );
   }
 
@@ -407,7 +408,7 @@ function EditBillItemsScreen({ route, navigation }: Props) {
         </View>
       </View>
 
-      <View style={styles.addItemPanel}>
+      <View style={[styles.addItemPanel, keyboardInset > 0 && { paddingBottom: 8 }]}>
         <Text style={[typography.labelMedium, styles.addItemTitle]}>{t('editBillItems.addItemTitle')}</Text>
         <View style={styles.addItemRow}>
           <TextInput
@@ -442,7 +443,7 @@ function EditBillItemsScreen({ route, navigation }: Props) {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeScreen style={styles.container}>
       <FlatList
         data={items}
         keyExtractor={(it) => it.id}
@@ -453,7 +454,7 @@ function EditBillItemsScreen({ route, navigation }: Props) {
         keyboardShouldPersistTaps="handled"
       />
 
-      <View style={styles.bottomPanel}>
+      <View style={[styles.bottomPanel, keyboardInset > 0 && { paddingBottom: keyboardInset + 12 }]}>
         {summaryRows.length > 0 && (
           <View style={styles.summarySection}>
             <Text style={[typography.labelMedium, styles.summaryTitle]}>{t('receiptSplit.paymentSummaryTitle')}</Text>
@@ -478,7 +479,7 @@ function EditBillItemsScreen({ route, navigation }: Props) {
           style={styles.saveBtn}
         />
       </View>
-    </SafeAreaView>
+    </SafeScreen>
   );
 }
 
@@ -486,6 +487,7 @@ export default memo(EditBillItemsScreen);
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
+  flex: { flex: 1 },
   list: { paddingBottom: 8 },
   loader: { flex: 1 },
 
@@ -510,8 +512,8 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   itemCardUnclaimed: { borderWidth: 1.5, borderColor: Colors.dangerTint },
-  itemHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 },
-  itemNameBlock: { flex: 1, alignItems: 'flex-start' },
+  itemHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
+  itemNameBlock: { flex: 1, minWidth: 0, alignItems: 'flex-start' },
   itemName: { color: Colors.text, textAlign: 'left' },
   itemQty: { color: Colors.textMuted },
   itemSubtotal: { color: Colors.text, marginLeft: 8, textAlign: 'right' },

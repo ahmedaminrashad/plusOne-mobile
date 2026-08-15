@@ -3,13 +3,13 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   Platform,
   PermissionsAndroid,
   Alert,
   ActivityIndicator,
 } from 'react-native';
+import SafeScreen from '../../components/common/SafeScreen';
 import { useTranslation } from 'react-i18next';
 import { Camera } from 'react-native-camera-kit';
 import { AppScreenProps } from '../../types/navigation';
@@ -137,7 +137,7 @@ function QRScannerScreen({ route, navigation }: Props) {
 
   if (!hasPermission) {
     return (
-      <SafeAreaView style={styles.permissionScreen}>
+      <SafeScreen style={styles.permissionScreen}>
         <CameraIcon size={50} color={Colors.textMuted} />
         <Text style={[typography.headingMedium, styles.permTitle]}>{t('qrScanner.permissionRequiredTitle')}</Text>
         <Text style={[typography.bodyMedium, styles.permSub]}>{t('qrScanner.permissionRequiredSub')}</Text>
@@ -147,7 +147,7 @@ function QRScannerScreen({ route, navigation }: Props) {
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Text style={[typography.bodyMedium, styles.backBtnText]}>{t('common:back')}</Text>
         </TouchableOpacity>
-      </SafeAreaView>
+      </SafeScreen>
     );
   }
 

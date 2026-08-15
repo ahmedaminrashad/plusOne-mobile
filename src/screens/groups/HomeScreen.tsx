@@ -6,11 +6,11 @@ import {
   FlatList,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   StatusBar,
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
+import SafeScreen from '../../components/common/SafeScreen';
 import { AppScreenProps } from '../../types/navigation';
 import {
   useGetGroupsQuery,
@@ -39,9 +39,13 @@ function HomeScreen({ navigation }: Props) {
   const { t } = useTranslation('groups');
   const typography = useTypography();
   const { data: me } = useGetMeQuery();
-  const { data: groups, isLoading, isFetching, refetch, isError } = useGetGroupsQuery();
-  const { data: invitations } = useGetMyInvitationsQuery();
-  const { data: myShares } = useGetMySharesQuery();
+  const { data: groups, isLoading, isFetching, refetch, isError } = useGetGroupsQuery(undefined, {
+    pollingInterval: 15_000,
+  });
+  const { data: invitations } = useGetMyInvitationsQuery(undefined, {
+    pollingInterval: 15_000,
+  });
+  const { data: myShares } = useGetMySharesQuery(undefined, { pollingInterval: 15_000 });
   const [accept] = useAcceptInvitationMutation();
   const [decline] = useDeclineInvitationMutation();
 
@@ -49,7 +53,14 @@ function HomeScreen({ navigation }: Props) {
     () => (myShares ?? []).filter((s) => s.status === 'initiated' && s.initiatorUserId === me?.id).length,
     [myShares, me?.id],
   );
-  const pendingCount = (invitations?.length ?? 0) + approvalCount;
+  const toPayCount = useMemo(
+    () =>
+      (myShares ?? []).filter(
+        (s) => s.ownerUserId === me?.id && (s.status === 'pending' || s.status === 'failed'),
+      ).length,
+    [myShares, me?.id],
+  );
+  const pendingCount = (invitations?.length ?? 0) + approvalCount + toPayCount;
   const [showModal, setShowModal] = useState(false);
   const shownRef = useRef(false);
 
@@ -106,7 +117,7 @@ function HomeScreen({ navigation }: Props) {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeScreen style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
 
       {(groups ?? []).map((g) => (
@@ -158,7 +169,7 @@ function HomeScreen({ navigation }: Props) {
                 { label: t('home.tileNewGroup'), Icon: PeopleIcon, iconColor: Colors.primary, onPress: () => navigation.navigate('CreateGroup'), bg: Colors.tint },
                 { label: t('home.tileMyCircle'), Icon: PersonIcon, iconColor: Colors.warningDark, onPress: () => navigation.navigate('MyCircle'), bg: Colors.warningTint },
                 { label: t('home.tileRemind'), Icon: BellIcon, iconColor: Colors.secondaryDark, onPress: () => navigation.navigate('Remind'), bg: Colors.successTint },
-                { label: t('home.tileMyLedger'), Icon: ReceiptIcon, iconColor: Colors.text, onPress: () => navigation.navigate('MyLedger'), bg: Colors.tileMyTab },
+                { label: t('home.tileMyLedger'), Icon: ReceiptIcon, iconColor: Colors.primary, onPress: () => navigation.navigate('MyLedger'), bg: Colors.tint },
               ].map((tile) => (
                 <TouchableOpacity key={tile.label} style={styles.tile} onPress={tile.onPress} activeOpacity={0.75}>
                   <View style={[styles.tileIconWrap, { backgroundColor: tile.bg }]}>
@@ -202,7 +213,7 @@ function HomeScreen({ navigation }: Props) {
           onDismiss={() => setShowModal(false)}
         />
       )}
-    </SafeAreaView>
+    </SafeScreen>
   );
 }
 
@@ -217,7 +228,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: 8,
+    paddingTop: 12,
     marginBottom: 12,
   },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flexShrink: 1 },

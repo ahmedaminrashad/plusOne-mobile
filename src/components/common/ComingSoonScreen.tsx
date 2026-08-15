@@ -1,5 +1,11 @@
 import React, { memo } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+} from 'react-native';
+import SafeScreen from './SafeScreen';
 import { useTranslation } from 'react-i18next';
 import { Colors } from '../../constants/colors';
 import { useTypography } from '../../hooks/useTypography';
@@ -14,7 +20,7 @@ function ComingSoonScreen({ title, onBack }: Props) {
   const { t } = useTranslation('common');
   const typography = useTypography();
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeScreen style={styles.container}>
       <View style={styles.headerRow}>
         {onBack && (
           <TouchableOpacity onPress={onBack} hitSlop={12}>
@@ -26,7 +32,7 @@ function ComingSoonScreen({ title, onBack }: Props) {
       <View style={styles.body}>
         <Text style={[typography.bodyLarge, styles.message]}>{t('comingSoon.message')}</Text>
       </View>
-    </SafeAreaView>
+    </SafeScreen>
   );
 }
 

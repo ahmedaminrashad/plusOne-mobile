@@ -3,11 +3,9 @@ import {
   View,
   Text,
   TouchableOpacity,
-  SafeAreaView,
-  KeyboardAvoidingView,
-  Platform,
   StyleSheet,
 } from 'react-native';
+import SafeScreen from '../../components/common/SafeScreen';
 import { AppScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/radius';
@@ -42,7 +40,7 @@ function ChatScreen({ route, navigation }: Props) {
   const subtitle = overflowCount > 0 ? `${memberNames} +${overflowCount}` : memberNames;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeScreen style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} hitSlop={10} activeOpacity={0.7}>
           <ChevronLeftIcon size={20} color={Colors.text} />
@@ -67,19 +65,14 @@ function ChatScreen({ route, navigation }: Props) {
         </View>
       </View>
 
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}>
-        <GroupChatPane
+      <GroupChatPane
           groupId={groupId}
           groupName={groupName}
           navigation={navigation}
           sharedImageUri={sharedImageUri}
           onSharedImageConsumed={() => navigation.setParams({ sharedImageUri: undefined })}
         />
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+    </SafeScreen>
   );
 }
 

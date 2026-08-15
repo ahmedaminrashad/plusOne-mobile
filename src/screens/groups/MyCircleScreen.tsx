@@ -6,11 +6,11 @@ import {
   TouchableOpacity,
   FlatList,
   StyleSheet,
-  SafeAreaView,
   ActivityIndicator,
   Modal,
   Alert,
 } from 'react-native';
+import SafeScreen from '../../components/common/SafeScreen';
 import { useTranslation } from 'react-i18next';
 import { AppScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
@@ -127,14 +127,14 @@ function MyCircleScreen({ navigation }: Props) {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeScreen style={styles.container}>
         <ActivityIndicator color={Colors.primary} style={styles.loader} />
-      </SafeAreaView>
+      </SafeScreen>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeScreen style={styles.container}>
       <View style={styles.headerRow}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} hitSlop={12}>
           <ChevronLeftIcon size={20} color={Colors.text} />
@@ -235,7 +235,7 @@ function MyCircleScreen({ navigation }: Props) {
         onConfirm={handleContactsPicked}
         title={t('myCircle.fromContactsTitle', { defaultValue: 'Add from contacts' })}
       />
-    </SafeAreaView>
+    </SafeScreen>
   );
 }
 
@@ -314,8 +314,14 @@ const styles = StyleSheet.create({
   statusPillPendingText: { color: Colors.warningDark },
   removeBtn: { marginLeft: 2, padding: 6 },
 
-  modalOverlay: { flex: 1, backgroundColor: Colors.overlay, justifyContent: 'center', padding: 24 },
-  modalCard: { backgroundColor: Colors.surface, borderRadius: Radius.xl, padding: 20 },
+  modalOverlay: { flex: 1, backgroundColor: Colors.overlay, justifyContent: 'center', alignItems: 'center', padding: 24 },
+  modalCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.xl,
+    padding: 20,
+    width: '100%',
+    maxWidth: 340,
+  },
   modalTitle: { color: Colors.text, marginBottom: 14 },
   modalInput: {
     backgroundColor: Colors.background, borderRadius: Radius.lg,
@@ -323,5 +329,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14, paddingVertical: 12, color: Colors.text,
   },
   modalActions: { flexDirection: 'row', gap: 10, marginTop: 16 },
-  modalBtn: { flex: 1 },
+  modalBtn: { flex: 1, height: 44 },
 });

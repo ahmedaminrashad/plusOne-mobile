@@ -4,11 +4,11 @@ import {
   Text,
   TextInput,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import SafeScreen from '../../components/common/SafeScreen';
 import { useTranslation } from 'react-i18next';
 import { AuthScreenProps } from '../../types/navigation';
 import Button from '../../components/common/Button';
@@ -101,7 +101,7 @@ function OTPVerificationScreen({ route, navigation }: Props) {
   }, [otp]);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeScreen style={styles.container}>
       <KeyboardAvoidingView
         style={styles.content}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -156,7 +156,7 @@ function OTPVerificationScreen({ route, navigation }: Props) {
           style={styles.verifyBtn}
         />
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </SafeScreen>
   );
 }
 

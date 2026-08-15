@@ -4,15 +4,15 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   StatusBar,
 } from 'react-native';
+import SafeScreen from '../../components/common/SafeScreen';
 import { useTranslation } from 'react-i18next';
 import { SettingsScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
 import { useGetMeQuery } from '../../store/api/usersApi';
-import { ClockIcon } from '../../components/icons';
+import { ClockIcon, ChevronLeftIcon } from '../../components/icons';
 
 type Props = SettingsScreenProps<'PaymentMethods'>;
 
@@ -21,15 +21,18 @@ function PaymentMethodsScreen({ navigation }: Props) {
   const { data: me } = useGetMeQuery();
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeScreen style={styles.container} statusBarColor={Colors.primaryDark}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.primaryDark} />
 
       <View style={styles.header}>
         <View style={styles.deco1} />
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Text style={styles.backBtnText}>{t('common:back')}</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t('paymentMethods.headerTitle')}</Text>
+        <View style={styles.headerRow}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} hitSlop={8}>
+            <ChevronLeftIcon size={20} color={Colors.secondary} />
+            <Text style={styles.backBtnText}>{t('common:back')}</Text>
+          </TouchableOpacity>
+          <Text style={styles.headerTitle} numberOfLines={1}>{t('paymentMethods.headerTitle')}</Text>
+        </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
@@ -78,7 +81,7 @@ function PaymentMethodsScreen({ navigation }: Props) {
         </View>
 
       </ScrollView>
-    </SafeAreaView>
+    </SafeScreen>
   );
 }
 
@@ -98,23 +101,19 @@ const styles = StyleSheet.create({
     width: 140, height: 140, borderRadius: 70,
     backgroundColor: 'rgba(255,255,255,0.06)',
   },
-  backBtn: { marginBottom: 6 },
-  backBtnText: { color: Colors.secondary, fontSize: 15, fontWeight: '600' },
-  headerTitle: { fontSize: 22, fontWeight: '800', color: '#fff' },
-  scroll: { padding: 16, paddingBottom: 40 },
+  headerRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  backBtn: { flexDirection: 'row', alignItems: 'center', gap: 2 },
+  backBtnText: { color: Colors.secondary, fontSize: 16, fontWeight: '600' },
+  headerTitle: { flex: 1, fontSize: 20, fontWeight: '800', color: '#fff' },
+  scroll: { padding: 24, paddingBottom: 40 },
 
   instaCard: {
     backgroundColor: Colors.surface,
-    borderRadius: 18,
+    borderRadius: 16,
     padding: 18,
     marginBottom: 24,
-    shadowColor: Colors.primaryDark,
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 12,
-    elevation: 4,
     borderWidth: 1,
-    borderColor: Colors.secondary + '30',
+    borderColor: Colors.borderLight,
   },
   instaHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   instaIconWrap: {

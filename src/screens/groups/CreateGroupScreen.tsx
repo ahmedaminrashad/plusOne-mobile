@@ -4,11 +4,11 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   Alert,
 } from 'react-native';
+import SafeScreen from '../../components/common/SafeScreen';
 import { AppScreenProps } from '../../types/navigation';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
@@ -54,7 +54,7 @@ function CreateGroupScreen({ navigation }: Props) {
   }, [name, category, createGroup, navigation, t]);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeScreen style={styles.container}>
       <View style={styles.headerRow}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} hitSlop={12}>
           <ChevronLeftIcon size={20} color={Colors.text} />
@@ -98,7 +98,7 @@ function CreateGroupScreen({ navigation }: Props) {
           disabled={!name.trim()}
         />
       </ScrollView>
-    </SafeAreaView>
+    </SafeScreen>
   );
 }
 

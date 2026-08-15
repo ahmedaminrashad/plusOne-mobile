@@ -6,11 +6,11 @@ import {
   FlatList,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   StatusBar,
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
+import SafeScreen from '../../components/common/SafeScreen';
 import { AppScreenProps } from '../../types/navigation';
 import {
   useGetMyInvitationsQuery,
@@ -99,7 +99,7 @@ function InvitationsScreen({ navigation }: Props) {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeScreen style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
       <FlatList
         data={invitations ?? []}
@@ -125,7 +125,7 @@ function InvitationsScreen({ navigation }: Props) {
           isLoading ? <ActivityIndicator color={Colors.primary} style={styles.loader} /> : null
         }
       />
-    </SafeAreaView>
+    </SafeScreen>
   );
 }
 

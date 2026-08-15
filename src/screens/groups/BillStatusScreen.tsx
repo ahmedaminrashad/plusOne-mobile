@@ -1,5 +1,16 @@
 import React, { useCallback, useMemo, memo } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, SafeAreaView, ActivityIndicator, Alert, ViewStyle, TextStyle } from 'react-native';
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+  Alert,
+  ViewStyle,
+  TextStyle,
+} from 'react-native';
+import SafeScreen from '../../components/common/SafeScreen';
 import { useTranslation } from 'react-i18next';
 import { AppScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
@@ -19,7 +30,17 @@ import { ChevronLeftIcon } from '../../components/icons';
 
 type Props = AppScreenProps<'BillStatus'>;
 
-function ShareRow({ share, payerName }: { share: Share; payerName: string }) {
+function ShareRow({
+  share,
+  payerName,
+  showMarkReceived,
+  onMarkReceived,
+}: {
+  share: Share;
+  payerName: string;
+  showMarkReceived?: boolean;
+  onMarkReceived?: () => void;
+}) {
   const { t } = useTranslation('billing');
   const typography = useTypography();
   const name = share.owner?.displayName ?? share.ownerPendingPhone ?? t('viewReceipt.defaultUserName');
@@ -53,9 +74,15 @@ function ShareRow({ share, payerName }: { share: Share; payerName: string }) {
         <Text style={[typography.labelLarge, styles.shareName]}>{name}</Text>
         {!!subtitle && <Text style={[typography.bodySmall, styles.shareSubtitle]}>{subtitle}</Text>}
       </View>
-      <View style={[styles.badge, badgeStyle]}>
-        <Text style={[typography.labelSmall, badgeTextStyle]}>{badgeLabel}</Text>
-      </View>
+      {showMarkReceived ? (
+        <TouchableOpacity style={styles.rowMarkBtn} onPress={onMarkReceived} activeOpacity={0.8}>
+          <Text style={[typography.labelSmall, styles.rowMarkBtnText]}>{t('billStatus.markReceivedButton')}</Text>
+        </TouchableOpacity>
+      ) : (
+        <View style={[styles.badge, badgeStyle]}>
+          <Text style={[typography.labelSmall, badgeTextStyle]}>{badgeLabel}</Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -117,11 +144,23 @@ function BillStatusScreen({ route, navigation }: Props) {
 
   const handleRemind = useCallback(async () => {
     try {
-      await remindAll(billId).unwrap();
+      const result = await remindAll(billId).unwrap();
+      Alert.alert(
+        t('billStatus.remindSentTitle'),
+        t('billStatus.remindSentMessage', { count: result.sent }),
+      );
     } catch {
-      // rate-limited/no-op reminders are silently ignored, matching the per-share remind UX
+      Alert.alert(t('common:error'), t('billStatus.remindFailed'));
     }
-  }, [remindAll, billId]);
+  }, [remindAll, billId, t]);
+
+  const handleMarkReceivedOne = useCallback(async (shareId: string) => {
+    try {
+      await confirmShare(shareId).unwrap();
+    } catch {
+      Alert.alert(t('common:error'), t('billStatus.confirmFailed'));
+    }
+  }, [confirmShare, t]);
 
   const handleMarkReceived = useCallback(async () => {
     try {
@@ -133,9 +172,9 @@ function BillStatusScreen({ route, navigation }: Props) {
 
   if (isLoading || !bill) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeScreen style={styles.container}>
         <ActivityIndicator color={Colors.primary} style={styles.loader} />
-      </SafeAreaView>
+      </SafeScreen>
     );
   }
 
@@ -143,7 +182,7 @@ function BillStatusScreen({ route, navigation }: Props) {
   const date = new Date(bill.createdAt).toLocaleString();
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeScreen style={styles.container}>
       <View style={styles.headerRow}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} hitSlop={12}>
           <ChevronLeftIcon size={20} color={Colors.text} />
@@ -177,7 +216,14 @@ function BillStatusScreen({ route, navigation }: Props) {
       <FlatList
         data={activeShares}
         keyExtractor={(s) => s.id}
-        renderItem={({ item }) => <ShareRow share={item} payerName={payerName} />}
+        renderItem={({ item }) => (
+          <ShareRow
+            share={item}
+            payerName={payerName}
+            showMarkReceived={isPayer && item.status === 'initiated'}
+            onMarkReceived={() => handleMarkReceivedOne(item.id)}
+          />
+        )}
         contentContainerStyle={styles.list}
         ListHeaderComponent={
           <View style={styles.totalCard}>
@@ -224,7 +270,7 @@ function BillStatusScreen({ route, navigation }: Props) {
           )}
         </View>
       )}
-    </SafeAreaView>
+    </SafeScreen>
   );
 }
 
@@ -282,6 +328,15 @@ const styles = StyleSheet.create({
   shareInfo: { flex: 1 },
   shareName: { color: Colors.text },
   shareSubtitle: { color: Colors.textMuted, marginTop: 2 },
+
+  rowMarkBtn: {
+    backgroundColor: Colors.primary,
+    borderRadius: Radius.pill,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    maxWidth: 130,
+  },
+  rowMarkBtnText: { color: Colors.textOnPrimary, textAlign: 'center' },
 
   badge: { borderRadius: Radius.pill, paddingHorizontal: 10, paddingVertical: 5 },
   badgePaid: { backgroundColor: Colors.successTint },

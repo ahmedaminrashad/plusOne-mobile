@@ -5,11 +5,11 @@ import {
   TouchableOpacity,
   Switch,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   Alert,
   StatusBar,
 } from 'react-native';
+import SafeScreen from '../../components/common/SafeScreen';
 import { useTranslation } from 'react-i18next';
 import { SettingsScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
@@ -101,7 +101,7 @@ function SecurityScreen({ navigation }: Props) {
   }, []);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeScreen style={styles.container} statusBarColor={Colors.primaryDark}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.primaryDark} />
 
       <View style={styles.header}>
@@ -156,7 +156,7 @@ function SecurityScreen({ navigation }: Props) {
           </View>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </SafeScreen>
   );
 }
 

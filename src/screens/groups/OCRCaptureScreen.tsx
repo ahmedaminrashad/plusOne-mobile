@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   Platform,
   PermissionsAndroid,
@@ -11,6 +10,7 @@ import {
   ActivityIndicator,
   Image,
 } from 'react-native';
+import SafeScreen from '../../components/common/SafeScreen';
 import { useTranslation } from 'react-i18next';
 import { launchCamera, launchImageLibrary, Asset } from 'react-native-image-picker';
 import { AppScreenProps } from '../../types/navigation';
@@ -152,7 +152,7 @@ function OCRCaptureScreen({ route, navigation }: Props) {
   }, [captured, groupId, groupName, navigation, parseReceipt, t]);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeScreen style={styles.container}>
       {captured ? (
         <View style={styles.previewContainer}>
           <Image source={{ uri: captured.uri }} style={styles.previewImage} resizeMode="contain" />
@@ -205,7 +205,7 @@ function OCRCaptureScreen({ route, navigation }: Props) {
           </View>
         </View>
       )}
-    </SafeAreaView>
+    </SafeScreen>
   );
 }
 

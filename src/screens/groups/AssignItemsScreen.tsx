@@ -5,11 +5,11 @@ import {
   FlatList,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   Alert,
   Modal,
   ScrollView,
 } from 'react-native';
+import SafeScreen from '../../components/common/SafeScreen';
 import { useTranslation } from 'react-i18next';
 import { AppScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
@@ -17,7 +17,6 @@ import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
 import Avatar from '../../components/common/Avatar';
 import Button from '../../components/common/Button';
-import DraggablePriceInput from '../../components/common/DraggablePriceInput';
 import { useGetGroupMembersQuery } from '../../store/api/groupsApi';
 import { useGetMeQuery } from '../../store/api/usersApi';
 import { useCreateBillMutation } from '../../store/api/billsApi';
@@ -59,15 +58,11 @@ function ItemRow({
   item,
   members,
   mode,
-  selected,
-  onSelect,
   onToggle,
 }: {
   item: ReceiptItem;
   members: GroupMember[];
   mode: SplitMode;
-  selected: boolean;
-  onSelect: () => void;
   onToggle: (itemId: string, memberId: string) => void;
 }) {
   const { t } = useTranslation('billing');
@@ -75,10 +70,7 @@ function ItemRow({
   const subtotal = item.price * item.qty;
   const unclaimed = item.claimedBy.length === 0;
   return (
-    <TouchableOpacity
-      style={[styles.itemCard, mode === 'byItem' && unclaimed && styles.itemCardUnclaimed, selected && styles.itemCardSelected]}
-      onPress={onSelect}
-      activeOpacity={0.85}>
+    <View style={[styles.itemCard, mode === 'byItem' && unclaimed && styles.itemCardUnclaimed]}>
       <View style={styles.itemHeader}>
         <View style={styles.itemNameBlock}>
           <Text style={[typography.labelLarge, styles.itemName]}>{item.name}</Text>
@@ -108,7 +100,7 @@ function ItemRow({
           )}
         </>
       )}
-    </TouchableOpacity>
+    </View>
   );
 }
 
@@ -126,8 +118,6 @@ function AssignItemsScreen({ route, navigation }: Props) {
   const [paidByUserId, setPaidByUserId] = useState('');
   const [payerModalVisible, setPayerModalVisible] = useState(false);
   const [mode, setMode] = useState<SplitMode>('byItem');
-  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
-  const [dragPrice, setDragPrice] = useState('');
 
   const activeMembers = useMemo(
     () => (members ?? []).filter((m) => m.status === 'active' && (m.userId || m.pendingPhone)),
@@ -146,10 +136,6 @@ function AssignItemsScreen({ route, navigation }: Props) {
         claimedBy: [],
       }));
       setItems(mapped);
-      if (mapped[0]) {
-        setSelectedItemId(mapped[0].id);
-        setDragPrice(String(mapped[0].price));
-      }
     } catch {
       Alert.alert(t('common:error'), t('receiptSplit.parseFailed'), [
         { text: t('common:back'), onPress: () => navigation.goBack() },
@@ -160,20 +146,6 @@ function AssignItemsScreen({ route, navigation }: Props) {
   useEffect(() => {
     if (me && !paidByUserId) setPaidByUserId(me.id);
   }, [me, paidByUserId]);
-
-  const commitDragPrice = useCallback(() => {
-    if (!selectedItemId) return;
-    const next = parseFloat(dragPrice.replace(',', '.'));
-    if (!Number.isFinite(next) || next < 0) return;
-    setItems((prev) =>
-      prev.map((item) => (item.id === selectedItemId ? { ...item, price: next } : item)),
-    );
-  }, [selectedItemId, dragPrice]);
-
-  const selectItemForPrice = useCallback((item: ReceiptItem) => {
-    setSelectedItemId(item.id);
-    setDragPrice(String(item.price));
-  }, []);
 
   const subtotal = useMemo(() => items.reduce((sum, it) => sum + it.price * it.qty, 0), [items]);
 
@@ -321,12 +293,10 @@ function AssignItemsScreen({ route, navigation }: Props) {
         item={item}
         members={activeMembers}
         mode={mode}
-        selected={item.id === selectedItemId}
-        onSelect={() => selectItemForPrice(item)}
         onToggle={toggleClaim}
       />
     ),
-    [activeMembers, mode, selectedItemId, selectItemForPrice, toggleClaim],
+    [activeMembers, mode, toggleClaim],
   );
 
   const ListHeader = useMemo(
@@ -377,7 +347,7 @@ function AssignItemsScreen({ route, navigation }: Props) {
   const summaryRows = activeMembers.filter((m) => memberTotals[getMemberId(m)] !== undefined);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeScreen style={styles.container}>
       <FlatList
         data={items}
         keyExtractor={(it) => it.id}
@@ -452,15 +422,7 @@ function AssignItemsScreen({ route, navigation }: Props) {
           </View>
         </TouchableOpacity>
       </Modal>
-
-      {selectedItemId && (
-        <DraggablePriceInput
-          value={dragPrice}
-          onChange={setDragPrice}
-          onCommit={commitDragPrice}
-        />
-      )}
-    </SafeAreaView>
+    </SafeScreen>
   );
 }
 

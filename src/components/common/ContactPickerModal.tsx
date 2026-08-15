@@ -8,8 +8,8 @@ import {
   TextInput,
   StyleSheet,
   ActivityIndicator,
-  SafeAreaView,
 } from 'react-native';
+import SafeScreen from './SafeScreen';
 import { useTranslation } from 'react-i18next';
 import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/radius';
@@ -81,7 +81,7 @@ function ContactPickerModal({
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <SafeAreaView style={styles.container}>
+      <SafeScreen style={styles.container}>
         <View style={styles.header}>
           <Text style={[typography.headingMedium, styles.title]}>
             {title ?? t('contacts.pickerTitle', { defaultValue: 'Choose from contacts' })}
@@ -152,7 +152,7 @@ function ContactPickerModal({
             </Text>
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
+      </SafeScreen>
     </Modal>
   );
 }

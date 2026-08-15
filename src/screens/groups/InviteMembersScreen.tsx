@@ -4,11 +4,11 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   FlatList,
   TouchableOpacity,
   Alert,
 } from 'react-native';
+import SafeScreen from '../../components/common/SafeScreen';
 import { AppScreenProps } from '../../types/navigation';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
@@ -98,7 +98,7 @@ function InviteMembersScreen({ route, navigation }: Props) {
   }, [selected, groupId, inviteMembers, navigation, t]);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeScreen style={styles.container}>
       <View style={styles.content}>
         <Text style={[typography.headingLarge, styles.title]}>{t('inviteMembers.title')}</Text>
         <Text style={[typography.bodyLarge, styles.subtitle]}>
@@ -142,16 +142,15 @@ function InviteMembersScreen({ route, navigation }: Props) {
             keyExtractor={(p) => p}
             renderItem={({ item }) => (
               <View style={styles.phoneTag}>
-                <Text style={[typography.labelMedium, styles.phoneTagText]}>
+                <Text style={[typography.labelMedium, styles.phoneTagText]} numberOfLines={1}>
                   {contactNames[item] ? `${contactNames[item]} · ${item}` : item}
                 </Text>
-                <TouchableOpacity onPress={() => handleRemovePhone(item)}>
+                <TouchableOpacity onPress={() => handleRemovePhone(item)} hitSlop={8}>
                   <CloseIcon size={12} color={Colors.primary} />
                 </TouchableOpacity>
               </View>
             )}
-            horizontal
-            showsHorizontalScrollIndicator={false}
+            showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.tags}
           />
         )}
@@ -172,7 +171,7 @@ function InviteMembersScreen({ route, navigation }: Props) {
         onClose={() => setPickerOpen(false)}
         onConfirm={handleContactsPicked}
       />
-    </SafeAreaView>
+    </SafeScreen>
   );
 }
 
@@ -199,12 +198,19 @@ const styles = StyleSheet.create({
   inputRow: { flexDirection: 'row', gap: 8, alignItems: 'flex-start' },
   phoneInput: { flex: 1, marginBottom: 0 },
   addBtn: { height: 52, paddingHorizontal: 16, marginTop: 0 },
-  tags: { paddingVertical: 8, gap: 8 },
+  tags: { paddingVertical: 12, gap: 8 },
   phoneTag: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: Colors.tint, borderRadius: Radius.xl,
-    paddingHorizontal: 12, paddingVertical: 8,
-    borderWidth: 1, borderColor: Colors.primaryLight,
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: Colors.tint,
+    borderRadius: Radius.pill,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderWidth: 1,
+    borderColor: Colors.primaryLight,
+    maxWidth: '100%',
   },
   phoneTagText: { color: Colors.primary },
   footer: { padding: 24, paddingTop: 0 },

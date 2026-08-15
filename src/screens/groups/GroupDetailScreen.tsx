@@ -6,12 +6,10 @@ import {
   FlatList,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   Alert,
   ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
+import SafeScreen from '../../components/common/SafeScreen';
 import { AppScreenProps } from '../../types/navigation';
 import { useGetGroupMembersQuery, useRemoveMemberMutation } from '../../store/api/groupsApi';
 import { useGetGroupBillsQuery, useDeleteBillMutation } from '../../store/api/billsApi';
@@ -177,7 +175,9 @@ function GroupDetailScreen({ route, navigation }: Props) {
   const { groupId, groupName } = route.params;
   const [activeTab, setActiveTab] = useState<Tab>('chat');
 
-  const { data: members, isLoading, refetch } = useGetGroupMembersQuery(groupId);
+  const { data: members, isLoading, refetch } = useGetGroupMembersQuery(groupId, {
+    pollingInterval: 10_000,
+  });
   const { data: bills, isLoading: billsLoading } = useGetGroupBillsQuery(groupId, {
     skip: activeTab !== 'bills',
   });
@@ -276,12 +276,7 @@ function GroupDetailScreen({ route, navigation }: Props) {
       : t('groupDetail.tabMembers');
 
   return (
-    <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}>
-
+    <SafeScreen style={styles.container}>
         {/* Header — back button, group name + member count, avatar stack */}
         <View style={styles.header}>
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} hitSlop={8}>
@@ -400,8 +395,7 @@ function GroupDetailScreen({ route, navigation }: Props) {
             )}
           </View>
         )}
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+    </SafeScreen>
   );
 }
 

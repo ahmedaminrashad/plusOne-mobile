@@ -1,5 +1,11 @@
 import React, { memo } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+} from 'react-native';
+import SafeScreen from '../../components/common/SafeScreen';
 import { useTranslation } from 'react-i18next';
 import { AppScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
@@ -47,7 +53,7 @@ function AddBillChooserScreen({ route, navigation }: Props) {
   ];
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeScreen style={styles.container}>
       <View style={styles.headerRow}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} hitSlop={12}>
           <ChevronLeftIcon size={20} color={Colors.text} />
@@ -84,7 +90,7 @@ function AddBillChooserScreen({ route, navigation }: Props) {
       </View>
 
       <Text style={[typography.caption, styles.footer]}>{t('addBillChooser.footer')}</Text>
-    </SafeAreaView>
+    </SafeScreen>
   );
 }
 

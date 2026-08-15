@@ -43,8 +43,15 @@
     "saveError": "تعذر حفظ التغييرات، حاول مرة أخرى.",
     "fullNameLabel": "الاسم الكامل *",
     "fullNamePlaceholder": "اسمك الكامل",
-    "instaPayLabel": "معرّف أو رقم InstaPay (اختياري)",
-    "instaPayPlaceholder": "مثال: ahmed_hassan أو 01001234567",
+    "instaPayLabel": "معرّف InstaPay (اختياري)",
+    "instaPayPlaceholder": "مثال: ahmedhassan/instapay/ID1234",
+    "instaPayHowToLink": "إزاي ألاقيه؟",
+    "instaPayHowToTitle": "الحصول على رابط InstaPay",
+    "instaPayHowToStep1": "١. افتح تطبيق InstaPay",
+    "instaPayHowToStep2": "٢. روح لملفك الشخصي واضغط شارك رابطك",
+    "instaPayHowToStep3": "٣. اختار +One من قائمة المشاركة",
+    "instaPayHowToStep4": "٤. ارجع هنا واضغط حفظ التغييرات",
+    "instaPayHowToNote": "الرابط بيخلي أصحابك يدفعوا لك مباشرة من التقسيمة.",
     "saveButton": "حفظ التغييرات"
   },
   "paymentMethods": {

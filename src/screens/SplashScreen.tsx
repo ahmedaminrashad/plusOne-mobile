@@ -8,6 +8,8 @@ import {
   StatusBar,
 } from 'react-native';
 
+import SafeScreen from '../components/common/SafeScreen';
+
 interface Props {
   onFinish: () => void;
 }
@@ -25,7 +27,7 @@ export default function SplashScreen({ onFinish }: Props) {
   }, [onFinish]);
 
   return (
-    <View style={styles.container}>
+    <SafeScreen style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
 
       <View style={styles.logoCard}>
@@ -46,7 +48,7 @@ export default function SplashScreen({ onFinish }: Props) {
           <Text style={styles.buttonText}>Continue to App</Text>
         </TouchableOpacity>
       )}
-    </View>
+    </SafeScreen>
   );
 }
 

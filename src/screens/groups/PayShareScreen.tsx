@@ -4,13 +4,13 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   ActivityIndicator,
   Alert,
   Linking,
   AppState,
   AppStateStatus,
 } from 'react-native';
+import SafeScreen from '../../components/common/SafeScreen';
 import { useTranslation } from 'react-i18next';
 import { useFocusEffect } from '@react-navigation/native';
 import { AppScreenProps } from '../../types/navigation';
@@ -175,16 +175,16 @@ function PayShareScreen({ route, navigation }: Props) {
 
   if (isLoading || !bill) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeScreen style={styles.container}>
         <ActivityIndicator color={Colors.primary} style={styles.loader} />
-      </SafeAreaView>
+      </SafeScreen>
     );
   }
 
   const displayName = bill.venueName ?? bill.title ?? t('viewReceipt.defaultBillName');
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeScreen style={styles.container}>
       <View style={styles.headerRow}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} hitSlop={12}>
           <ChevronLeftIcon size={20} color={Colors.text} />
@@ -251,7 +251,7 @@ function PayShareScreen({ route, navigation }: Props) {
           </>
         ) : null}
       </View>
-    </SafeAreaView>
+    </SafeScreen>
   );
 }
 

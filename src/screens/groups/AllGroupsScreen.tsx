@@ -7,8 +7,8 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
 } from 'react-native';
+import SafeScreen from '../../components/common/SafeScreen';
 import { AppScreenProps } from '../../types/navigation';
 import { useGetGroupsQuery } from '../../store/api/groupsApi';
 import GroupCard from '../../components/groups/GroupCard';
@@ -80,7 +80,7 @@ function AllGroupsScreen({ navigation }: Props) {
   ];
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeScreen style={styles.container}>
       {(groups ?? []).map((g) => (
         <GroupBalanceCollector key={g.id} groupId={g.id} onBalance={handleBalance} />
       ))}
@@ -140,7 +140,7 @@ function AllGroupsScreen({ navigation }: Props) {
       <TouchableOpacity style={styles.newGroupBtn} onPress={() => navigation.navigate('CreateGroup')} activeOpacity={0.85}>
         <Text style={[typography.labelLarge, styles.newGroupBtnText]}>{t('allGroups.newGroupCta')}</Text>
       </TouchableOpacity>
-    </SafeAreaView>
+    </SafeScreen>
   );
 }
 

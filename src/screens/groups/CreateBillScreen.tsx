@@ -9,10 +9,10 @@ import {
   Modal,
   FlatList,
   StyleSheet,
-  SafeAreaView,
   Platform,
   ActivityIndicator,
 } from 'react-native';
+import SafeScreen from '../../components/common/SafeScreen';
 import { useTranslation } from 'react-i18next';
 import { AppScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
@@ -225,7 +225,7 @@ function CreateBillScreen({ route, navigation }: Props) {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeScreen style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         {isPreview && (
           <View style={styles.previewBanner}>
@@ -435,7 +435,7 @@ function CreateBillScreen({ route, navigation }: Props) {
           </View>
         </TouchableOpacity>
       </Modal>
-    </SafeAreaView>
+    </SafeScreen>
   );
 }
 

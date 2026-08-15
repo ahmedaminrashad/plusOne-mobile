@@ -36,6 +36,7 @@ export default function AppStack() {
         headerTintColor: Colors.accent,
         headerTitleStyle: { fontWeight: '700', color: Colors.text },
         headerShadowVisible: false,
+        headerBackTitleVisible: false,
         contentStyle: { backgroundColor: Colors.background },
       }}>
       <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />

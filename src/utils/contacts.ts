@@ -26,8 +26,9 @@ export async function requestContactsPermission(): Promise<boolean> {
     return result === PermissionsAndroid.RESULTS.GRANTED;
   }
 
-  const permission = await Contacts.checkPermission();
-  if (permission === 'authorized' || permission === 'limited') return true;
+  // Always call requestPermission on iOS. checkPermission() can report
+  // "undetermined" without ever showing the system dialog, so a pre-check
+  // skips the prompt entirely on first launch.
   const requested = await Contacts.requestPermission();
   return requested === 'authorized' || requested === 'limited';
 }

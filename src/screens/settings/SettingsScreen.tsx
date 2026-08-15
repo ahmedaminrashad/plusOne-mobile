@@ -4,12 +4,12 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   Alert,
   StatusBar,
   Modal,
 } from 'react-native';
+import SafeScreen from '../../components/common/SafeScreen';
 import { useTranslation } from 'react-i18next';
 import { SettingsScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
@@ -22,7 +22,7 @@ import { baseApi } from '../../store/api/baseApi';
 import { SecureStorage } from '../../utils/storage';
 import { changeLanguage, AppLanguage } from '../../i18n';
 import { resolveAssetUrl } from '../../utils/format';
-import { PersonIcon, CardIcon, LockIcon, GlobeIcon, HelpIcon, InfoIcon, LogoutIcon, CheckIcon, ChevronRightIcon } from '../../components/icons';
+import { PersonIcon, CardIcon, GlobeIcon, HelpIcon, InfoIcon, LogoutIcon, CheckIcon, ChevronRightIcon } from '../../components/icons';
 
 type Props = SettingsScreenProps<'Settings'>;
 
@@ -104,7 +104,7 @@ function SettingsScreen({ navigation }: Props) {
   }, [dispatch, t, logout, refreshToken]);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeScreen style={styles.container} statusBarColor={Colors.primaryDark}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.primaryDark} />
 
       {/* Header */}
@@ -135,10 +135,6 @@ function SettingsScreen({ navigation }: Props) {
           <SettingsRow icon={<PersonIcon size={18} color={Colors.primary} />} label={t('settings.editProfileLabel')} onPress={() => navigation.navigate('EditProfile')} />
           <View style={styles.divider} />
           <SettingsRow icon={<CardIcon size={18} color={Colors.primary} />} label={t('settings.paymentMethodsLabel')} onPress={() => navigation.navigate('PaymentMethods')} />
-        </SettingsSection>
-
-        <SettingsSection title={t('settings.securitySection')}>
-          <SettingsRow icon={<LockIcon size={18} color={Colors.primary} />} label={t('settings.securityLabel')} onPress={() => navigation.navigate('SecuritySettings')} />
         </SettingsSection>
 
         <SettingsSection title={t('settings.appSection')}>
@@ -192,7 +188,7 @@ function SettingsScreen({ navigation }: Props) {
           </View>
         </TouchableOpacity>
       </Modal>
-    </SafeAreaView>
+    </SafeScreen>
   );
 }
 

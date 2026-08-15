@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Provider } from 'react-redux';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Appearance, StatusBar, Platform } from 'react-native';
 import { store } from './src/store';
 import RootNavigator from './src/navigation/RootNavigator';
 import SplashScreen from './src/screens/SplashScreen';
@@ -15,6 +15,11 @@ export default function App() {
   // Restore the user's saved language (if any) as early as possible, while the
   // splash screen is still covering the UI, to avoid a flash of the default language.
   useEffect(() => {
+    Appearance.setColorScheme('light');
+    if (Platform.OS === 'android') {
+      StatusBar.setTranslucent(true);
+      StatusBar.setBackgroundColor('transparent');
+    }
     AppStorage.getLanguage().then((stored) => {
       if (stored && stored !== DEFAULT_LANGUAGE) {
         changeLanguage(stored);

@@ -3,12 +3,12 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   Alert,
   Platform,
 } from 'react-native';
+import SafeScreen from '../../components/common/SafeScreen';
 import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
 import { useTranslation } from 'react-i18next';
 import { AuthScreenProps } from '../../types/navigation';
@@ -82,7 +82,7 @@ function ProfileSetupScreen({ navigation }: Props) {
   }, [t]);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeScreen style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <Text style={styles.title}>{t('profileSetup.title')}</Text>
         <Text style={styles.subtitle}>{t('profileSetup.subtitle')}</Text>
@@ -120,7 +120,7 @@ function ProfileSetupScreen({ navigation }: Props) {
           <Text style={styles.skipText}>{t('profileSetup.skipButton')}</Text>
         </TouchableOpacity>
       </ScrollView>
-    </SafeAreaView>
+    </SafeScreen>
   );
 }
 

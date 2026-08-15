@@ -92,6 +92,9 @@
     "payLinkSentBySms": "Pay link sent by SMS",
     "remindButton": "Remind ({{count}})",
     "markReceivedButton": "Mark received",
+    "remindSentTitle": "Reminder sent",
+    "remindSentMessage": "Sent {{count}} reminder(s). They’ll also appear in Notifications.",
+    "remindFailed": "Couldn't send the reminder, please try again",
     "confirmFailed": "Couldn't confirm the payment, please try again"
   },
   "payShare": {

@@ -3,13 +3,13 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   FlatList,
   useWindowDimensions,
   NativeSyntheticEvent,
   NativeScrollEvent,
   TouchableOpacity,
 } from 'react-native';
+import SafeScreen from '../../components/common/SafeScreen';
 import { useTranslation } from 'react-i18next';
 import { AuthScreenProps } from '../../types/navigation';
 import Button from '../../components/common/Button';
@@ -142,7 +142,7 @@ function OnboardingScreen({ navigation }: Props) {
   const isLast = index === slides.length - 1;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeScreen style={styles.container}>
       <TouchableOpacity style={styles.skipButton} onPress={finishOnboarding} hitSlop={12}>
         <Text style={[typography.labelMedium, styles.skipText]}>{t('onboarding.skip')}</Text>
       </TouchableOpacity>
@@ -176,7 +176,7 @@ function OnboardingScreen({ navigation }: Props) {
           style={styles.nextButton}
         />
       </View>
-    </SafeAreaView>
+    </SafeScreen>
   );
 }
 
@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
   },
   // Figma colours these captions textSecondary (#66706B), not the darker ink/muted tones.
   illustrationVenue: { color: Colors.textSecondary },
-  illustrationMuted: { color: Colors.textSecondary },
+  illustrationMuted: { color: Colors.textSecondary, textAlign: 'center', alignSelf: 'center' },
   illustrationSpacedTop: { marginTop: 12 },
   illustrationDivider: { borderTopWidth: 1, borderStyle: 'dashed', borderColor: Colors.borderLight, marginVertical: 10 },
   illustrationRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 4 },

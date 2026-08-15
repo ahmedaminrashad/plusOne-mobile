@@ -8,7 +8,7 @@ export const usersApi = baseApi.injectEndpoints({
       providesTags: ['User'],
     }),
 
-    updateProfile: builder.mutation<User, { displayName?: string; instaPayAlias?: string }>({
+    updateProfile: builder.mutation<User, { displayName?: string; instaPayAlias?: string | null }>({
       query: (body) => ({ url: '/users/me', method: 'PATCH', body }),
       invalidatesTags: ['User', 'Bill'],
     }),

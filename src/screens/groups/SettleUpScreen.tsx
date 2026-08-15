@@ -1,5 +1,14 @@
 import React, { useCallback, useMemo, memo } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, SafeAreaView, ActivityIndicator, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+  Alert,
+} from 'react-native';
+import SafeScreen from '../../components/common/SafeScreen';
 import { useTranslation } from 'react-i18next';
 import { AppScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
@@ -36,7 +45,16 @@ function SettleUpScreen({ navigation }: Props) {
 
   const handleRemind = useCallback(async (row: AggregateShareRow) => {
     try {
-      await Promise.all(row.shareIds.map((id) => sendReminder(id).unwrap()));
+      const results = await Promise.all(row.shareIds.map((id) => sendReminder(id).unwrap()));
+      const sent = results.filter((r) => r.sent).length;
+      const rateLimited = results.filter((r) => r.rateLimited).length;
+      if (sent > 0) {
+        Alert.alert(t('settleUp.remindSentTitle'), t('settleUp.remindSentMessage', { count: sent }));
+      } else if (rateLimited > 0) {
+        Alert.alert(t('settleUp.remindRateLimitedTitle'), t('settleUp.remindRateLimitedMessage'));
+      } else {
+        Alert.alert(t('common:error'), t('settleUp.remindFailed'));
+      }
     } catch {
       Alert.alert(t('common:error'), t('settleUp.remindFailed'));
     }
@@ -44,7 +62,17 @@ function SettleUpScreen({ navigation }: Props) {
 
   const handleRemindAll = useCallback(async () => {
     try {
-      await Promise.all(toCollect.flatMap((r) => r.shareIds).map((id) => sendReminder(id).unwrap()));
+      const ids = toCollect.flatMap((r) => r.shareIds);
+      const results = await Promise.all(ids.map((id) => sendReminder(id).unwrap()));
+      const sent = results.filter((r) => r.sent).length;
+      const rateLimited = results.filter((r) => r.rateLimited).length;
+      if (sent > 0) {
+        Alert.alert(t('settleUp.remindSentTitle'), t('settleUp.remindSentMessage', { count: sent }));
+      } else if (rateLimited > 0) {
+        Alert.alert(t('settleUp.remindRateLimitedTitle'), t('settleUp.remindRateLimitedMessage'));
+      } else {
+        Alert.alert(t('common:error'), t('settleUp.remindFailed'));
+      }
     } catch {
       Alert.alert(t('common:error'), t('settleUp.remindFailed'));
     }
@@ -56,16 +84,16 @@ function SettleUpScreen({ navigation }: Props) {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeScreen style={styles.container}>
         <ActivityIndicator color={Colors.primary} style={styles.loader} />
-      </SafeAreaView>
+      </SafeScreen>
     );
   }
 
   const isEmpty = toCollect.length === 0 && toPay.length === 0;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeScreen style={styles.container}>
       <View style={styles.headerRow}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} hitSlop={12}>
           <ChevronLeftIcon size={20} color={Colors.text} />
@@ -155,7 +183,7 @@ function SettleUpScreen({ navigation }: Props) {
           )}
         </>
       )}
-    </SafeAreaView>
+    </SafeScreen>
   );
 }
 

@@ -31,14 +31,17 @@
   },
   "notifications": {
     "title": "Notifications",
-    "subtitle": "Payment approvals and group invites",
+    "subtitle": "Approvals, payments you owe, and group invites",
     "approvalTitle": "{{name}} paid {{amount}}",
     "approvalSubtitle": "Confirm you received this payment",
+    "toPayTitle": "Pay {{amount}} for {{title}}",
+    "toPaySubtitle": "Someone reminded you to settle this share",
+    "payNow": "Pay now",
     "viewBill": "View",
     "confirmPayment": "Approve",
     "confirmFailed": "Couldn't confirm payment",
     "emptyTitle": "All caught up",
-    "emptySubtitle": "Payment approvals and invitations will show up here",
+    "emptySubtitle": "Approvals, payment reminders, and invitations will show up here",
     "viewInvitations": "Group invitations"
   },
   "myCircle": {
@@ -100,7 +103,11 @@
     "remindEveryone": "Remind everyone · collect {{amount}}",
     "emptyTitle": "You're all settled up",
     "emptySubtitle": "No outstanding balances across your groups right now.",
-    "remindFailed": "Couldn't send the reminder, please try again"
+    "remindFailed": "Couldn't send the reminder, please try again",
+    "remindSentTitle": "Reminder sent",
+    "remindSentMessage": "Sent {{count}} reminder(s).",
+    "remindRateLimitedTitle": "Already reminded",
+    "remindRateLimitedMessage": "You can only remind each person once per day."
   },
   "remind": {
     "title": "Send reminders",

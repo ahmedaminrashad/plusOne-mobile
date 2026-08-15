@@ -1,5 +1,12 @@
 import React, { useState, useCallback, useMemo, memo } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
+} from 'react-native';
+import SafeScreen from '../../components/common/SafeScreen';
 import { useTranslation } from 'react-i18next';
 import { AppScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
@@ -66,7 +73,7 @@ function MyLedgerScreen({ navigation }: Props) {
   const monthLabel = formatDate(new Date(), { month: 'short' });
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeScreen style={styles.container}>
       {(groups ?? []).map((g) => (
         <GroupLedgerCollector key={g.id} groupId={g.id} onLedger={handleLedger} />
       ))}
@@ -157,7 +164,7 @@ function MyLedgerScreen({ navigation }: Props) {
           )}
         />
       )}
-    </SafeAreaView>
+    </SafeScreen>
   );
 }
 

@@ -92,6 +92,9 @@
     "payLinkSentBySms": "اتبعت رابط الدفع بـ SMS",
     "remindButton": "تذكير ({{count}})",
     "markReceivedButton": "تأكيد الاستلام",
+    "remindSentTitle": "تم إرسال التذكير",
+    "remindSentMessage": "اتبعت {{count}} تذكير. هتظهر كمان في الإشعارات.",
+    "remindFailed": "تعذر إرسال التذكير، حاول مرة أخرى",
     "confirmFailed": "تعذر تأكيد الدفع، حاول مرة أخرى"
   },
   "payShare": {

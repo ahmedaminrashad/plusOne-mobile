@@ -91,7 +91,7 @@ function MessageBubble({
     const timeStr = pending.failed ? t('chat.sendFailed') : t('chat.sendingEllipsis');
     return (
       <View style={[styles.bubbleRow, styles.bubbleRowMine]}>
-        <View style={styles.bubbleCol}>
+        <View style={styles.bubbleColMine}>
           <TouchableOpacity
             activeOpacity={pending.failed ? 0.6 : 1}
             onPress={pending.failed ? () => onRetry(pending.localId) : undefined}>
@@ -330,12 +330,12 @@ function GroupChatPane({ groupId, groupName, navigation, sharedImageUri, onShare
   });
 
   const listData: ChatListItem[] = [
-    ...pending.map((item) => ({ kind: 'pending' as const, item })),
+    ...pending.filter((item) => item.failed).map((item) => ({ kind: 'pending' as const, item })),
     ...messageItems,
   ];
 
   return (
-    <View style={[styles.flex, { paddingBottom: keyboardInset }]}>
+    <View style={styles.flex}>
       {listData.length === 0 ? (
         <View style={styles.emptyChat}>
           <ChatBubbleIcon size={48} color={Colors.textSecondary} />
@@ -384,6 +384,8 @@ function GroupChatPane({ groupId, groupName, navigation, sharedImageUri, onShare
           contentContainerStyle={styles.messagesList}
           onEndReached={loadMore}
           onEndReachedThreshold={0.3}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
           ListFooterComponent={
             loadingMore
               ? <ActivityIndicator color={Colors.primary} style={styles.loadMoreSpinner} />
@@ -392,7 +394,7 @@ function GroupChatPane({ groupId, groupName, navigation, sharedImageUri, onShare
         />
       )}
 
-      <View style={styles.inputRow}>
+      <View style={[styles.inputRow, keyboardInset > 0 && { marginBottom: keyboardInset }]}>
         <TouchableOpacity
           style={styles.attachBtn}
           onPress={handlePickImage}

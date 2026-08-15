@@ -7,9 +7,9 @@ import {
   FlatList,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   ActivityIndicator,
 } from 'react-native';
+import SafeScreen from '../../components/common/SafeScreen';
 import { AppScreenProps } from '../../types/navigation';
 import { useGetGroupsQuery } from '../../store/api/groupsApi';
 import { Group } from '../../types/models';
@@ -41,7 +41,7 @@ function SelectGroupToShareScreen({ route, navigation }: Props) {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeScreen style={styles.container}>
       <View style={styles.previewRow}>
         <Image source={{ uri: imageUri }} style={styles.preview} resizeMode="cover" />
         <Text style={styles.subtitle}>{t('shareToGroup.subtitle')}</Text>
@@ -72,7 +72,7 @@ function SelectGroupToShareScreen({ route, navigation }: Props) {
           </View>
         }
       />
-    </SafeAreaView>
+    </SafeScreen>
   );
 }
 

@@ -4,11 +4,11 @@ import {
   Text,
   Image,
   StyleSheet,
-  SafeAreaView,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
 } from 'react-native';
+import SafeScreen from '../../components/common/SafeScreen';
 import { useTranslation } from 'react-i18next';
 import { AuthScreenProps } from '../../types/navigation';
 import Button from '../../components/common/Button';
@@ -57,7 +57,7 @@ function PhoneEntryScreen({ navigation }: Props) {
   }, []);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeScreen style={styles.container}>
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -103,7 +103,7 @@ function PhoneEntryScreen({ navigation }: Props) {
           <Text style={[typography.caption, styles.terms]}>{t('phoneEntry.terms')}</Text>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </SafeScreen>
   );
 }
 

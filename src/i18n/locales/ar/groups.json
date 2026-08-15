@@ -31,14 +31,17 @@
   },
   "notifications": {
     "title": "الإشعارات",
-    "subtitle": "موافقات الدفع ودعوات المجموعات",
+    "subtitle": "موافقات الدفع، المبالغ المستحقة، ودعوات المجموعات",
     "approvalTitle": "{{name}} دفع {{amount}}",
     "approvalSubtitle": "أكّد استلامك لهذا الدفع",
+    "toPayTitle": "ادفع {{amount}} لـ {{title}}",
+    "toPaySubtitle": "حد ذكّرك تسوي حصتك",
+    "payNow": "ادفع الآن",
     "viewBill": "عرض",
     "confirmPayment": "موافقة",
     "confirmFailed": "تعذّر تأكيد الدفع",
     "emptyTitle": "كل شيء تمام",
-    "emptySubtitle": "موافقات الدفع والدعوات هتظهر هنا",
+    "emptySubtitle": "موافقات الدفع وتذكيرات السداد والدعوات هتظهر هنا",
     "viewInvitations": "دعوات المجموعات"
   },
   "myCircle": {
@@ -100,7 +103,11 @@
     "remindEveryone": "ذكّر الكل · حصّل {{amount}}",
     "emptyTitle": "حسابك متسوّى",
     "emptySubtitle": "مفيش أرصدة معلّقة على مجموعاتك دلوقتي.",
-    "remindFailed": "تعذر إرسال التذكير، حاول مرة أخرى"
+    "remindFailed": "تعذر إرسال التذكير، حاول مرة أخرى",
+    "remindSentTitle": "تم إرسال التذكير",
+    "remindSentMessage": "اتبعت {{count}} تذكير.",
+    "remindRateLimitedTitle": "اتذكّروا قبل كده",
+    "remindRateLimitedMessage": "تقدر تذكّر كل شخص مرة واحدة في اليوم بس."
   },
   "remind": {
     "title": "إرسال تذكيرات",

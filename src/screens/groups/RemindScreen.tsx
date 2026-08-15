@@ -1,5 +1,14 @@
 import React, { useCallback, useMemo, useState, memo } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, SafeAreaView, ActivityIndicator, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+  Alert,
+} from 'react-native';
+import SafeScreen from '../../components/common/SafeScreen';
 import { useTranslation } from 'react-i18next';
 import { AppScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
@@ -50,8 +59,22 @@ function RemindScreen({ navigation }: Props) {
 
   const handleSend = useCallback(async () => {
     try {
-      await Promise.all(selectedRows.flatMap((r) => r.shareIds).map((id) => sendReminder(id).unwrap()));
-      navigation.goBack();
+      const results = await Promise.all(
+        selectedRows.flatMap((r) => r.shareIds).map((id) => sendReminder(id).unwrap()),
+      );
+      const sent = results.filter((r) => r.sent).length;
+      const rateLimited = results.filter((r) => r.rateLimited).length;
+      if (sent > 0) {
+        Alert.alert(
+          t('settleUp.remindSentTitle'),
+          t('settleUp.remindSentMessage', { count: sent }),
+          [{ text: t('common:ok'), onPress: () => navigation.goBack() }],
+        );
+      } else if (rateLimited > 0) {
+        Alert.alert(t('settleUp.remindRateLimitedTitle'), t('settleUp.remindRateLimitedMessage'));
+      } else {
+        Alert.alert(t('common:error'), t('remind.sendFailed'));
+      }
     } catch {
       Alert.alert(t('common:error'), t('remind.sendFailed'));
     }
@@ -59,14 +82,14 @@ function RemindScreen({ navigation }: Props) {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeScreen style={styles.container}>
         <ActivityIndicator color={Colors.primary} style={styles.loader} />
-      </SafeAreaView>
+      </SafeScreen>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeScreen style={styles.container}>
       <View style={styles.headerRow}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} hitSlop={12}>
           <ChevronLeftIcon size={20} color={Colors.text} />
@@ -138,7 +161,7 @@ function RemindScreen({ navigation }: Props) {
           </View>
         </>
       )}
-    </SafeAreaView>
+    </SafeScreen>
   );
 }
 

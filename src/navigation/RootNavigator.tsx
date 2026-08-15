@@ -87,6 +87,11 @@ export default function RootNavigator() {
         screen: 'PayShare',
         params: { groupId: data.groupId, groupName: data.groupName ?? '', billId: data.billId },
       });
+    } else if (data.type === 'share_reminder' && data.groupId && data.billId) {
+      nav.navigate('Home', {
+        screen: 'PayShare',
+        params: { groupId: data.groupId, groupName: data.groupName ?? '', billId: data.billId },
+      });
     }
   }, []);
 
@@ -109,7 +114,8 @@ export default function RootNavigator() {
         data.type === 'chat_message' ||
         data.type === 'share_assigned' ||
         data.type === 'share_initiated' ||
-        data.type === 'share_settled'
+        data.type === 'share_settled' ||
+        data.type === 'share_reminder'
       ) {
         dispatch(
           baseApi.util.invalidateTags([
@@ -179,6 +185,25 @@ export default function RootNavigator() {
     });
     return () => subscription.remove();
   }, [showApp, navReady]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const subscription = AppState.addEventListener('change', (state: AppStateStatus) => {
+      if (state !== 'active') return;
+      dispatch(
+        baseApi.util.invalidateTags([
+          'Group',
+          'GroupMember',
+          'Invitation',
+          'Share',
+          'Bill',
+          'Ledger',
+          'Message',
+        ]),
+      );
+    });
+    return () => subscription.remove();
+  }, [dispatch, isAuthenticated]);
 
   if (loading) {
     return (

@@ -5,12 +5,12 @@ import {
   FlatList,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   StatusBar,
   ActivityIndicator,
   RefreshControl,
   Alert,
 } from 'react-native';
+import SafeScreen from '../../components/common/SafeScreen';
 import { useTranslation } from 'react-i18next';
 import { AppScreenProps } from '../../types/navigation';
 import {
@@ -32,6 +32,7 @@ type Props = AppScreenProps<'Notifications'>;
 
 type FeedItem =
   | { kind: 'approval'; share: MyShare }
+  | { kind: 'toPay'; share: MyShare }
   | { kind: 'invite'; invitation: GroupMember };
 
 function NotificationsScreen({ navigation }: Props) {
@@ -43,13 +44,13 @@ function NotificationsScreen({ navigation }: Props) {
     isLoading: loadingShares,
     isFetching: fetchingShares,
     refetch: refetchShares,
-  } = useGetMySharesQuery();
+  } = useGetMySharesQuery(undefined, { pollingInterval: 15_000 });
   const {
     data: invitations,
     isLoading: loadingInvites,
     isFetching: fetchingInvites,
     refetch: refetchInvites,
-  } = useGetMyInvitationsQuery();
+  } = useGetMyInvitationsQuery(undefined, { pollingInterval: 15_000 });
 
   const [confirmShare, { isLoading: confirming }] = useConfirmShareMutation();
   const [acceptInvite, { isLoading: accepting }] = useAcceptInvitationMutation();
@@ -63,13 +64,25 @@ function NotificationsScreen({ navigation }: Props) {
     [shares, me?.id],
   );
 
+  const toPay = useMemo(
+    () =>
+      (shares ?? []).filter(
+        (s) =>
+          s.ownerUserId === me?.id &&
+          s.initiatorUserId !== me?.id &&
+          (s.status === 'pending' || s.status === 'failed'),
+      ),
+    [shares, me?.id],
+  );
+
   const feed = useMemo<FeedItem[]>(() => {
     const items: FeedItem[] = [
       ...approvals.map((share) => ({ kind: 'approval' as const, share })),
+      ...toPay.map((share) => ({ kind: 'toPay' as const, share })),
       ...(invitations ?? []).map((invitation) => ({ kind: 'invite' as const, invitation })),
     ];
     return items;
-  }, [approvals, invitations]);
+  }, [approvals, toPay, invitations]);
 
   const refreshing = fetchingShares || fetchingInvites;
   const loading = loadingShares || loadingInvites;
@@ -159,6 +172,41 @@ function NotificationsScreen({ navigation }: Props) {
         );
       }
 
+      if (item.kind === 'toPay') {
+        const { share } = item;
+        const amount = formatCurrency(share.amountPiastres / 100, share.currency);
+        const billTitle = share.bill?.venueName ?? share.bill?.title ?? t('groupDetail.defaultBillName');
+        return (
+          <View style={styles.card}>
+            <View style={[styles.iconWrap, { backgroundColor: Colors.warningTint }]}>
+              <BellIcon size={18} color={Colors.warningDark} />
+            </View>
+            <View style={styles.cardBody}>
+              <Text style={[typography.labelLarge, styles.cardTitle]} numberOfLines={2}>
+                {t('notifications.toPayTitle', { amount, title: billTitle })}
+              </Text>
+              <Text style={[typography.bodySmall, styles.cardSub]} numberOfLines={1}>
+                {share.group?.name ?? t('notifications.toPaySubtitle')}
+              </Text>
+              <View style={styles.actions}>
+                <TouchableOpacity
+                  style={[styles.actionBtn, styles.confirmBtn]}
+                  onPress={() =>
+                    navigation.navigate('PayShare', {
+                      groupId: share.groupId,
+                      groupName: share.group?.name ?? '',
+                      billId: share.billId,
+                    })
+                  }
+                  activeOpacity={0.7}>
+                  <Text style={styles.confirmBtnText}>{t('notifications.payNow')}</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        );
+      }
+
       const invitation = item.invitation;
       const group = invitation.group;
       return (
@@ -197,14 +245,14 @@ function NotificationsScreen({ navigation }: Props) {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeScreen style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
       <View style={styles.header}>
         <Text style={[typography.headingLarge, styles.headerTitle]}>
           {t('notifications.title', { defaultValue: 'Notifications' })}
         </Text>
         <Text style={[typography.bodyMedium, styles.headerSub]}>
-          {t('notifications.subtitle', { defaultValue: 'Payment approvals and group invites' })}
+          {t('notifications.subtitle')}
         </Text>
       </View>
 
@@ -214,7 +262,11 @@ function NotificationsScreen({ navigation }: Props) {
         <FlatList
           data={feed}
           keyExtractor={(item) =>
-            item.kind === 'approval' ? `a-${item.share.id}` : `i-${item.invitation.id}`
+            item.kind === 'approval'
+              ? `a-${item.share.id}`
+              : item.kind === 'toPay'
+                ? `p-${item.share.id}`
+                : `i-${item.invitation.id}`
           }
           renderItem={renderItem}
           contentContainerStyle={feed.length === 0 ? styles.listEmpty : styles.list}
@@ -230,9 +282,7 @@ function NotificationsScreen({ navigation }: Props) {
                 {t('notifications.emptyTitle', { defaultValue: 'All caught up' })}
               </Text>
               <Text style={[typography.bodyMedium, styles.emptySubtitle]}>
-                {t('notifications.emptySubtitle', {
-                  defaultValue: 'Payment approvals and invitations will show up here',
-                })}
+                {t('notifications.emptySubtitle')}
               </Text>
               <TouchableOpacity
                 style={styles.secondaryLink}
@@ -246,7 +296,7 @@ function NotificationsScreen({ navigation }: Props) {
           }
         />
       )}
-    </SafeAreaView>
+    </SafeScreen>
   );
 }
 
