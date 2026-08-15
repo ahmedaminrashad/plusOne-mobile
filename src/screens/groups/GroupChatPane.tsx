@@ -394,7 +394,11 @@ function GroupChatPane({ groupId, groupName, navigation, sharedImageUri, onShare
         />
       )}
 
-      <View style={[styles.inputRow, keyboardInset > 0 && { marginBottom: keyboardInset }]}>
+      <View
+        style={[
+          styles.inputRow,
+          keyboardInset > 0 && { marginBottom: keyboardInset, paddingBottom: 4, paddingTop: 6 },
+        ]}>
         <TouchableOpacity
           style={styles.attachBtn}
           onPress={handlePickImage}

@@ -33,12 +33,9 @@ class KeyboardInsetsModule(reactContext: ReactApplicationContext) :
 
     ViewCompat.setOnApplyWindowInsetsListener(decorView) { _, insets ->
       val imeBottom = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
-      val navBarBottom = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
-      // Only the part of the IME inset taller than the nav bar is the keyboard itself.
-      val heightPx = (imeBottom - navBarBottom).coerceAtLeast(0)
-      if (heightPx != lastHeightPx) {
-        lastHeightPx = heightPx
-        emitHeight(heightPx)
+      if (imeBottom != lastHeightPx) {
+        lastHeightPx = imeBottom
+        emitHeight(imeBottom)
       }
       insets
     }

@@ -40,6 +40,7 @@ export function useKeyboardInsetHeight(): number {
   }, []);
 
   if (height <= 0) return 0;
-  // Keyboard height already covers the home-indicator inset.
+  // iOS keyboard height includes the home-indicator region. Android IME inset
+  // is already the distance from the window bottom to the top of the keys.
   return Math.max(0, height - (Platform.OS === 'ios' ? insets.bottom : 0));
 }

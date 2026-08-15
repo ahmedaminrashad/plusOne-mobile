@@ -18,6 +18,7 @@ import { Colors } from '../constants/colors';
 import { Radius } from '../constants/radius';
 import { useTypography } from '../hooks/useTypography';
 import { HomeIcon, PersonIcon, PeopleIcon, AddPersonIcon } from '../components/icons';
+import { useKeyboardInsetHeight } from '../services/keyboardInsets';
 
 const Tab = createBottomTabNavigator<TabParamList>();
 
@@ -31,6 +32,7 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const typography = useTypography();
   const [menuOpen, setMenuOpen] = useState(false);
   const fabRotate = useRef(new Animated.Value(0)).current;
+  const keyboardHeight = useKeyboardInsetHeight();
 
   useEffect(() => {
     Animated.timing(fabRotate, {
@@ -66,6 +68,10 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   // Indices after removing Bills/Activity: Home=0, QuickAdd=1, SettingsTab=2
   const homeActive = state.index === 0;
   const profileActive = state.index === 2;
+
+  // Keyboard inset already lifts the composer from the window bottom. Leaving the
+  // tab bar in layout adds a large empty gap between the input and the keys.
+  if (keyboardHeight > 0) return null;
 
   return (
     <>
@@ -146,9 +152,9 @@ export default function TabNavigator() {
 const TAB_BAR_HEIGHT = 62;
 const TAB_BAR_MARGIN = 23;
 const TAB_BAR_BOTTOM = Platform.OS === 'ios' ? 22 : 14;
-const FAB_SIZE = 54;
-const FAB_INNER_SIZE = 28;
-const FAB_OVERLAP = 12;
+const FAB_SIZE = 58;
+const FAB_INNER_SIZE = 40;
+const FAB_OVERLAP = 14;
 const TAB_BAR_WRAP_HEIGHT = TAB_BAR_HEIGHT + TAB_BAR_BOTTOM + FAB_OVERLAP;
 
 const styles = StyleSheet.create({
