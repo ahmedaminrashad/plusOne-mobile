@@ -26,7 +26,7 @@ import { formatCurrency, resolveAssetUrl } from '../../utils/format';
 import { useInputTextAlign } from '../../utils/rtl';
 import { useKeyboardInsetHeight } from '../../services/keyboardInsets';
 import i18n from '../../i18n';
-import { LockIcon, PlusIcon } from '../../components/icons';
+import { LockIcon, PlusIcon, CheckIcon } from '../../components/icons';
 
 type Props = AppScreenProps<'EditBillItems'>;
 
@@ -92,6 +92,7 @@ function MemberChip({
       <Text style={[typography.labelSmall, styles.chipName, selected && styles.chipNameSelected]} numberOfLines={1}>
         {name.split(' ')[0]}
       </Text>
+      {selected && <CheckIcon size={13} color={Colors.textOnPrimary} strokeWidth={2.75} />}
     </TouchableOpacity>
   );
 }
@@ -545,15 +546,20 @@ const styles = StyleSheet.create({
   chip: {
     alignItems: 'center',
     gap: 4,
-    paddingHorizontal: 8,
+    paddingHorizontal: 10,
     paddingVertical: 8,
     borderRadius: Radius.lg,
     backgroundColor: Colors.surfaceElevated,
     minWidth: 54,
+    borderWidth: 2,
+    borderColor: 'transparent',
   },
-  chipSelected: { backgroundColor: Colors.tint },
+  chipSelected: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primaryDark,
+  },
   chipName: { color: Colors.textSecondary },
-  chipNameSelected: { color: Colors.primary },
+  chipNameSelected: { color: Colors.textOnPrimary, fontWeight: '700' },
 
   unclaimedNote: { color: Colors.danger, textAlign: 'left', marginTop: 6 },
   splitNote: { color: Colors.textMuted, textAlign: 'left', marginTop: 4 },
