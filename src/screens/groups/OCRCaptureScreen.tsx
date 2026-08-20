@@ -29,7 +29,8 @@ type CapturedImage = {
 function OCRCaptureScreen({ route, navigation }: Props) {
   const { t } = useTranslation('billing');
   const typography = useTypography();
-  const { groupId, groupName } = route.params;
+  const groupId = route.params?.groupId;
+  const groupName = route.params?.groupName;
   const [captured, setCaptured] = useState<CapturedImage | null>(null);
   const [processing, setProcessing] = useState(false);
   const [parseReceipt] = useParseReceiptBillMutation();

@@ -46,7 +46,7 @@ interface CreateBillPayload {
 }
 
 interface ParseQrPayload {
-  groupId: string;
+  groupId?: string;
   payload: string;
 }
 
@@ -69,7 +69,7 @@ interface ParsedBillResult {
 }
 
 interface ParseReceiptPayload {
-  groupId: string;
+  groupId?: string;
   uri: string;
   fileName?: string;
   mimeType?: string;
@@ -138,7 +138,7 @@ export const billsApi = baseApi.injectEndpoints({
     }),
     parseQrBill: builder.mutation<ParsedBillResult, ParseQrPayload>({
       query: ({ groupId, payload }) => ({
-        url: `/bills/group/${groupId}/parse-qr`,
+        url: groupId ? `/bills/group/${groupId}/parse-qr` : '/bills/parse-qr',
         method: 'POST',
         body: { payload },
       }),
@@ -152,7 +152,7 @@ export const billsApi = baseApi.injectEndpoints({
           type: mimeType ?? 'image/jpeg',
         } as unknown as Blob);
         return {
-          url: `/bills/group/${groupId}/parse-receipt`,
+          url: groupId ? `/bills/group/${groupId}/parse-receipt` : '/bills/parse-receipt',
           method: 'POST',
           body: formData,
         };

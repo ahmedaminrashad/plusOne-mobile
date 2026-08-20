@@ -2,6 +2,7 @@
   "addBillChooser": {
     "title": "Add a bill",
     "subtitle": "to {{groupName}}",
+    "subtitlePickGroupLater": "You'll pick the group after the receipt",
     "scanQrTitle": "Scan bill QR",
     "scanQrSubtitle": "E-receipt loads itemized, instantly",
     "scanQrBadge": "Fastest",
@@ -9,7 +10,8 @@
     "scanReceiptSubtitle": "We read it (OCR) — you confirm every line",
     "manualTitle": "Enter manually",
     "manualSubtitle": "Itemized, or just the total",
-    "footer": "Whichever way in — splitting works the same after."
+    "footer": "Whichever way in — splitting works the same after.",
+    "footerPickGroupLater": "After the bill is ready, choose which group to assign it to."
   },
   "createBill": {
     "venueLabel": "Restaurant / Venue",
@@ -38,6 +40,7 @@
     "overrideLabel": "Override total (optional)",
     "overridePlaceholder": "Leave empty to use the calculated total",
     "mismatchWarning": "⚠ The entered total doesn't match the calculations — your number will be used.",
+    "continueChooseGroup": "Continue — choose group",
     "payerLabel": "Who paid? *",
     "payerModalTitle": "Who paid?",
     "selectPayerFallback": "Choose who paid",

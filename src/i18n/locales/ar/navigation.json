@@ -23,6 +23,8 @@
     "profileLabel": "حسابي"
   },
   "quickAdd": {
+    "addBill": "إضافة فاتورة",
+    "addBillSubtitle": "امسح أو أدخل إيصال",
     "newGroup": "مجموعة جديدة",
     "newGroupSubtitle": "ابدأ حساب مشترك",
     "addPlusOne": "إضافة +One",

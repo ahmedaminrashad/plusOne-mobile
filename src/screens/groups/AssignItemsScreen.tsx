@@ -137,6 +137,7 @@ function AssignItemsScreen({ route, navigation }: Props) {
         claimedBy: [],
       }));
       setItems(mapped);
+      if (mapped.length === 0) setMode('equally');
     } catch {
       Alert.alert(t('common:error'), t('receiptSplit.parseFailed'), [
         { text: t('common:back'), onPress: () => navigation.goBack() },
@@ -167,7 +168,13 @@ function AssignItemsScreen({ route, navigation }: Props) {
     );
   }, [receipt.vat, receipt.vatType, subtotal, taxAmt, deliveryAmt]);
 
-  const grandTotal = roundMoney(subtotal + taxAmt + deliveryAmt + vatAmt);
+  const grandTotal = useMemo(() => {
+    const fromLines = roundMoney(subtotal + taxAmt + deliveryAmt + vatAmt);
+    if (items.length === 0 && receipt.grandTotal != null) {
+      return roundMoney(receipt.grandTotal);
+    }
+    return fromLines;
+  }, [items.length, receipt.grandTotal, subtotal, taxAmt, deliveryAmt, vatAmt]);
 
   const memberTotals = useMemo(() => {
     if (mode === 'equally') {

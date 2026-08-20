@@ -18,7 +18,17 @@ type Props = AppScreenProps<'AddBillChooser'>;
 function AddBillChooserScreen({ route, navigation }: Props) {
   const { t } = useTranslation('billing');
   const typography = useTypography();
-  const { groupId, groupName } = route.params;
+  const groupId = route.params?.groupId;
+  const groupName = route.params?.groupName;
+  const deferGroup = !groupId;
+
+  const go = (screen: 'QRScanner' | 'OCRCapture' | 'AddBill') => {
+    if (deferGroup) {
+      navigation.navigate(screen, {});
+      return;
+    }
+    navigation.navigate(screen, { groupId: groupId!, groupName: groupName! });
+  };
 
   const options = [
     {
@@ -30,7 +40,7 @@ function AddBillChooserScreen({ route, navigation }: Props) {
       subtitle: t('addBillChooser.scanQrSubtitle'),
       badge: t('addBillChooser.scanQrBadge'),
       highlighted: true,
-      onPress: () => navigation.navigate('QRScanner', { groupId, groupName }),
+      onPress: () => go('QRScanner'),
     },
     {
       key: 'ocr',
@@ -39,7 +49,7 @@ function AddBillChooserScreen({ route, navigation }: Props) {
       iconColor: Colors.primary,
       title: t('addBillChooser.scanReceiptTitle'),
       subtitle: t('addBillChooser.scanReceiptSubtitle'),
-      onPress: () => navigation.navigate('OCRCapture', { groupId, groupName }),
+      onPress: () => go('OCRCapture'),
     },
     {
       key: 'manual',
@@ -48,7 +58,7 @@ function AddBillChooserScreen({ route, navigation }: Props) {
       iconColor: Colors.primary,
       title: t('addBillChooser.manualTitle'),
       subtitle: t('addBillChooser.manualSubtitle'),
-      onPress: () => navigation.navigate('AddBill', { groupId, groupName }),
+      onPress: () => go('AddBill'),
     },
   ];
 
@@ -58,10 +68,12 @@ function AddBillChooserScreen({ route, navigation }: Props) {
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} hitSlop={12}>
           <ChevronLeftIcon size={20} color={Colors.text} />
         </TouchableOpacity>
-        <View>
+        <View style={styles.headerText}>
           <Text style={[typography.headingLarge, styles.title]}>{t('addBillChooser.title')}</Text>
           <Text style={[typography.bodyMedium, styles.subtitle]}>
-            {t('addBillChooser.subtitle', { groupName })}
+            {deferGroup
+              ? t('addBillChooser.subtitlePickGroupLater')
+              : t('addBillChooser.subtitle', { groupName })}
           </Text>
         </View>
       </View>
@@ -89,7 +101,9 @@ function AddBillChooserScreen({ route, navigation }: Props) {
         ))}
       </View>
 
-      <Text style={[typography.caption, styles.footer]}>{t('addBillChooser.footer')}</Text>
+      <Text style={[typography.caption, styles.footer]}>
+        {deferGroup ? t('addBillChooser.footerPickGroupLater') : t('addBillChooser.footer')}
+      </Text>
     </SafeScreen>
   );
 }
@@ -98,13 +112,15 @@ export default memo(AddBillChooserScreen);
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-  headerRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 24 },
+  headerRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 24 },
   backBtn: {
     width: 34, height: 34, borderRadius: Radius.md,
     justifyContent: 'center', alignItems: 'center',
     backgroundColor: Colors.surface,
     borderWidth: 1, borderColor: Colors.borderLight,
+    marginTop: 2,
   },
+  headerText: { flex: 1 },
   title: { color: Colors.text },
   subtitle: { color: Colors.textSecondary, marginTop: 2 },
 

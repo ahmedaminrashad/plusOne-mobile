@@ -2,6 +2,7 @@
   "addBillChooser": {
     "title": "إضافة فاتورة",
     "subtitle": "لـ {{groupName}}",
+    "subtitlePickGroupLater": "هتختار المجموعة بعد ما الإيصال يبقى جاهز",
     "scanQrTitle": "مسح QR الفاتورة",
     "scanQrSubtitle": "الفاتورة الإلكترونية بتتحمل بالتفصيل، فورًا",
     "scanQrBadge": "الأسرع",
@@ -9,7 +10,8 @@
     "scanReceiptSubtitle": "بنقراه (OCR) — وانت تأكد كل سطر",
     "manualTitle": "إدخال يدوي",
     "manualSubtitle": "بالتفصيل، أو الإجمالي بس",
-    "footer": "أي طريقة تدخل بيها — التقسيم بيشتغل نفس الطريقة بعد كده."
+    "footer": "أي طريقة تدخل بيها — التقسيم بيشتغل نفس الطريقة بعد كده.",
+    "footerPickGroupLater": "بعد ما الفاتورة تبقى جاهزة، اختَر المجموعة اللي هتتحسب عليها."
   },
   "createBill": {
     "venueLabel": "المطعم / المحل",
@@ -38,6 +40,7 @@
     "overrideLabel": "تجاوز الإجمالي (اختياري)",
     "overridePlaceholder": "اتركه فارغاً لاستخدام الإجمالي المحسوب",
     "mismatchWarning": "⚠ الإجمالي المدخل لا يتطابق مع الحسابات — سيُستخدم رقمك.",
+    "continueChooseGroup": "متابعة — اختيار المجموعة",
     "payerLabel": "من دفع؟ *",
     "payerModalTitle": "من دفع؟",
     "selectPayerFallback": "اختر من دفع",

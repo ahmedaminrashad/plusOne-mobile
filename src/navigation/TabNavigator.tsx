@@ -17,7 +17,7 @@ import SettingsStack from './SettingsStack';
 import { Colors } from '../constants/colors';
 import { Radius } from '../constants/radius';
 import { useTypography } from '../hooks/useTypography';
-import { HomeIcon, PersonIcon, PeopleIcon, AddPersonIcon } from '../components/icons';
+import { HomeIcon, PersonIcon, PeopleIcon, AddPersonIcon, ReceiptIcon } from '../components/icons';
 import { useKeyboardInsetHeight } from '../services/keyboardInsets';
 
 const Tab = createBottomTabNavigator<TabParamList>();
@@ -55,6 +55,11 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
     navigation.navigate('Home', { screen: 'CreateGroup' } as any);
   }, [navigation]);
 
+  const handleAddBill = useCallback(() => {
+    setMenuOpen(false);
+    navigation.navigate('Home', { screen: 'AddBillChooser' } as any);
+  }, [navigation]);
+
   const handleAddPlusOne = useCallback(() => {
     setMenuOpen(false);
     navigation.navigate('Home', { screen: 'MyCircle' } as any);
@@ -75,7 +80,16 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
       {menuOpen && !keyboardOpen && (
         <Pressable style={styles.menuBackdrop} onPress={() => setMenuOpen(false)}>
           <View style={styles.menu}>
-            <TouchableOpacity style={styles.menuCard} onPress={handleNewGroup} activeOpacity={0.75}>
+            <TouchableOpacity style={styles.menuCard} onPress={handleAddBill} activeOpacity={0.75}>
+              <View style={[styles.menuIconWrap, { backgroundColor: Colors.tint }]}>
+                <ReceiptIcon size={20} color={Colors.primary} />
+              </View>
+              <View style={styles.menuCardText}>
+                <Text style={[typography.labelLarge, styles.menuItemTitle]}>{t('quickAdd.addBill')}</Text>
+                <Text style={[typography.bodySmall, styles.menuItemSubtitle]}>{t('quickAdd.addBillSubtitle')}</Text>
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.menuCard, styles.menuCardSecond]} onPress={handleNewGroup} activeOpacity={0.75}>
               <View style={[styles.menuIconWrap, { backgroundColor: Colors.tint }]}>
                 <PeopleIcon size={20} color={Colors.primary} />
               </View>
@@ -222,7 +236,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: TAB_BAR_HEIGHT + TAB_BAR_BOTTOM + 20,
     alignSelf: 'center',
-    width: 220,
+    width: 240,
   },
   menuCard: {
     flexDirection: 'row',

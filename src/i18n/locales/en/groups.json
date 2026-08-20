@@ -236,5 +236,14 @@
     "loadError": "Couldn't load groups.",
     "emptyTitle": "No groups yet",
     "emptySubtitle": "Create a group first to share photos with it"
+  },
+  "selectGroupForBill": {
+    "title": "Assign to group",
+    "subtitle": "Choose which group this bill belongs to",
+    "membersCount": "{{count}} members",
+    "loadError": "Couldn't load groups. Tap to retry.",
+    "emptyTitle": "No groups yet",
+    "emptySubtitle": "Create a group first, then assign this bill to it",
+    "createGroupCta": "Create group"
   }
 }

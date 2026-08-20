@@ -18,6 +18,7 @@ import BillStatusScreen from '../screens/groups/BillStatusScreen';
 import PayShareScreen from '../screens/groups/PayShareScreen';
 import EditBillItemsScreen from '../screens/groups/EditBillItemsScreen';
 import SelectGroupToShareScreen from '../screens/groups/SelectGroupToShareScreen';
+import SelectGroupForBillScreen from '../screens/groups/SelectGroupForBillScreen';
 import AllGroupsScreen from '../screens/groups/AllGroupsScreen';
 import SettleUpScreen from '../screens/groups/SettleUpScreen';
 import MyCircleScreen from '../screens/groups/MyCircleScreen';
@@ -79,6 +80,11 @@ export default function AppStack() {
         name="SelectGroupToShare"
         component={SelectGroupToShareScreen}
         options={{ title: t('appStack.selectGroupToShareTitle') }}
+      />
+      <Stack.Screen
+        name="SelectGroupForBill"
+        component={SelectGroupForBillScreen}
+        options={{ headerShown: false }}
       />
       <Stack.Screen name="AllGroups" component={AllGroupsScreen} options={{ headerShown: false }} />
       <Stack.Screen name="SettleUp" component={SettleUpScreen} options={{ headerShown: false }} />

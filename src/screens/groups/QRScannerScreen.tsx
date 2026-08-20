@@ -25,7 +25,8 @@ type Props = AppScreenProps<'QRScanner'>;
 function QRScannerScreen({ route, navigation }: Props) {
   const { t } = useTranslation('billing');
   const typography = useTypography();
-  const { groupId, groupName } = route.params;
+  const groupId = route.params?.groupId;
+  const groupName = route.params?.groupName;
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [parsing, setParsing] = useState(false);
   const scannedRef = useRef(false);

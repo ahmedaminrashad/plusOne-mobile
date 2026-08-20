@@ -23,6 +23,8 @@
     "profileLabel": "Profile"
   },
   "quickAdd": {
+    "addBill": "Add bill",
+    "addBillSubtitle": "Scan or enter a receipt",
     "newGroup": "New group",
     "newGroupSubtitle": "Start a shared tab",
     "addPlusOne": "Add a +One",

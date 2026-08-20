@@ -72,8 +72,9 @@ function CreateBillScreen({ route, navigation }: Props) {
   const { t } = useTranslation('billing');
   const typography = useTypography();
   const inputAlign = useInputTextAlign();
-  const { groupId, groupName, prefilledData } = route.params;
+  const { groupId, groupName, prefilledData } = route.params ?? {};
   const isPreview = !!prefilledData;
+  const deferGroup = !groupId;
 
   const [venueName, setVenueName] = useState(prefilledData?.venueName ?? '');
   const [items, setItems] = useState<LineItem[]>(() => {
@@ -99,15 +100,15 @@ function CreateBillScreen({ route, navigation }: Props) {
   const [isLumpSum, setIsLumpSum] = useState(false);
   const [lumpSumTotal, setLumpSumTotal] = useState('');
 
-  const { data: members } = useGetGroupMembersQuery(groupId);
+  const { data: members } = useGetGroupMembersQuery(groupId ?? '', { skip: !groupId });
   const { data: me } = useGetMeQuery();
   const [createBill, { isLoading }] = useCreateBillMutation();
 
   const activeMembers = (members ?? []).filter((m) => m.status === 'active' && m.userId);
 
   useEffect(() => {
-    if (me && !paidByUserId) setPaidByUserId(me.id);
-  }, [me, paidByUserId]);
+    if (me && !paidByUserId && !deferGroup) setPaidByUserId(me.id);
+  }, [me, paidByUserId, deferGroup]);
 
   const subtotal = roundMoney(items.reduce((sum, it) => sum + parseNum(it.qty) * parseNum(it.unitPrice), 0));
   const taxAmt = taxValue
@@ -126,8 +127,8 @@ function CreateBillScreen({ route, navigation }: Props) {
 
   const hasValidItems = items.some((it) => it.name.trim() && parseNum(it.unitPrice) > 0);
   const canContinue = isLumpSum
-    ? parseNum(lumpSumTotal) > 0 && !!paidByUserId
-    : hasValidItems && !!paidByUserId;
+    ? parseNum(lumpSumTotal) > 0 && (deferGroup || !!paidByUserId)
+    : hasValidItems && (deferGroup || !!paidByUserId);
 
   const addItem = useCallback(() => {
     setItems((prev) => [...prev, { id: newItemId(), name: '', qty: '1', unitPrice: '' }]);
@@ -149,12 +150,34 @@ function CreateBillScreen({ route, navigation }: Props) {
   const handleContinue = useCallback(async () => {
     if (!canContinue) return;
 
+    const goNext = (receiptData: ParsedReceiptData) => {
+      const receiptJson = JSON.stringify(receiptData);
+      if (deferGroup || !groupId || !groupName) {
+        navigation.navigate('SelectGroupForBill', { receiptJson });
+        return;
+      }
+      navigation.navigate('AssignItems', { groupId, groupName, receiptJson });
+    };
+
     if (isLumpSum) {
       const amount = roundMoney(parseNum(lumpSumTotal));
       if (amount <= 0) {
         Alert.alert(t('common:error'), t('createBill.amountMustBePositive'));
         return;
       }
+
+      if (deferGroup || !groupId || !groupName) {
+        goNext({
+          venueName: venueName.trim() || undefined,
+          storeName: venueName.trim() || undefined,
+          items: [],
+          grandTotal: amount,
+          captureMethod: prefilledData?.captureMethod ?? 'manual',
+          sourceRef: prefilledData?.sourceRef,
+        });
+        return;
+      }
+
       try {
         await createBill({
           groupId,
@@ -173,7 +196,7 @@ function CreateBillScreen({ route, navigation }: Props) {
 
     const validItems = items.filter((it) => it.name.trim() && parseNum(it.unitPrice) > 0);
 
-    const receiptData: ParsedReceiptData = {
+    goNext({
       storeName: venueName.trim() || undefined,
       venueName: venueName.trim() || undefined,
       items: validItems.map((it) => ({
@@ -191,17 +214,11 @@ function CreateBillScreen({ route, navigation }: Props) {
       grandTotal: hasOverride ? grandTotal : undefined,
       captureMethod: prefilledData?.captureMethod ?? 'manual',
       sourceRef: prefilledData?.sourceRef,
-    };
-
-    navigation.navigate('AssignItems', {
-      groupId,
-      groupName,
-      receiptJson: JSON.stringify(receiptData),
     });
   }, [
     canContinue, isLumpSum, lumpSumTotal, items, venueName, taxValue, taxType,
     deliveryValue, deliveryType, vatValue, vatType, hasOverride, grandTotal,
-    paidByUserId, groupId, groupName, prefilledData, createBill, navigation,
+    paidByUserId, groupId, groupName, deferGroup, prefilledData, createBill, navigation, t,
   ]);
 
   const renderPayerRow = useCallback(
@@ -399,15 +416,19 @@ function CreateBillScreen({ route, navigation }: Props) {
           </>
         )}
 
-        {/* Payer */}
-        <Text style={[typography.labelMedium, styles.sectionLabel]}>{t('createBill.payerLabel')}</Text>
-        <TouchableOpacity style={styles.pickerBtn} onPress={() => setPayerPickerVisible(true)}>
-          <ChevronDownIcon size={14} color={Colors.textMuted} strokeWidth={2} />
-          <Text style={[typography.bodyLarge, styles.pickerText]}>{payerName}</Text>
-        </TouchableOpacity>
+        {/* Payer — only when bill already belongs to a group */}
+        {!deferGroup && (
+          <>
+            <Text style={[typography.labelMedium, styles.sectionLabel]}>{t('createBill.payerLabel')}</Text>
+            <TouchableOpacity style={styles.pickerBtn} onPress={() => setPayerPickerVisible(true)}>
+              <ChevronDownIcon size={14} color={Colors.textMuted} strokeWidth={2} />
+              <Text style={[typography.bodyLarge, styles.pickerText]}>{payerName}</Text>
+            </TouchableOpacity>
+          </>
+        )}
 
         <Button
-          title={t('common:continue')}
+          title={deferGroup ? t('createBill.continueChooseGroup') : t('common:continue')}
           onPress={handleContinue}
           loading={isLoading}
           style={[styles.continueBtn, !canContinue && styles.continueBtnDisabled]}

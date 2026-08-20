@@ -18,10 +18,12 @@ export type AppStackParamList = {
   InviteMembers: { groupId: string };
   Chat: { groupId: string; groupName: string; sharedImageUri?: string };
   SelectGroupToShare: { imageUri: string };
-  AddBillChooser: { groupId: string; groupName: string };
-  AddBill: { groupId: string; groupName: string; prefilledData?: PrefilledBillData };
-  QRScanner: { groupId: string; groupName: string };
-  OCRCapture: { groupId: string; groupName: string };
+  /** Pick a group after the bill/receipt is ready (FAB flow). */
+  SelectGroupForBill: { receiptJson: string };
+  AddBillChooser: { groupId?: string; groupName?: string };
+  AddBill: { groupId?: string; groupName?: string; prefilledData?: PrefilledBillData };
+  QRScanner: { groupId?: string; groupName?: string };
+  OCRCapture: { groupId?: string; groupName?: string };
   AssignItems: { groupId: string; groupName: string; receiptJson: string };
   BillStatus: { groupId: string; groupName: string; billId: string };
   PayShare: { groupId: string; groupName: string; billId: string };
