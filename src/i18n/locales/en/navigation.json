@@ -13,17 +13,17 @@
     "myCircleTitle": "My Circle",
     "remindTitle": "Send reminders",
     "myLedgerTitle": "My tab",
-    "billsTabTitle": "Bills",
+    "billsTabTitle": "Receipts",
     "activityTabTitle": "Activity"
   },
   "tabBar": {
     "homeLabel": "Home",
-    "billsLabel": "Bills",
+    "billsLabel": "Receipts",
     "activityLabel": "Activity",
     "profileLabel": "Profile"
   },
   "quickAdd": {
-    "addBill": "Add bill",
+    "addBill": "Add receipt",
     "addBillSubtitle": "Scan or enter a receipt",
     "newGroup": "New group",
     "newGroupSubtitle": "Start a shared tab",

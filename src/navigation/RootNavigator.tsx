@@ -1,13 +1,13 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { NavigationContainer, NavigationContainerRef } from '@react-navigation/native';
+import { NavigationContainer, NavigationContainerRef, CommonActions } from '@react-navigation/native';
 import { useAppSelector } from '../hooks/useAppDispatch';
 import { SecureStorage } from '../utils/storage';
 import { setTokens, setProfileComplete } from '../store/slices/authSlice';
 import { useAppDispatch } from '../hooks/useAppDispatch';
 import AuthStack from './AuthStack';
 import TabNavigator from './TabNavigator';
-import { View, ActivityIndicator, StyleSheet, Alert, AppState, AppStateStatus } from 'react-native';
+import { View, ActivityIndicator, StyleSheet, Alert, AppState, AppStateStatus, InteractionManager } from 'react-native';
 import { Colors } from '../constants/colors';
 import { useGetMeQuery, useSaveFcmTokenMutation } from '../store/api/usersApi';
 import {
@@ -23,6 +23,16 @@ import { extractInstaPayIdentifierFromSharedText } from '../utils/instapay';
 import { TabParamList } from '../types/navigation';
 import { baseApi } from '../store/api/baseApi';
 
+function asDataRecord(data: Record<string, unknown> | undefined | null): Record<string, string> {
+  if (!data) return {};
+  const out: Record<string, string> = {};
+  for (const [key, value] of Object.entries(data)) {
+    if (value == null) continue;
+    out[key] = String(value);
+  }
+  return out;
+}
+
 export default function RootNavigator() {
   const { t } = useTranslation('navigation');
   const dispatch = useAppDispatch();
@@ -31,6 +41,9 @@ export default function RootNavigator() {
   const [navReady, setNavReady] = useState(false);
   const [saveFcmToken] = useSaveFcmTokenMutation();
   const navRef = useRef<NavigationContainerRef<TabParamList>>(null);
+  const pendingNotificationRef = useRef<Record<string, string> | null>(null);
+  const navReadyRef = useRef(false);
+  const showAppRef = useRef(false);
 
   useEffect(() => {
     (async () => {
@@ -54,7 +67,7 @@ export default function RootNavigator() {
     !tokensRestored ||
     (isAuthenticated && (meUninitialized || verifyingSession));
   const showApp = isAuthenticated && isProfileComplete;
-  const pendingNotificationRef = useRef<Record<string, string> | null>(null);
+  showAppRef.current = showApp;
 
   // Register FCM token when authenticated
   useEffect(() => {
@@ -67,44 +80,68 @@ export default function RootNavigator() {
     })();
   }, [isAuthenticated, saveFcmToken]);
 
+  const openNestedHomeScreen = useCallback((screen: string, params?: Record<string, unknown>) => {
+    const nav = navRef.current;
+    if (!nav) return;
+
+    // Prefer an explicit nested state so cold-start taps don't land on the Home
+    // list when the AppStack hasn't finished mounting yet.
+    nav.dispatch(
+      CommonActions.navigate({
+        name: 'Home',
+        params: {
+          screen,
+          params,
+        },
+      }),
+    );
+  }, []);
+
   // Handle notification taps — same logic for both a background-tap (onNotificationOpenedApp)
   // and a cold-start tap (getInitialNotification), so the two paths can't drift apart.
-  const navigateFromNotification = useCallback((data: Record<string, string>) => {
-    const nav = navRef.current as any;
-    if (!nav) {
+  // Always wait until the app shell is ready; navigating earlier silently drops nested routes.
+  const navigateFromNotification = useCallback((raw: Record<string, string>) => {
+    const data = asDataRecord(raw);
+    if (!navReadyRef.current || !showAppRef.current || !navRef.current) {
       pendingNotificationRef.current = data;
       return;
     }
-    if (data.type === 'invitation') {
-      nav.navigate('Home', { screen: 'Invitations' });
-    } else if (data.type === 'member_joined' && data.groupId) {
-      nav.navigate('Home', {
-        screen: 'GroupDetail',
-        params: { groupId: data.groupId, groupName: data.groupName ?? '' },
-      });
-    } else if (data.type === 'chat_message' && data.groupId) {
-      nav.navigate('Home', {
-        screen: 'GroupDetail',
-        params: { groupId: data.groupId, groupName: data.groupName ?? '' },
-      });
-    } else if (
-      (data.type === 'share_assigned' ||
-        data.type === 'share_reminder' ||
-        data.type === 'share_initiated') &&
-      data.groupId &&
-      data.billId
-    ) {
-      nav.navigate('Home', {
-        screen: 'PayShare',
-        params: { groupId: data.groupId, groupName: data.groupName ?? '', billId: data.billId },
-      });
-    } else if (data.type === 'share_settled' && data.groupId && data.billId) {
-      nav.navigate('Home', {
-        screen: 'BillStatus',
-        params: { groupId: data.groupId, groupName: data.groupName ?? '', billId: data.billId },
-      });
-    }
-  }, []);
+
+    const run = () => {
+      if (data.type === 'invitation') {
+        openNestedHomeScreen('Invitations');
+      } else if ((data.type === 'member_joined' || data.type === 'chat_message') && data.groupId) {
+        openNestedHomeScreen('GroupDetail', {
+          groupId: data.groupId,
+          groupName: data.groupName ?? '',
+          initialTab: 'chat',
+        });
+      } else if (
+        (data.type === 'share_assigned' ||
+          data.type === 'share_reminder' ||
+          data.type === 'share_initiated') &&
+        data.groupId &&
+        data.billId
+      ) {
+        openNestedHomeScreen('PayShare', {
+          groupId: data.groupId,
+          groupName: data.groupName ?? '',
+          billId: data.billId,
+        });
+      } else if (data.type === 'share_settled' && data.groupId && data.billId) {
+        openNestedHomeScreen('BillStatus', {
+          groupId: data.groupId,
+          groupName: data.groupName ?? '',
+          billId: data.billId,
+        });
+      }
+    };
+
+    InteractionManager.runAfterInteractions(() => {
+      // One frame later covers the Tab → AppStack mount race on cold start.
+      setTimeout(run, 50);
+    });
+  }, [openNestedHomeScreen]);
 
   useEffect(() => {
     if (!navReady || !showApp || !pendingNotificationRef.current) return;
@@ -116,7 +153,7 @@ export default function RootNavigator() {
   useEffect(() => {
     const unsub = onNotificationOpenedApp(navigateFromNotification);
     getInitialNotification().then((data) => {
-      if (data) navigateFromNotification(data);
+      if (data) navigateFromNotification(asDataRecord(data));
     });
     return unsub;
   }, [navigateFromNotification]);
@@ -125,15 +162,16 @@ export default function RootNavigator() {
   // surface it ourselves via an alert with a "View" action that reuses the same navigation.
   useEffect(() => {
     const unsub = onForegroundMessage((notification, data) => {
+      const payload = asDataRecord(data);
       // Keep group/member caches fresh across devices without requiring an app restart.
       if (
-        data.type === 'member_joined' ||
-        data.type === 'invitation' ||
-        data.type === 'chat_message' ||
-        data.type === 'share_assigned' ||
-        data.type === 'share_initiated' ||
-        data.type === 'share_settled' ||
-        data.type === 'share_reminder'
+        payload.type === 'member_joined' ||
+        payload.type === 'invitation' ||
+        payload.type === 'chat_message' ||
+        payload.type === 'share_assigned' ||
+        payload.type === 'share_initiated' ||
+        payload.type === 'share_settled' ||
+        payload.type === 'share_reminder'
       ) {
         dispatch(
           baseApi.util.invalidateTags([
@@ -150,14 +188,14 @@ export default function RootNavigator() {
 
       // The chat itself already reflects new messages via polling — don't also
       // pop an alert over the same conversation the user is currently looking at.
-      if (data.type === 'chat_message' && data.groupId && isChatGroupActive(data.groupId)) return;
+      if (payload.type === 'chat_message' && payload.groupId && isChatGroupActive(payload.groupId)) return;
 
       Alert.alert(
         notification.title ?? t('rootNavigator.newNotificationTitle'),
         notification.body ?? '',
         [
           { text: t('common:close'), style: 'cancel' },
-          { text: t('rootNavigator.viewAction'), onPress: () => navigateFromNotification(data) },
+          { text: t('rootNavigator.viewAction'), onPress: () => navigateFromNotification(payload) },
         ],
       );
     });
@@ -232,7 +270,12 @@ export default function RootNavigator() {
   }
 
   return (
-    <NavigationContainer ref={navRef} onReady={() => setNavReady(true)}>
+    <NavigationContainer
+      ref={navRef}
+      onReady={() => {
+        navReadyRef.current = true;
+        setNavReady(true);
+      }}>
       {showApp ? <TabNavigator /> : <AuthStack />}
     </NavigationContainer>
   );

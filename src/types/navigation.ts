@@ -14,7 +14,7 @@ export type AppStackParamList = {
   Notifications: undefined;
   Invitations: undefined;
   CreateGroup: undefined;
-  GroupDetail: { groupId: string; groupName: string };
+  GroupDetail: { groupId: string; groupName: string; initialTab?: 'chat' | 'bills' | 'ledger' | 'members' };
   InviteMembers: { groupId: string };
   Chat: { groupId: string; groupName: string; sharedImageUri?: string };
   SelectGroupToShare: { imageUri: string };

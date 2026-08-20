@@ -8,7 +8,7 @@
     "emptySubtitle": "أنشئ مجموعتك الأولى وابدأ في تتبع المصاريف مع أصدقائك وعائلتك",
     "createGroupCta": "+ إنشاء مجموعة",
     "loadError": "تعذر تحميل المجموعات. اسحب للأسفل للمحاولة.",
-    "searchPlaceholder": "دور على مجموعة، فاتورة، أو حد في دائرتك…",
+    "searchPlaceholder": "دور على مجموعة، إيصال، أو حد في دائرتك…",
     "acrossAllGroups": "على كل المجموعات",
     "youAreOwed": "ليك",
     "youOwe": "عليك",
@@ -20,7 +20,7 @@
     "yourGroups": "مجموعاتك",
     "yourGroupsSubtitle": "مجموعاتك وفواتيرهم المشتركة.",
     "viewAll": "عرض الكل",
-    "cardMeta": "{{members}} عضو · {{bills}} فاتورة مفتوحة",
+    "cardMeta": "{{members}} عضو · {{bills}} إيصال مفتوح",
     "cardMetaNoBills": "{{members}} عضو",
     "cardMembersOnly": "{{count}} أعضاء"
   },
@@ -60,7 +60,7 @@
     "pendingPill": "قيد الانتظار",
     "pendingBadge": "مدعوّ · بيدفع برابط",
     "emptyTitle": "دائرتك فاضية",
-    "emptySubtitle": "ضيف الناس اللي بتقسم معاهم الفواتير أكتر.",
+    "emptySubtitle": "ضيف الناس اللي بتقسم معاهم الإيصالات أكتر.",
     "addPhoneTitle": "إضافة لدائرتك",
     "addPhonePlaceholder": "رقم الهاتف",
     "addFailed": "تعذرت إضافة الشخص، حاول مرة أخرى",
@@ -78,7 +78,7 @@
     "byGroupHeader": "حسب المجموعة",
     "settledLabel": "متسواة",
     "emptyTitle": "مفيش نشاط لسه",
-    "emptySubtitle": "بمجرد ما تقسم فاتورة، حسابك الشهري هيظهر هنا."
+    "emptySubtitle": "بمجرد ما تقسم إيصال، حسابك الشهري هيظهر هنا."
   },
   "groupLedger": {
     "spentThisMonth": "المصروف الشهر ده",
@@ -135,7 +135,7 @@
   },
   "groupDetail": {
     "defaultUserName": "مستخدم",
-    "defaultBillName": "فاتورة",
+    "defaultBillName": "إيصال",
     "thisMemberFallback": "هذا العضو",
     "thisBillFallback": "هذا الإيصال",
     "roleAdmin": "مسؤول",
@@ -143,11 +143,11 @@
     "removeAction": "إزالة",
     "paidByMeta": "دفع {{payer}} • {{date}}",
     "tabChat": "الدردشة",
-    "tabBills": "الفواتير",
+    "tabBills": "الإيصالات",
     "tabLedger": "الحساب",
     "tabMembers": "الأعضاء",
     "pendingChatNotice": "يجب قبول الدعوة أولاً للوصول إلى الدردشة.",
-    "addBillCta": "+ إضافة فاتورة",
+    "addBillCta": "+ إضافة إيصال",
     "emptyBillsTitle": "لا توجد إيصالات بعد",
     "emptyBillsSubtitle": "أضف أو امسح أول إيصال للمجموعة",
     "inviteMembersCta": "+ دعوة أعضاء",
@@ -223,7 +223,7 @@
     "imagePreviewLabel": "📷 صورة",
     "imageTooLarge": "الصورة كبيرة جداً (الحد الأقصى 10 ميجابايت)",
     "receiptDefaultTitle": "إيصال",
-    "receiptAddedTitle": "تمت إضافة فاتورة — {{title}}",
+    "receiptAddedTitle": "تمت إضافة إيصال — {{title}}",
     "receiptItemCount": "{{count}} صنف",
     "receiptNoItemsYet": "لم تُضَف أصناف بعد",
     "receiptOpenCta": "عرض وإضافة أصناف ‹",
@@ -239,11 +239,11 @@
   },
   "selectGroupForBill": {
     "title": "تعيين لمجموعة",
-    "subtitle": "اختَر المجموعة اللي هتتحسب عليها الفاتورة",
+    "subtitle": "اختَر المجموعة اللي هتتحسب عليها الإيصال",
     "membersCount": "{{count}} أعضاء",
     "loadError": "تعذر تحميل المجموعات. اضغط للمحاولة.",
     "emptyTitle": "لا توجد مجموعات بعد",
-    "emptySubtitle": "أنشئ مجموعة أولاً، بعدين عيّن الفاتورة عليها",
+    "emptySubtitle": "أنشئ مجموعة أولاً، بعدين عيّن الإيصال عليها",
     "createGroupCta": "إنشاء مجموعة"
   }
 }

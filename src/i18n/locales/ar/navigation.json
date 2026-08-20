@@ -13,17 +13,17 @@
     "myCircleTitle": "دائرتي",
     "remindTitle": "إرسال تذكيرات",
     "myLedgerTitle": "حسابي",
-    "billsTabTitle": "الفواتير",
+    "billsTabTitle": "الإيصالات",
     "activityTabTitle": "النشاط"
   },
   "tabBar": {
     "homeLabel": "الرئيسية",
-    "billsLabel": "الفواتير",
+    "billsLabel": "الإيصالات",
     "activityLabel": "النشاط",
     "profileLabel": "حسابي"
   },
   "quickAdd": {
-    "addBill": "إضافة فاتورة",
+    "addBill": "إضافة إيصال",
     "addBillSubtitle": "امسح أو أدخل إيصال",
     "newGroup": "مجموعة جديدة",
     "newGroupSubtitle": "ابدأ حساب مشترك",

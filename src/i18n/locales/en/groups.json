@@ -8,7 +8,7 @@
     "emptySubtitle": "Create your first group and start tracking expenses with your friends and family",
     "createGroupCta": "+ Create group",
     "loadError": "Couldn't load groups. Pull down to retry.",
-    "searchPlaceholder": "Search groups, bills, your Circle…",
+    "searchPlaceholder": "Search groups, receipts, your Circle…",
     "acrossAllGroups": "Across all groups",
     "youAreOwed": "You're owed",
     "youOwe": "You owe",
@@ -18,9 +18,9 @@
     "tileRemind": "Remind",
     "tileMyLedger": "My tab",
     "yourGroups": "Your groups",
-    "yourGroupsSubtitle": "Your crews and their shared bills.",
+    "yourGroupsSubtitle": "Your crews and their shared receipts.",
     "viewAll": "View all",
-    "cardMeta": "{{members}} members · {{bills}} open bills",
+    "cardMeta": "{{members}} members · {{bills}} open receipts",
     "cardMetaNoBills": "{{members}} members",
     "cardMembersOnly": "{{count}} members"
   },
@@ -60,7 +60,7 @@
     "pendingPill": "Pending",
     "pendingBadge": "Invited · pays by link",
     "emptyTitle": "Your Circle is empty",
-    "emptySubtitle": "Add the people you split bills with most often.",
+    "emptySubtitle": "Add the people you split receipts with most often.",
     "addPhoneTitle": "Add to your Circle",
     "addPhonePlaceholder": "Phone number",
     "addFailed": "Couldn't add this person, please try again",
@@ -78,7 +78,7 @@
     "byGroupHeader": "By group",
     "settledLabel": "Settled",
     "emptyTitle": "No activity yet",
-    "emptySubtitle": "Once you split a bill, your monthly tab shows up here."
+    "emptySubtitle": "Once you split a receipt, your monthly tab shows up here."
   },
   "groupLedger": {
     "spentThisMonth": "Spent this month",
@@ -135,7 +135,7 @@
   },
   "groupDetail": {
     "defaultUserName": "User",
-    "defaultBillName": "Bill",
+    "defaultBillName": "Receipt",
     "thisMemberFallback": "this member",
     "thisBillFallback": "this receipt",
     "roleAdmin": "Admin",
@@ -143,11 +143,11 @@
     "removeAction": "Remove",
     "paidByMeta": "Paid by {{payer}} • {{date}}",
     "tabChat": "Chat",
-    "tabBills": "Bills",
+    "tabBills": "Receipts",
     "tabLedger": "Tab",
     "tabMembers": "Members",
     "pendingChatNotice": "You must accept the invitation first to access the chat.",
-    "addBillCta": "+ Add bill",
+    "addBillCta": "+ Add receipt",
     "emptyBillsTitle": "No receipts yet",
     "emptyBillsSubtitle": "Add or scan the group's first receipt",
     "inviteMembersCta": "+ Invite members",
@@ -223,7 +223,7 @@
     "imagePreviewLabel": "📷 Photo",
     "imageTooLarge": "Image is too large (max 10 MB)",
     "receiptDefaultTitle": "Receipt",
-    "receiptAddedTitle": "Bill added — {{title}}",
+    "receiptAddedTitle": "Receipt added — {{title}}",
     "receiptItemCount": "{{count}} item(s)",
     "receiptNoItemsYet": "No items added yet",
     "receiptOpenCta": "View & add items ›",
@@ -239,11 +239,11 @@
   },
   "selectGroupForBill": {
     "title": "Assign to group",
-    "subtitle": "Choose which group this bill belongs to",
+    "subtitle": "Choose which group this receipt belongs to",
     "membersCount": "{{count}} members",
     "loadError": "Couldn't load groups. Tap to retry.",
     "emptyTitle": "No groups yet",
-    "emptySubtitle": "Create a group first, then assign this bill to it",
+    "emptySubtitle": "Create a group first, then assign this receipt to it",
     "createGroupCta": "Create group"
   }
 }

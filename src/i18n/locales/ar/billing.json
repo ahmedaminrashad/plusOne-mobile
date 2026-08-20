@@ -1,17 +1,17 @@
 {
   "addBillChooser": {
-    "title": "إضافة فاتورة",
+    "title": "إضافة إيصال",
     "subtitle": "لـ {{groupName}}",
     "subtitlePickGroupLater": "هتختار المجموعة بعد ما الإيصال يبقى جاهز",
-    "scanQrTitle": "مسح QR الفاتورة",
-    "scanQrSubtitle": "الفاتورة الإلكترونية بتتحمل بالتفصيل، فورًا",
+    "scanQrTitle": "مسح QR الإيصال",
+    "scanQrSubtitle": "الإيصال الإلكتروني بيتحمل بالتفصيل، فورًا",
     "scanQrBadge": "الأسرع",
     "scanReceiptTitle": "صوّر الإيصال",
     "scanReceiptSubtitle": "بنقراه (OCR) — وانت تأكد كل سطر",
     "manualTitle": "إدخال يدوي",
     "manualSubtitle": "بالتفصيل، أو الإجمالي بس",
     "footer": "أي طريقة تدخل بيها — التقسيم بيشتغل نفس الطريقة بعد كده.",
-    "footerPickGroupLater": "بعد ما الفاتورة تبقى جاهزة، اختَر المجموعة اللي هتتحسب عليها."
+    "footerPickGroupLater": "بعد ما الإيصال يبقى جاهز، اختَر المجموعة اللي هتتحسب عليها."
   },
   "createBill": {
     "venueLabel": "المطعم / المحل",
@@ -48,7 +48,7 @@
     "qrPreviewBanner": "📷 تم مسح QR — راجع التفاصيل وعدّل إن لزم",
     "ocrPreviewBanner": "🖨 نتيجة OCR — راجع وعدّل أي حقل",
     "amountMustBePositive": "يجب أن يكون المبلغ أكبر من صفر.",
-    "saveFailed": "تعذر حفظ الفاتورة، حاول مرة أخرى لاحقاً."
+    "saveFailed": "تعذر حفظ الإيصال، حاول مرة أخرى لاحقاً."
   },
   "assignItems": {
     "title": "مين ياخد إيه؟",
@@ -87,7 +87,7 @@
   },
   "billStatus": {
     "paidCount": "دفع {{paid}}/{{total}}",
-    "totalBillLabel": "إجمالي الفاتورة",
+    "totalBillLabel": "إجمالي الإيصال",
     "collectedOf": "اتجمع {{collected}} من {{owed}} مستحقة لـ {{payer}}",
     "paidBadge": "مدفوع ✓",
     "pendingBadge": "معلّق",
@@ -131,11 +131,11 @@
     "payInstructions": "سيتم فتح InstaPay لإرسال الأموال إلى {{alias}}. أرسل {{amount}} بعد فتح التطبيق.",
     "notFound": "تعذر العثور على الإيصال",
     "defaultUserName": "مستخدم",
-    "defaultBillName": "فاتورة",
+    "defaultBillName": "إيصال",
     "paidByAndDate": "دفع {{payerName}} • {{date}}",
     "shareSettled": "تم دفع نصيبك ✅",
     "awaitingConfirmation": "بانتظار تأكيد {{payerName}} لاستلام {{amount}}",
-    "yourShareLabel": "نصيبك من الفاتورة",
+    "yourShareLabel": "نصيبك من الإيصال",
     "payButton": "ادفع",
     "itemsTitle": "الأصناف",
     "detailsTitle": "التفاصيل",
@@ -155,7 +155,7 @@
   "editBillItems": {
     "saveButton": "حفظ التغييرات",
     "saveFailed": "تعذر حفظ التغييرات، يرجى المحاولة مرة أخرى",
-    "billClosedMessage": "تم تسوية هذه الفاتورة بالكامل ولا يمكن تعديلها بعد الآن.",
+    "billClosedMessage": "تم تسوية هذا الإيصال بالكامل ولا يمكن تعديله بعد الآن.",
     "addItemTitle": "إضافة صنف",
     "addItemInvalid": "أدخل اسم الصنف والكمية والسعر بقيمة أكبر من صفر"
   },

@@ -1,9 +1,9 @@
 {
   "addBillChooser": {
-    "title": "Add a bill",
+    "title": "Add a receipt",
     "subtitle": "to {{groupName}}",
     "subtitlePickGroupLater": "You'll pick the group after the receipt",
-    "scanQrTitle": "Scan bill QR",
+    "scanQrTitle": "Scan receipt QR",
     "scanQrSubtitle": "E-receipt loads itemized, instantly",
     "scanQrBadge": "Fastest",
     "scanReceiptTitle": "Photo the receipt",
@@ -11,7 +11,7 @@
     "manualTitle": "Enter manually",
     "manualSubtitle": "Itemized, or just the total",
     "footer": "Whichever way in — splitting works the same after.",
-    "footerPickGroupLater": "After the bill is ready, choose which group to assign it to."
+    "footerPickGroupLater": "After the receipt is ready, choose which group to assign it to."
   },
   "createBill": {
     "venueLabel": "Restaurant / Venue",
@@ -48,7 +48,7 @@
     "qrPreviewBanner": "📷 QR scanned — review the details and edit if needed",
     "ocrPreviewBanner": "🖨 OCR result — review and edit any field",
     "amountMustBePositive": "The amount must be greater than zero.",
-    "saveFailed": "Couldn't save the bill, please try again later."
+    "saveFailed": "Couldn't save the receipt, please try again later."
   },
   "assignItems": {
     "title": "Who took what?",
@@ -87,7 +87,7 @@
   },
   "billStatus": {
     "paidCount": "{{paid}}/{{total}} paid",
-    "totalBillLabel": "Total bill",
+    "totalBillLabel": "Total receipt",
     "collectedOf": "{{collected}} collected of {{owed}} owed to {{payer}}",
     "paidBadge": "Paid ✓",
     "pendingBadge": "Pending",
@@ -131,11 +131,11 @@
     "payInstructions": "InstaPay will open to send money to {{alias}}. Send {{amount}} after opening the app.",
     "notFound": "Couldn't find the receipt",
     "defaultUserName": "User",
-    "defaultBillName": "Bill",
+    "defaultBillName": "Receipt",
     "paidByAndDate": "Paid by {{payerName}} • {{date}}",
     "shareSettled": "Your share has been paid ✅",
     "awaitingConfirmation": "Awaiting {{payerName}}'s confirmation of receiving {{amount}}",
-    "yourShareLabel": "Your share of the bill",
+    "yourShareLabel": "Your share of the receipt",
     "payButton": "Pay",
     "itemsTitle": "Items",
     "detailsTitle": "Details",
@@ -155,7 +155,7 @@
   "editBillItems": {
     "saveButton": "Save changes",
     "saveFailed": "Couldn't save changes, please try again",
-    "billClosedMessage": "This bill is fully settled and can no longer be edited.",
+    "billClosedMessage": "This receipt is fully settled and can no longer be edited.",
     "addItemTitle": "Add an item",
     "addItemInvalid": "Enter an item name, quantity and price greater than zero"
   },

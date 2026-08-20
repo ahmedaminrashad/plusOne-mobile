@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, memo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   View,
@@ -187,11 +187,15 @@ function BillCard({
 function GroupDetailScreen({ route, navigation }: Props) {
   const { t } = useTranslation('groups');
   const typography = useTypography();
-  const { groupId, groupName: routeGroupName } = route.params;
-  const [activeTab, setActiveTab] = useState<Tab>('chat');
+  const { groupId, groupName: routeGroupName, initialTab } = route.params;
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab ?? 'chat');
   const [displayName, setDisplayName] = useState(routeGroupName);
   const [renameVisible, setRenameVisible] = useState(false);
   const [renameValue, setRenameValue] = useState(routeGroupName);
+
+  useEffect(() => {
+    if (initialTab) setActiveTab(initialTab);
+  }, [initialTab, groupId]);
 
   const { data: members, isLoading, refetch } = useGetGroupMembersQuery(groupId, {
     pollingInterval: 10_000,
