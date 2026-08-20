@@ -243,6 +243,22 @@ function PayShareScreen({ route, navigation }: Props) {
               )}
             </View>
 
+            {(bill.lineItems?.length ?? 0) > 0 && (
+              <View style={styles.lineItemsCard}>
+                <Text style={[typography.labelMedium, styles.lineItemsTitle]}>{t('viewReceipt.itemsTitle')}</Text>
+                {bill.lineItems!.map((it, idx) => (
+                  <View key={`${it.name}-${idx}`} style={styles.lineItemRow}>
+                    <Text style={[typography.bodyMedium, styles.lineItemName]} numberOfLines={2}>
+                      {it.qty > 1 ? `${it.qty}× ` : ''}{it.name}
+                    </Text>
+                    <Text style={[typography.bodyMedium, styles.lineItemAmt]}>
+                      {formatCurrency(it.qty * it.unitPrice)}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            )}
+
             <Button title={t('payShare.payWithInstaPay')} onPress={handlePayInstaPay} loading={isPaying} style={styles.payBtn} />
             <Button title={t('payShare.iPaidInCash')} onPress={handlePayCash} variant="outline" style={styles.cashBtn} />
 
@@ -297,6 +313,19 @@ const styles = StyleSheet.create({
   breakdownRow: { flexDirection: 'row', justifyContent: 'space-between', alignSelf: 'stretch', marginBottom: 6 },
   breakdownAmt: { color: Colors.textSecondary },
   breakdownLabel: { color: Colors.textSecondary },
+
+  lineItemsCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.xl,
+    padding: 16,
+    alignSelf: 'stretch',
+    marginBottom: 16,
+    gap: 8,
+  },
+  lineItemsTitle: { color: Colors.textMuted, letterSpacing: 0.5, marginBottom: 4 },
+  lineItemRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
+  lineItemName: { color: Colors.text, flex: 1 },
+  lineItemAmt: { color: Colors.textSecondary },
 
   payBtn: { alignSelf: 'stretch', marginBottom: 10 },
   cashBtn: { alignSelf: 'stretch', marginBottom: 16 },

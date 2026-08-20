@@ -78,7 +78,9 @@
     "saveButton": "Save receipt",
     "paidTheReceiptSuffix": "paid the receipt",
     "assignedWithCharges": "Assigned {{amount}} + charges",
-    "unassignedLabel": "unassigned"
+    "unassignedLabel": "unassigned",
+    "totalsMismatchTitle": "Totals don't match",
+    "totalsMismatchMessage": "Assigned shares ({{members}}) don't match the receipt total ({{total}}). Review assignments, or continue to save using the computed total."
   },
   "billStatus": {
     "paidCount": "{{paid}}/{{total}} paid",
@@ -150,7 +152,7 @@
   "editBillItems": {
     "saveButton": "Save changes",
     "saveFailed": "Couldn't save changes, please try again",
-    "billClosedMessage": "This bill's split is already closed and can no longer be edited.",
+    "billClosedMessage": "This bill is fully settled and can no longer be edited.",
     "addItemTitle": "Add an item",
     "addItemInvalid": "Enter an item name, quantity and price greater than zero"
   },

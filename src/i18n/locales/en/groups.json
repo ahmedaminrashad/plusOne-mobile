@@ -18,6 +18,7 @@
     "tileRemind": "Remind",
     "tileMyLedger": "My tab",
     "yourGroups": "Your groups",
+    "yourGroupsSubtitle": "Your crews and their shared bills.",
     "viewAll": "View all",
     "cardMeta": "{{members}} members · {{bills}} open bills",
     "cardMetaNoBills": "{{members}} members",
@@ -45,6 +46,7 @@
     "viewInvitations": "Group invitations"
   },
   "myCircle": {
+    "headerSubtitle": "People you split with most.",
     "peopleCount": "{{count}} people",
     "searchPlaceholder": "Name or phone number…",
     "growTitle": "Grow your Circle",
@@ -115,7 +117,7 @@
     "theyllReceive": "They'll receive",
     "rateLimitNote": "Reminders are rate-limited to once per day per person.",
     "previewSender": "+one · friendly nudge",
-    "previewMessage": "Hey {{name}} 👋 quick one — your share from {{group}} is EGP {{amount}}. Tap to settle in seconds.",
+    "previewMessage": "{{name}} is reminding you to pay EGP {{amount}} for {{bill}} in {{group}}.",
     "sendButton": "Send {{count}} reminders",
     "emptyTitle": "No one to remind",
     "emptySubtitle": "Everyone's either paid up or hasn't been asked yet.",
@@ -149,6 +151,15 @@
     "emptyBillsTitle": "No receipts yet",
     "emptyBillsSubtitle": "Add or scan the group's first receipt",
     "inviteMembersCta": "+ Invite members",
+    "renameAction": "Rename",
+    "renameTitle": "Rename group",
+    "renamePlaceholder": "Group name",
+    "renameError": "Couldn't rename the group",
+    "deleteGroupAction": "Delete group",
+    "deleteGroupTitle": "Delete this group?",
+    "deleteGroupMessage": "This removes the group for everyone. You can only delete if there are no open shares.",
+    "deleteGroupError": "Couldn't delete the group",
+    "deleteGroupHasOpenShares": "This group still has unsettled shares. Settle or cancel them first.",
     "deleteBillTitle": "Delete receipt",
     "deleteBillMessage": "Do you want to delete \"{{name}}\"?",
     "deleteBillError": "Couldn't delete the receipt",
@@ -159,7 +170,8 @@
     "splitNow": "Split now →",
     "fullySettled": "Fully settled ✓",
     "paidCount": "{{paid}} of {{total}} paid",
-    "pendingCount": "{{count}} pending"
+    "pendingCount": "{{count}} pending",
+    "editSplit": "Edit split →"
   },
   "createGroup": {
     "categoryFriends": "👫 Friends",

@@ -22,7 +22,7 @@ import { useGetMySharesQuery, useConfirmShareMutation, MyShare } from '../../sto
 import { useGetMeQuery } from '../../store/api/usersApi';
 import { GroupMember } from '../../types/models';
 import Avatar from '../../components/common/Avatar';
-import { BellIcon, MailIcon, CheckIcon } from '../../components/icons';
+import { BellIcon, MailIcon, CheckIcon, ChevronLeftIcon } from '../../components/icons';
 import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
@@ -248,9 +248,14 @@ function NotificationsScreen({ navigation }: Props) {
     <SafeScreen style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
       <View style={styles.header}>
-        <Text style={[typography.headingLarge, styles.headerTitle]}>
-          {t('notifications.title', { defaultValue: 'Notifications' })}
-        </Text>
+        <View style={styles.headerTop}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} hitSlop={12}>
+            <ChevronLeftIcon size={20} color={Colors.text} />
+          </TouchableOpacity>
+          <Text style={[typography.headingLarge, styles.headerTitle]}>
+            {t('notifications.title', { defaultValue: 'Notifications' })}
+          </Text>
+        </View>
         <Text style={[typography.bodyMedium, styles.headerSub]}>
           {t('notifications.subtitle')}
         </Text>
@@ -305,8 +310,22 @@ export default memo(NotificationsScreen);
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 8 },
-  headerTitle: { color: Colors.text },
-  headerSub: { color: Colors.textSecondary, marginTop: 4 },
+  headerTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  backBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  headerTitle: { color: Colors.text, flex: 1 },
+  headerSub: { color: Colors.textSecondary, marginTop: 8 },
   loader: { marginTop: 40 },
   list: { padding: 16, paddingBottom: 40 },
   listEmpty: { flexGrow: 1, padding: 16 },

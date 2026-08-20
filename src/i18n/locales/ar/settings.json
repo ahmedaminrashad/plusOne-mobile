@@ -48,10 +48,10 @@
     "instaPayHowToLink": "إزاي ألاقيه؟",
     "instaPayHowToTitle": "الحصول على رابط InstaPay",
     "instaPayHowToStep1": "١. افتح تطبيق InstaPay",
-    "instaPayHowToStep2": "٢. روح لملفك الشخصي واضغط شارك رابطك",
-    "instaPayHowToStep3": "٣. اختار +One من قائمة المشاركة",
+    "instaPayHowToStep2": "٢. روح للصفحة الرئيسية واضغط Link تحت حسابك",
+    "instaPayHowToStep3": "٣. اختار +One من قائمة المشاركة، بعدين اضغط Post",
     "instaPayHowToStep4": "٤. ارجع هنا واضغط حفظ التغييرات",
-    "instaPayHowToNote": "الرابط بيخلي أصحابك يدفعوا لك مباشرة من التقسيمة.",
+    "instaPayHowToNote": "رابط InstaPay بيخلي أصحابك يدفعوا لك مباشرة من التقسيمة.",
     "saveButton": "حفظ التغييرات"
   },
   "paymentMethods": {

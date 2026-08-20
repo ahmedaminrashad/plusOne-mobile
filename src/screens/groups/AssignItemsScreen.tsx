@@ -50,6 +50,7 @@ function MemberChip({ member, selected, onToggle }: { member: GroupMember; selec
       <Text style={[typography.labelSmall, styles.chipName, selected && styles.chipNameSelected]} numberOfLines={1}>
         {name.split(' ')[0]}
       </Text>
+      {selected && <CheckIcon size={12} color={Colors.primary} strokeWidth={2.5} />}
     </TouchableOpacity>
   );
 }
@@ -164,7 +165,7 @@ function AssignItemsScreen({ route, navigation }: Props) {
     return receipt.vatType === 'percent' ? (subtotal + taxAmt + deliveryAmt) * receipt.vat / 100 : receipt.vat;
   }, [receipt.vat, receipt.vatType, subtotal, taxAmt, deliveryAmt]);
 
-  const grandTotal = receipt.grandTotal ?? (subtotal + taxAmt + deliveryAmt + vatAmt);
+  const grandTotal = subtotal + taxAmt + deliveryAmt + vatAmt;
 
   const memberTotals = useMemo(() => {
     if (mode === 'equally') {
@@ -235,7 +236,7 @@ function AssignItemsScreen({ route, navigation }: Props) {
       .filter((s) => s.amountPiastres > 0);
 
     const sharesTotalPiastres = shares.reduce((sum, s) => sum + s.amountPiastres, 0);
-    // Bill amount must cover share sum (SHARES_EXCEED_BILL_TOTAL); prefer computed total over a stale OCR override.
+    // Prefer computed line total over a stale OCR grandTotal for the bill amount.
     const amount = Math.max(grandTotal, sharesTotalPiastres / 100);
 
     try {
@@ -269,6 +270,42 @@ function AssignItemsScreen({ route, navigation }: Props) {
       Alert.alert(t('common:error'), t('receiptSplit.selectPayerRequired'));
       return;
     }
+
+    const memberSum = Object.values(memberTotals).reduce((sum, v) => sum + v, 0);
+    if (Math.abs(memberSum - grandTotal) > 0.02) {
+      Alert.alert(
+        t('receiptSplit.totalsMismatchTitle'),
+        t('receiptSplit.totalsMismatchMessage', {
+          members: formatCurrency(memberSum),
+          total: formatCurrency(grandTotal),
+        }),
+        [
+          { text: t('receiptSplit.reviewButton'), style: 'cancel' },
+          {
+            text: t('common:continue'),
+            onPress: () => {
+              if (mode === 'byItem') {
+                const unclaimedItems = items.filter((i) => i.claimedBy.length === 0);
+                if (unclaimedItems.length > 0) {
+                  Alert.alert(
+                    t('receiptSplit.unclaimedItemsTitle'),
+                    t('receiptSplit.unclaimedItemsMessage', { count: unclaimedItems.length }),
+                    [
+                      { text: t('receiptSplit.reviewButton'), style: 'cancel' },
+                      { text: t('common:continue'), onPress: doSave },
+                    ],
+                  );
+                  return;
+                }
+              }
+              doSave();
+            },
+          },
+        ],
+      );
+      return;
+    }
+
     if (mode === 'byItem') {
       const unclaimedItems = items.filter((i) => i.claimedBy.length === 0);
       if (unclaimedItems.length > 0) {
@@ -285,7 +322,7 @@ function AssignItemsScreen({ route, navigation }: Props) {
     }
     doSave();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [paidByUserId, mode, items, doSave]);
+  }, [paidByUserId, mode, items, doSave, memberTotals, grandTotal, t]);
 
   const renderItem = useCallback(
     ({ item }: { item: ReceiptItem }) => (
@@ -513,10 +550,15 @@ const styles = StyleSheet.create({
     borderRadius: Radius.lg,
     backgroundColor: Colors.surfaceElevated,
     minWidth: 54,
+    borderWidth: 1.5,
+    borderColor: 'transparent',
   },
-  chipSelected: { backgroundColor: Colors.tint },
+  chipSelected: {
+    backgroundColor: Colors.tint,
+    borderColor: Colors.primary,
+  },
   chipName: { color: Colors.textSecondary },
-  chipNameSelected: { color: Colors.primary },
+  chipNameSelected: { color: Colors.primary, fontWeight: '700' },
 
   unclaimedNote: { color: Colors.danger, textAlign: 'left', marginTop: 6 },
   splitNote: { color: Colors.textMuted, textAlign: 'left', marginTop: 4 },

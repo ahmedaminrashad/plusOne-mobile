@@ -78,7 +78,9 @@
     "saveButton": "حفظ الإيصال",
     "paidTheReceiptSuffix": "دفع الإيصال",
     "assignedWithCharges": "المحدد {{amount}} + الرسوم",
-    "unassignedLabel": "غير محدد"
+    "unassignedLabel": "غير محدد",
+    "totalsMismatchTitle": "الإجماليات مش متطابقة",
+    "totalsMismatchMessage": "حصص الأعضاء ({{members}}) مش مطابقة لإجمالي الإيصال ({{total}}). راجع التوزيع، أو كمّل بالحفظ بالإجمالي المحسوب."
   },
   "billStatus": {
     "paidCount": "دفع {{paid}}/{{total}}",
@@ -150,7 +152,7 @@
   "editBillItems": {
     "saveButton": "حفظ التغييرات",
     "saveFailed": "تعذر حفظ التغييرات، يرجى المحاولة مرة أخرى",
-    "billClosedMessage": "تم إغلاق توزيع هذه الفاتورة ولا يمكن تعديله بعد الآن.",
+    "billClosedMessage": "تم تسوية هذه الفاتورة بالكامل ولا يمكن تعديلها بعد الآن.",
     "addItemTitle": "إضافة صنف",
     "addItemInvalid": "أدخل اسم الصنف والكمية والسعر بقيمة أكبر من صفر"
   },

@@ -128,7 +128,11 @@ function EditProfileScreen({ navigation, route }: Props) {
           placeholder={t('editProfile.instaPayPlaceholder')}
           maxLength={60}
         />
-        <TouchableOpacity onPress={() => setInstaPayHelpVisible(true)} activeOpacity={0.7}>
+        <TouchableOpacity
+          onPress={() => setInstaPayHelpVisible(true)}
+          activeOpacity={0.7}
+          style={styles.howToLinkBtn}
+          hitSlop={8}>
           <Text style={styles.howToLink}>{t('editProfile.instaPayHowToLink')}</Text>
         </TouchableOpacity>
 
@@ -212,12 +216,17 @@ const styles = StyleSheet.create({
   },
   readOnlyLabel: { fontSize: 12, color: Colors.textMuted, marginBottom: 4, fontWeight: '500' },
   readOnlyValue: { fontSize: 15, color: Colors.textSecondary, fontWeight: '600' },
+  howToLinkBtn: {
+    alignSelf: 'flex-start',
+    paddingVertical: 4,
+    paddingHorizontal: 2,
+    marginTop: -8,
+    marginBottom: 16,
+  },
   howToLink: {
     color: Colors.primary,
     fontSize: 13,
     fontWeight: '600',
-    marginTop: -8,
-    marginBottom: 20,
   },
   modalOverlay: { flex: 1, backgroundColor: Colors.overlay, justifyContent: 'flex-end' },
   modalSheet: {
@@ -226,9 +235,9 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 20,
     padding: 24,
     paddingBottom: 40,
-    gap: 10,
+    gap: 12,
   },
-  modalTitle: { fontSize: 18, fontWeight: '800', color: Colors.text, marginBottom: 6 },
-  modalStep: { fontSize: 15, color: Colors.text, lineHeight: 22 },
-  modalNote: { fontSize: 13, color: Colors.textMuted, lineHeight: 20, marginVertical: 8 },
+  modalTitle: { fontSize: 20, fontWeight: '800', color: Colors.text, marginBottom: 6 },
+  modalStep: { fontSize: 17, color: Colors.text, lineHeight: 26 },
+  modalNote: { fontSize: 15, color: Colors.textMuted, lineHeight: 22, marginVertical: 8 },
 });

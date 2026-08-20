@@ -8,10 +8,18 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
+  Modal,
+  TextInput,
+  Platform,
 } from 'react-native';
 import SafeScreen from '../../components/common/SafeScreen';
 import { AppScreenProps } from '../../types/navigation';
-import { useGetGroupMembersQuery, useRemoveMemberMutation } from '../../store/api/groupsApi';
+import {
+  useGetGroupMembersQuery,
+  useRemoveMemberMutation,
+  useUpdateGroupMutation,
+  useDeleteGroupMutation,
+} from '../../store/api/groupsApi';
 import { useGetGroupBillsQuery, useDeleteBillMutation } from '../../store/api/billsApi';
 import { useGetBillSharesQuery } from '../../store/api/sharesApi';
 import { GroupMember, Bill } from '../../types/models';
@@ -150,10 +158,17 @@ function BillCard({
             <Text style={[typography.bodyMedium, styles.billStatusMuted]}>
               {t('groupDetail.paidCount', { paid: settledCount, total: totalCount })}
             </Text>
-            <View style={styles.pendingCountBadge}>
-              <Text style={[typography.labelSmall, styles.pendingCountText]}>
-                {t('groupDetail.pendingCount', { count: pendingCount })}
-              </Text>
+            <View style={styles.billStatusRowRight}>
+              {pendingCount > 0 && (
+                <View style={styles.pendingCountBadge}>
+                  <Text style={[typography.labelSmall, styles.pendingCountText]}>
+                    {t('groupDetail.pendingCount', { count: pendingCount })}
+                  </Text>
+                </View>
+              )}
+              <TouchableOpacity style={styles.splitNowPill} onPress={onSplit} hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}>
+                <Text style={[typography.labelMedium, styles.splitNowText]}>{t('groupDetail.editSplit')}</Text>
+              </TouchableOpacity>
             </View>
           </View>
           <View style={styles.progressTrack}>
@@ -172,8 +187,11 @@ function BillCard({
 function GroupDetailScreen({ route, navigation }: Props) {
   const { t } = useTranslation('groups');
   const typography = useTypography();
-  const { groupId, groupName } = route.params;
+  const { groupId, groupName: routeGroupName } = route.params;
   const [activeTab, setActiveTab] = useState<Tab>('chat');
+  const [displayName, setDisplayName] = useState(routeGroupName);
+  const [renameVisible, setRenameVisible] = useState(false);
+  const [renameValue, setRenameValue] = useState(routeGroupName);
 
   const { data: members, isLoading, refetch } = useGetGroupMembersQuery(groupId, {
     pollingInterval: 10_000,
@@ -183,6 +201,8 @@ function GroupDetailScreen({ route, navigation }: Props) {
   });
   const [removeMember] = useRemoveMemberMutation();
   const [deleteBill] = useDeleteBillMutation();
+  const [updateGroup, { isLoading: isRenaming }] = useUpdateGroupMutation();
+  const [deleteGroup, { isLoading: isDeletingGroup }] = useDeleteGroupMutation();
   const { data: me } = useGetMeQuery();
 
   const activeMembers = useMemo(() => members?.filter((m) => m.status === 'active') ?? [], [members]);
@@ -195,14 +215,14 @@ function GroupDetailScreen({ route, navigation }: Props) {
   // ── Bills actions ───────────────────────────────────────────
 
   const handleAddBill = useCallback(() => {
-    navigation.navigate('AddBillChooser', { groupId, groupName });
-  }, [groupId, groupName, navigation]);
+    navigation.navigate('AddBillChooser', { groupId, groupName: displayName });
+  }, [groupId, displayName, navigation]);
 
   const handleSplitBill = useCallback(
     (billId: string) => {
-      navigation.navigate('EditBillItems', { groupId, groupName, billId });
+      navigation.navigate('EditBillItems', { groupId, groupName: displayName, billId });
     },
-    [groupId, groupName, navigation],
+    [groupId, displayName, navigation],
   );
 
   const handleDeleteBill = useCallback(
@@ -254,6 +274,75 @@ function GroupDetailScreen({ route, navigation }: Props) {
     [groupId, removeMember, t],
   );
 
+  const submitRename = useCallback(async (nextName: string) => {
+    const trimmed = nextName.trim();
+    if (!trimmed || trimmed === displayName) {
+      setRenameVisible(false);
+      return;
+    }
+    try {
+      const updated = await updateGroup({ groupId, name: trimmed }).unwrap();
+      setDisplayName(updated.name);
+      navigation.setParams({ groupName: updated.name });
+      setRenameVisible(false);
+    } catch {
+      Alert.alert(t('common:error'), t('groupDetail.renameError'));
+    }
+  }, [displayName, updateGroup, groupId, navigation, t]);
+
+  const handleRenamePress = useCallback(() => {
+    if (!isAdmin) return;
+    if (Platform.OS === 'ios') {
+      Alert.prompt(
+        t('groupDetail.renameTitle'),
+        undefined,
+        [
+          { text: t('common:cancel'), style: 'cancel' },
+          { text: t('common:save', { defaultValue: 'Save' }), onPress: (text?: string) => { if (text) void submitRename(text); } },
+        ],
+        'plain-text',
+        displayName,
+      );
+      return;
+    }
+    setRenameValue(displayName);
+    setRenameVisible(true);
+  }, [isAdmin, t, displayName, submitRename]);
+
+  const handleDeleteGroup = useCallback(() => {
+    Alert.alert(
+      t('groupDetail.deleteGroupTitle'),
+      t('groupDetail.deleteGroupMessage'),
+      [
+        { text: t('common:cancel'), style: 'cancel' },
+        {
+          text: t('groupDetail.deleteGroupAction'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteGroup(groupId).unwrap();
+              navigation.navigate('Home');
+            } catch (err: any) {
+              const payload = err?.data?.message;
+              const code =
+                (typeof payload === 'string'
+                  ? payload
+                  : payload?.message ?? payload?.error) ??
+                err?.data?.error ??
+                '';
+              Alert.alert(
+                t('common:error'),
+                code === 'GROUP_HAS_OPEN_SHARES'
+                  ? t('groupDetail.deleteGroupHasOpenShares')
+                  : t('groupDetail.deleteGroupError'),
+              );
+            }
+          },
+        },
+      ],
+    );
+  }, [deleteGroup, groupId, navigation, t]);
+
   const renderMember = useCallback(
     ({ item }: { item: GroupMember }) => (
       <MemberRow
@@ -282,12 +371,17 @@ function GroupDetailScreen({ route, navigation }: Props) {
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} hitSlop={8}>
             <ChevronLeftIcon size={20} color={Colors.text} />
           </TouchableOpacity>
-          <View style={styles.headerTitleBlock}>
-            <Text style={[typography.headingSmall, styles.headerTitle]} numberOfLines={1}>{groupName}</Text>
+          <TouchableOpacity
+            style={styles.headerTitleBlock}
+            onPress={handleRenamePress}
+            disabled={!isAdmin}
+            activeOpacity={isAdmin ? 0.7 : 1}>
+            <Text style={[typography.headingSmall, styles.headerTitle]} numberOfLines={1}>{displayName}</Text>
             <Text style={[typography.bodySmall, styles.headerSubtitle]}>
               {t('home.activeMembersCount', { count: activeMembers.length })}
+              {isAdmin ? ` · ${t('groupDetail.renameAction')}` : ''}
             </Text>
-          </View>
+          </TouchableOpacity>
           <View style={styles.headerAvatarStack}>
             {headerAvatars.map((m, i) => (
               <Avatar
@@ -331,7 +425,7 @@ function GroupDetailScreen({ route, navigation }: Props) {
                 </Text>
               </View>
             ) : (
-              <GroupChatPane groupId={groupId} groupName={groupName} navigation={navigation} />
+              <GroupChatPane groupId={groupId} groupName={displayName} navigation={navigation} />
             )}
           </View>
         )}
@@ -355,7 +449,7 @@ function GroupDetailScreen({ route, navigation }: Props) {
                   <BillCard
                     bill={item}
                     canDelete={item.paidByUserId === me?.id || isAdmin}
-                    onPress={() => navigation.navigate('BillStatus', { groupId, groupName, billId: item.id })}
+                    onPress={() => navigation.navigate('BillStatus', { groupId, groupName: displayName, billId: item.id })}
                     onSplit={() => handleSplitBill(item.id)}
                     onDelete={() => handleDeleteBill(item)}
                   />
@@ -391,10 +485,53 @@ function GroupDetailScreen({ route, navigation }: Props) {
                 keyExtractor={(m) => m.id}
                 renderItem={renderMember}
                 contentContainerStyle={styles.list}
+                ListFooterComponent={
+                  isAdmin ? (
+                    <TouchableOpacity
+                      style={styles.deleteGroupBtn}
+                      onPress={handleDeleteGroup}
+                      disabled={isDeletingGroup}
+                      activeOpacity={0.75}>
+                      <Text style={[typography.labelMedium, styles.deleteGroupText]}>
+                        {t('groupDetail.deleteGroupAction')}
+                      </Text>
+                    </TouchableOpacity>
+                  ) : null
+                }
               />
             )}
           </View>
         )}
+
+      <Modal visible={renameVisible} transparent animationType="fade" onRequestClose={() => setRenameVisible(false)}>
+        <TouchableOpacity style={styles.renameOverlay} activeOpacity={1} onPress={() => setRenameVisible(false)}>
+          <View style={styles.renameSheet}>
+            <Text style={[typography.headingSmall, styles.renameTitle]}>{t('groupDetail.renameTitle')}</Text>
+            <TextInput
+              style={[typography.bodyLarge, styles.renameInput]}
+              value={renameValue}
+              onChangeText={setRenameValue}
+              placeholder={t('groupDetail.renamePlaceholder')}
+              placeholderTextColor={Colors.textMuted}
+              maxLength={50}
+              autoFocus
+            />
+            <View style={styles.renameActions}>
+              <TouchableOpacity style={styles.renameCancel} onPress={() => setRenameVisible(false)}>
+                <Text style={[typography.labelMedium, styles.renameCancelText]}>{t('common:cancel')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.renameSave}
+                onPress={() => void submitRename(renameValue)}
+                disabled={isRenaming}>
+                <Text style={[typography.labelMedium, styles.renameSaveText]}>
+                  {t('common:save', { defaultValue: 'Save' })}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </SafeScreen>
   );
 }
@@ -483,6 +620,7 @@ const styles = StyleSheet.create({
   billDeleteBtn: { marginLeft: 8 },
   billSeparator: { height: 1, backgroundColor: Colors.borderLight, marginVertical: 12 },
   billStatusRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  billStatusRowRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   billStatusMuted: { color: Colors.textSecondary },
   billSettledText: { color: Colors.success },
   pendingCountBadge: { backgroundColor: Colors.warningTint, borderRadius: Radius.pill, paddingHorizontal: 10, paddingVertical: 4 },
@@ -516,6 +654,54 @@ const styles = StyleSheet.create({
   inviteBtn: { margin: 16 },
   list: { paddingHorizontal: 16, paddingBottom: 90 },
   loader: { marginTop: 40 },
+  deleteGroupBtn: {
+    marginTop: 16,
+    marginBottom: 24,
+    alignItems: 'center',
+    paddingVertical: 14,
+    borderRadius: Radius.xl,
+    backgroundColor: Colors.dangerTint,
+  },
+  deleteGroupText: { color: Colors.danger },
+  renameOverlay: {
+    flex: 1,
+    backgroundColor: Colors.overlay,
+    justifyContent: 'center',
+    padding: 24,
+  },
+  renameSheet: {
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.xl,
+    padding: 20,
+    gap: 12,
+  },
+  renameTitle: { color: Colors.text, textAlign: 'center' },
+  renameInput: {
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: Radius.lg,
+    paddingHorizontal: 14,
+    paddingVertical: Platform.OS === 'ios' ? 12 : 10,
+    color: Colors.text,
+    backgroundColor: Colors.background,
+  },
+  renameActions: { flexDirection: 'row', gap: 10, marginTop: 4 },
+  renameCancel: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderRadius: Radius.pill,
+    backgroundColor: Colors.neutral100,
+  },
+  renameCancelText: { color: Colors.textSecondary },
+  renameSave: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderRadius: Radius.pill,
+    backgroundColor: Colors.primary,
+  },
+  renameSaveText: { color: Colors.textOnPrimary },
 
   memberRow: {
     flexDirection: 'row',

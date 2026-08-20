@@ -139,7 +139,10 @@ function MyCircleScreen({ navigation }: Props) {
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} hitSlop={12}>
           <ChevronLeftIcon size={20} color={Colors.text} />
         </TouchableOpacity>
-        <Text style={[typography.headingLarge, styles.title]}>{t('navigation:appStack.myCircleTitle')}</Text>
+        <View style={styles.titleBlock}>
+          <Text style={[typography.headingLarge, styles.title]}>{t('navigation:appStack.myCircleTitle')}</Text>
+          <Text style={[typography.bodySmall, styles.headerSubtitle]}>{t('myCircle.headerSubtitle')}</Text>
+        </View>
         <View style={styles.countPill}>
           <Text style={[typography.labelMedium, styles.countPillText]}>{t('myCircle.peopleCount', { count: circle?.length ?? 0 })}</Text>
         </View>
@@ -250,7 +253,9 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     justifyContent: 'center', alignItems: 'center',
   },
-  title: { color: Colors.text, flex: 1 },
+  titleBlock: { flex: 1 },
+  title: { color: Colors.text },
+  headerSubtitle: { color: Colors.textSecondary, marginTop: 2 },
   countPill: { borderRadius: Radius.pill, paddingHorizontal: 10, paddingVertical: 4, backgroundColor: Colors.tint },
   countPillText: { color: Colors.primary },
 

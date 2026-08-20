@@ -68,14 +68,11 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   // Indices after removing Bills/Activity: Home=0, QuickAdd=1, SettingsTab=2
   const homeActive = state.index === 0;
   const profileActive = state.index === 2;
-
-  // Keyboard inset already lifts the composer from the window bottom. Leaving the
-  // tab bar in layout adds a large empty gap between the input and the keys.
-  if (keyboardHeight > 0) return null;
+  const keyboardOpen = keyboardHeight > 0;
 
   return (
     <>
-      {menuOpen && (
+      {menuOpen && !keyboardOpen && (
         <Pressable style={styles.menuBackdrop} onPress={() => setMenuOpen(false)}>
           <View style={styles.menu}>
             <TouchableOpacity style={styles.menuCard} onPress={handleNewGroup} activeOpacity={0.75}>
@@ -100,13 +97,14 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
         </Pressable>
       )}
 
-      <View style={styles.tabBarWrap}>
+      <View
+        style={[styles.tabBarWrap, keyboardOpen && styles.tabBarWrapHidden]}
+        pointerEvents={keyboardOpen ? 'none' : 'auto'}>
         <View style={styles.tabBar}>
           <TouchableOpacity style={styles.tabItem} onPress={handleHomePress} activeOpacity={0.7}>
             <View style={styles.tabItemInner}>
               <HomeIcon size={20} color={homeActive ? Colors.navActive : Colors.navInactive} />
               <Text style={[typography.labelSmall, styles.tabLabel, homeActive && styles.tabLabelActive]}>{t('tabBar.homeLabel')}</Text>
-              {homeActive && <View style={styles.tabActiveDot} />}
             </View>
           </TouchableOpacity>
 
@@ -117,7 +115,6 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
             <View style={styles.tabItemInner}>
               <PersonIcon size={20} color={profileActive ? Colors.navActive : Colors.navInactive} />
               <Text style={[typography.labelSmall, styles.tabLabel, profileActive && styles.tabLabelActive]}>{t('tabBar.profileLabel')}</Text>
-              {profileActive && <View style={styles.tabActiveDot} />}
             </View>
           </TouchableOpacity>
         </View>
@@ -154,13 +151,18 @@ const TAB_BAR_MARGIN = 23;
 const TAB_BAR_BOTTOM = Platform.OS === 'ios' ? 22 : 14;
 const FAB_SIZE = 58;
 const FAB_INNER_SIZE = 40;
-const FAB_OVERLAP = 14;
+const FAB_OVERLAP = 18;
 const TAB_BAR_WRAP_HEIGHT = TAB_BAR_HEIGHT + TAB_BAR_BOTTOM + FAB_OVERLAP;
 
 const styles = StyleSheet.create({
   tabBarWrap: {
     height: TAB_BAR_WRAP_HEIGHT,
     backgroundColor: 'transparent',
+    overflow: 'visible',
+  },
+  tabBarWrapHidden: {
+    height: 0,
+    overflow: 'hidden',
   },
   tabBar: {
     position: 'absolute',
@@ -188,12 +190,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 3,
-  },
-  tabActiveDot: {
-    position: 'absolute',
-    bottom: -8,
-    width: 4, height: 4, borderRadius: 2,
-    backgroundColor: Colors.navActive,
   },
   tabLabel: { color: Colors.navInactive },
   tabLabelActive: { color: Colors.navActive },

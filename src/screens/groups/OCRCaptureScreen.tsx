@@ -4,9 +4,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Platform,
-  PermissionsAndroid,
-  Alert,
   ActivityIndicator,
   Image,
 } from 'react-native';
@@ -19,6 +16,7 @@ import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
 import { useParseReceiptBillMutation } from '../../store/api/billsApi';
 import { PrefilledBillData } from '../../types/models';
+import { requestCameraPermission } from '../../utils/cameraPermission';
 
 type Props = AppScreenProps<'OCRCapture'>;
 
@@ -45,33 +43,21 @@ function OCRCaptureScreen({ route, navigation }: Props) {
     });
   }, []);
 
-  const requestCameraPermission = useCallback(async (): Promise<boolean> => {
-    if (Platform.OS === 'ios') return true;
-    const result = await PermissionsAndroid.request(
-      PermissionsAndroid.PERMISSIONS.CAMERA,
-      {
-        title: t('ocrCapture.permissionTitle'),
-        message: t('ocrCapture.permissionMessage'),
-        buttonPositive: t('common:ok'),
-        buttonNegative: t('common:cancel'),
-      },
-    );
-    if (result !== PermissionsAndroid.RESULTS.GRANTED) {
-      Alert.alert(
-        t('ocrCapture.permissionDeniedTitle'),
-        t('ocrCapture.permissionDeniedMessage'),
-        [
-          { text: t('ocrCapture.manualEntryButton'), onPress: () => navigation.replace('AddBill', { groupId, groupName }) },
-          { text: t('common:cancel'), onPress: () => navigation.goBack() },
-        ],
-      );
-      return false;
-    }
-    return true;
+  const requestCameraPermissionLocal = useCallback(async (): Promise<boolean> => {
+    return requestCameraPermission({
+      title: t('ocrCapture.permissionTitle'),
+      message: t('ocrCapture.permissionMessage'),
+      ok: t('common:ok'),
+      cancel: t('common:cancel'),
+      deniedTitle: t('ocrCapture.permissionDeniedTitle'),
+      deniedMessage: t('ocrCapture.permissionDeniedMessage'),
+      manualEntryLabel: t('ocrCapture.manualEntryButton'),
+      onManualEntry: () => navigation.replace('AddBill', { groupId, groupName }),
+    });
   }, [navigation, groupId, groupName, t]);
 
   const handleCapture = useCallback(async () => {
-    const ok = await requestCameraPermission();
+    const ok = await requestCameraPermissionLocal();
     if (!ok) return;
 
     launchCamera(

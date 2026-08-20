@@ -9,6 +9,7 @@ import {
   Alert,
   ScrollView,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import SafeScreen from '../../components/common/SafeScreen';
 import { useTranslation } from 'react-i18next';
@@ -115,18 +116,20 @@ function ItemRow({
       <View style={styles.itemHeader}>
         <View style={styles.itemNameBlock}>
           <Text style={[typography.labelLarge, styles.itemName]}>{item.name}</Text>
-          <View style={styles.priceRow}>
-            {item.qty > 1 && <Text style={[typography.bodySmall, styles.itemQty]}>{item.qty} ×</Text>}
-            <TextInput
-              style={[typography.bodySmall, styles.priceInput]}
-              value={item.price}
-              onChangeText={(v) => onPriceChange(item.id, v)}
-              keyboardType="decimal-pad"
-              textAlign="right"
-            />
-          </View>
+          {item.qty > 1 && (
+            <Text style={[typography.bodySmall, styles.itemQty]}>{item.qty} ×</Text>
+          )}
         </View>
-        <Text style={[typography.amountMedium, styles.itemSubtotal]}>{formatCurrency(subtotal)}</Text>
+        <View style={styles.priceCol}>
+          <TextInput
+            style={[typography.bodySmall, styles.priceInput]}
+            value={item.price}
+            onChangeText={(v) => onPriceChange(item.id, v)}
+            keyboardType="decimal-pad"
+            textAlign="right"
+          />
+          <Text style={[typography.amountMedium, styles.itemSubtotal]}>{formatCurrency(subtotal)}</Text>
+        </View>
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsRow}>
         {members.map((m) => (
@@ -278,7 +281,7 @@ function EditBillItemsScreen({ route, navigation }: Props) {
       .filter((m) => m.userId !== bill.paidByUserId && memberTotals[getMemberId(m)] !== undefined)
       .map((m) => ({
         groupMemberId: m.id,
-        amountPiastres: Math.floor(memberTotals[getMemberId(m)]! * 100),
+        amountPiastres: Math.round(memberTotals[getMemberId(m)]! * 100),
       }))
       .filter((s) => s.amountPiastres > 0);
 
@@ -300,8 +303,16 @@ function EditBillItemsScreen({ route, navigation }: Props) {
         shares,
       }).unwrap();
       navigation.goBack();
-    } catch {
-      Alert.alert(t('common:error'), t('editBillItems.saveFailed'));
+    } catch (err: unknown) {
+      const code =
+        err && typeof err === 'object' && 'data' in err
+          ? String((err as { data?: { message?: string } }).data?.message ?? '')
+          : '';
+      const message =
+        code.includes('SHARE_ALREADY_PAID_LOCKED') || code.includes('BILL_FULLY_SETTLED')
+          ? t('editBillItems.billClosedMessage')
+          : t('editBillItems.saveFailed');
+      Alert.alert(t('common:error'), message);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
@@ -341,7 +352,7 @@ function EditBillItemsScreen({ route, navigation }: Props) {
     );
   }
 
-  if (!bill.isEditable) {
+  if (bill.aggregateStatus === 'fully_settled') {
     return (
       <SafeScreen style={styles.container}>
         <View style={styles.emptyState}>
@@ -512,21 +523,22 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   itemCardUnclaimed: { borderWidth: 1.5, borderColor: Colors.dangerTint },
-  itemHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
-  itemNameBlock: { flex: 1, minWidth: 0, alignItems: 'flex-start' },
+  itemHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 },
+  itemNameBlock: { flex: 1, minWidth: 0, alignItems: 'flex-start', paddingRight: 8 },
   itemName: { color: Colors.text, textAlign: 'left' },
-  itemQty: { color: Colors.textMuted },
-  itemSubtotal: { color: Colors.text, marginLeft: 8, textAlign: 'right' },
-  priceRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
+  itemQty: { color: Colors.textMuted, marginTop: 4 },
+  priceCol: { alignItems: 'flex-end', gap: 4 },
+  itemSubtotal: { color: Colors.text, textAlign: 'right' },
   priceInput: {
     color: Colors.text,
     backgroundColor: Colors.background,
     borderWidth: 1,
     borderColor: Colors.border,
     borderRadius: Radius.sm,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    minWidth: 56,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    minWidth: 72,
+    textAlign: 'right',
   },
 
   chipsRow: { flexDirection: 'row', gap: 8, paddingBottom: 4 },

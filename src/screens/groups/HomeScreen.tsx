@@ -69,15 +69,31 @@ function HomeScreen({ navigation }: Props) {
     setBalances((prev) => (prev[groupId] === net ? prev : { ...prev, [groupId]: net }));
   }, []);
 
+  const groupIds = useMemo(() => new Set((groups ?? []).map((g) => g.id)), [groups]);
+
+  useEffect(() => {
+    setBalances((prev) => {
+      const next: Record<string, number> = {};
+      let changed = false;
+      for (const [id, net] of Object.entries(prev)) {
+        if (groupIds.has(id)) next[id] = net;
+        else changed = true;
+      }
+      return changed || Object.keys(next).length !== Object.keys(prev).length ? next : prev;
+    });
+  }, [groupIds]);
+
   const { owed, owe } = useMemo(() => {
     let owedTotal = 0;
     let oweTotal = 0;
-    for (const net of Object.values(balances)) {
+    for (const id of groupIds) {
+      const net = balances[id];
+      if (net == null) continue;
       if (net > 0) owedTotal += net;
       else oweTotal += -net;
     }
     return { owed: owedTotal, owe: oweTotal };
-  }, [balances]);
+  }, [balances, groupIds]);
 
   useEffect(() => {
     if (!shownRef.current && invitations && invitations.length > 0) {
@@ -181,7 +197,10 @@ function HomeScreen({ navigation }: Props) {
             </View>
 
             <View style={styles.sectionHeader}>
-              <Text style={[typography.headingMedium, styles.sectionTitle]}>{t('home.yourGroups')}</Text>
+              <View style={styles.sectionTitleBlock}>
+                <Text style={[typography.headingMedium, styles.sectionTitle]}>{t('home.yourGroups')}</Text>
+                <Text style={[typography.bodySmall, styles.sectionSubtitle]}>{t('home.yourGroupsSubtitle')}</Text>
+              </View>
               <TouchableOpacity onPress={() => navigation.navigate('AllGroups')}>
                 <Text style={[typography.labelMedium, styles.viewAll]}>{t('home.viewAll')}</Text>
               </TouchableOpacity>
@@ -283,11 +302,13 @@ const styles = StyleSheet.create({
 
   // ── Section header ──
   sectionHeader: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 16, paddingTop: 24, paddingBottom: 10,
+    flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between',
+    paddingHorizontal: 16, paddingTop: 24, paddingBottom: 10, gap: 12,
   },
+  sectionTitleBlock: { flex: 1 },
   sectionTitle: { color: Colors.text },
-  viewAll: { color: Colors.primary },
+  sectionSubtitle: { color: Colors.textSecondary, marginTop: 2 },
+  viewAll: { color: Colors.primary, marginTop: 2 },
 
   // ── List ──
   list: { paddingHorizontal: 16, paddingBottom: 110 },

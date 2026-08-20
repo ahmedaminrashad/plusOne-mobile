@@ -48,10 +48,10 @@
     "instaPayHowToLink": "How do I find it?",
     "instaPayHowToTitle": "Getting your InstaPay link",
     "instaPayHowToStep1": "1. Open the InstaPay app",
-    "instaPayHowToStep2": "2. Go to your profile and tap Share my link",
-    "instaPayHowToStep3": "3. Choose +One from the share menu",
+    "instaPayHowToStep2": "2. Go to your Home and tap Link under your account",
+    "instaPayHowToStep3": "3. Choose +One from the share menu, then press Post",
     "instaPayHowToStep4": "4. Come back here and tap Save Changes",
-    "instaPayHowToNote": "Your link lets friends pay you directly from a split.",
+    "instaPayHowToNote": "Your InstaPay link lets friends pay you directly from a split.",
     "saveButton": "Save Changes"
   },
   "paymentMethods": {

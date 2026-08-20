@@ -18,6 +18,7 @@
     "tileRemind": "تذكير",
     "tileMyLedger": "حسابي",
     "yourGroups": "مجموعاتك",
+    "yourGroupsSubtitle": "مجموعاتك وفواتيرهم المشتركة.",
     "viewAll": "عرض الكل",
     "cardMeta": "{{members}} عضو · {{bills}} فاتورة مفتوحة",
     "cardMetaNoBills": "{{members}} عضو",
@@ -45,6 +46,7 @@
     "viewInvitations": "دعوات المجموعات"
   },
   "myCircle": {
+    "headerSubtitle": "الناس اللي بتقسم معاهم أكتر.",
     "peopleCount": "{{count}} أشخاص",
     "searchPlaceholder": "الاسم أو رقم الهاتف…",
     "growTitle": "كبّر دائرتك",
@@ -115,7 +117,7 @@
     "theyllReceive": "هيستقبلوا",
     "rateLimitNote": "التذكيرات محدودة بمرة واحدة في اليوم لكل شخص.",
     "previewSender": "+one · تذكير ودّي",
-    "previewMessage": "هاي {{name}} 👋 حاجة بسيطة — حصتك من {{group}} هي EGP {{amount}}. دوس للتسوية في ثوانٍ.",
+    "previewMessage": "{{name}} يذكرك بدفع EGP {{amount}} لـ {{bill}} في {{group}}.",
     "sendButton": "إرسال {{count}} تذكيرات",
     "emptyTitle": "مفيش حد يتذكّر",
     "emptySubtitle": "إما الكل دفع أو لسه محدش اتطلب منه.",
@@ -149,6 +151,15 @@
     "emptyBillsTitle": "لا توجد إيصالات بعد",
     "emptyBillsSubtitle": "أضف أو امسح أول إيصال للمجموعة",
     "inviteMembersCta": "+ دعوة أعضاء",
+    "renameAction": "إعادة تسمية",
+    "renameTitle": "إعادة تسمية المجموعة",
+    "renamePlaceholder": "اسم المجموعة",
+    "renameError": "تعذرت إعادة تسمية المجموعة",
+    "deleteGroupAction": "حذف المجموعة",
+    "deleteGroupTitle": "حذف المجموعة؟",
+    "deleteGroupMessage": "هتتحذف المجموعة للجميع. تقدر تحذف فقط لو مفيش حصص مفتوحة.",
+    "deleteGroupError": "تعذر حذف المجموعة",
+    "deleteGroupHasOpenShares": "المجموعة فيها حصص لسه متسواش. سوّيها أو ألغِها الأول.",
     "deleteBillTitle": "حذف الإيصال",
     "deleteBillMessage": "هل تريد حذف \"{{name}}\"؟",
     "deleteBillError": "تعذر حذف الإيصال",
@@ -159,7 +170,8 @@
     "splitNow": "قسّم دلوقتي ←",
     "fullySettled": "متسواة بالكامل ✓",
     "paidCount": "دفع {{paid}} من {{total}}",
-    "pendingCount": "{{count}} مستني"
+    "pendingCount": "{{count}} مستني",
+    "editSplit": "عدّل التقسيم ←"
   },
   "createGroup": {
     "categoryFriends": "👫 أصدقاء",

@@ -104,11 +104,37 @@ export const billsApi = baseApi.injectEndpoints({
         method: 'PATCH',
         body,
       }),
-      invalidatesTags: (result, error, { billId }) => [{ type: 'Bill', id: billId }, 'Bill'],
+      invalidatesTags: (result, _error, { billId }) => [
+        { type: 'Bill', id: billId },
+        'Bill',
+        'Share',
+        'Ledger',
+        'Message',
+        ...(result?.groupId
+          ? [
+              { type: 'Message' as const, id: result.groupId },
+              { type: 'Ledger' as const, id: result.groupId },
+              { type: 'Group' as const, id: result.groupId },
+            ]
+          : []),
+      ],
     }),
     closeBill: builder.mutation<Bill, string>({
       query: (billId) => ({ url: `/bills/${billId}/close`, method: 'POST' }),
-      invalidatesTags: (result, error, billId) => [{ type: 'Bill', id: billId }, 'Bill'],
+      invalidatesTags: (result, _error, billId) => [
+        { type: 'Bill', id: billId },
+        'Bill',
+        'Share',
+        'Ledger',
+        'Message',
+        ...(result?.groupId
+          ? [
+              { type: 'Message' as const, id: result.groupId },
+              { type: 'Ledger' as const, id: result.groupId },
+              { type: 'Group' as const, id: result.groupId },
+            ]
+          : []),
+      ],
     }),
     parseQrBill: builder.mutation<ParsedBillResult, ParseQrPayload>({
       query: ({ groupId, payload }) => ({

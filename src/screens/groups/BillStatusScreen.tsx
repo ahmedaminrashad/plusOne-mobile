@@ -71,7 +71,14 @@ function ShareRow({
     <View style={styles.shareRow}>
       <Avatar uri={resolveAssetUrl(share.owner?.photoUrl)} name={name} size={28} />
       <View style={styles.shareInfo}>
-        <Text style={[typography.labelLarge, styles.shareName]}>{name}</Text>
+        <View style={styles.shareNameRow}>
+          {isNonApp && (
+            <View style={styles.plusOneBadge}>
+              <Text style={[typography.labelSmall, styles.plusOneBadgeText]}>+one</Text>
+            </View>
+          )}
+          <Text style={[typography.labelLarge, styles.shareName]} numberOfLines={1}>{name}</Text>
+        </View>
         {!!subtitle && <Text style={[typography.bodySmall, styles.shareSubtitle]}>{subtitle}</Text>}
       </View>
       {showMarkReceived ? (
@@ -126,6 +133,8 @@ function BillStatusScreen({ route, navigation }: Props) {
   const payerName = bill?.paidBy?.displayName ?? t('viewReceipt.defaultUserName');
   const myShare = bill?.shares.find((s) => s.ownerUserId === me?.id);
   const myShareOutstanding = !isPayer && !!myShare && myShare.status !== 'settled';
+  // Any group member can edit until every share is settled.
+  const canEditBill = !!bill && bill.aggregateStatus !== 'fully_settled';
 
   const handlePayMyShare = useCallback(() => {
     navigation.navigate('PayShare', { groupId, groupName, billId });
@@ -195,7 +204,7 @@ function BillStatusScreen({ route, navigation }: Props) {
         </View>
       </View>
 
-      {bill.isEditable && isPayer && (
+      {canEditBill && (
         <View style={styles.actionsRow}>
           <Button
             title={bill.lineItems && bill.lineItems.length > 0 ? t('viewReceipt.editItemsButton') : t('viewReceipt.addItemsButton')}
@@ -203,13 +212,15 @@ function BillStatusScreen({ route, navigation }: Props) {
             variant="outline"
             style={styles.actionButton}
           />
-          <Button
-            title={t('viewReceipt.closeSplitButton')}
-            onPress={handleCloseSplit}
-            loading={isClosing}
-            variant="outline"
-            style={styles.actionButton}
-          />
+          {isPayer && (
+            <Button
+              title={t('viewReceipt.closeSplitButton')}
+              onPress={handleCloseSplit}
+              loading={isClosing}
+              variant="outline"
+              style={styles.actionButton}
+            />
+          )}
         </View>
       )}
 
@@ -226,22 +237,40 @@ function BillStatusScreen({ route, navigation }: Props) {
         )}
         contentContainerStyle={styles.list}
         ListHeaderComponent={
-          <View style={styles.totalCard}>
-            <Text style={[typography.labelMedium, styles.totalLabel]}>{t('billStatus.totalBillLabel')}</Text>
-            <Text style={[typography.amountLarge, styles.totalAmount]}>{formatCurrency(Number(bill.amount), bill.currency)}</Text>
-            <Text style={[typography.bodySmall, styles.paidBySubtitle]}>
-              {t('viewReceipt.paidByAndDate', { payerName, date })}
-            </Text>
-            <View style={styles.progressTrack}>
-              <View style={[styles.progressFill, { width: `${Math.min(100, progress * 100)}%` }]} />
+          <View>
+            <View style={styles.totalCard}>
+              <Text style={[typography.labelMedium, styles.totalLabel]}>{t('billStatus.totalBillLabel')}</Text>
+              <Text style={[typography.amountLarge, styles.totalAmount]}>{formatCurrency(Number(bill.amount), bill.currency)}</Text>
+              <Text style={[typography.bodySmall, styles.paidBySubtitle]}>
+                {t('viewReceipt.paidByAndDate', { payerName, date })}
+              </Text>
+              <View style={styles.progressTrack}>
+                <View style={[styles.progressFill, { width: `${Math.min(100, progress * 100)}%` }]} />
+              </View>
+              <Text style={[typography.bodySmall, styles.progressCaption]}>
+                {t('billStatus.collectedOf', {
+                  collected: formatCurrency(collected / 100, bill.currency),
+                  owed: formatCurrency(owed / 100, bill.currency),
+                  payer: payerName,
+                })}
+              </Text>
             </View>
-            <Text style={[typography.bodySmall, styles.progressCaption]}>
-              {t('billStatus.collectedOf', {
-                collected: formatCurrency(collected / 100, bill.currency),
-                owed: formatCurrency(owed / 100, bill.currency),
-                payer: payerName,
-              })}
-            </Text>
+
+            {(bill.lineItems?.length ?? 0) > 0 && (
+              <View style={styles.lineItemsCard}>
+                <Text style={[typography.labelMedium, styles.lineItemsTitle]}>{t('viewReceipt.itemsTitle')}</Text>
+                {bill.lineItems!.map((it, idx) => (
+                  <View key={`${it.name}-${idx}`} style={styles.lineItemRow}>
+                    <Text style={[typography.bodyMedium, styles.lineItemName]} numberOfLines={2}>
+                      {it.qty > 1 ? `${it.qty}× ` : ''}{it.name}
+                    </Text>
+                    <Text style={[typography.bodyMedium, styles.lineItemAmt]}>
+                      {formatCurrency(it.qty * it.unitPrice, bill.currency)}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            )}
           </View>
         }
       />
@@ -316,6 +345,18 @@ const styles = StyleSheet.create({
   progressFill: { height: '100%', backgroundColor: Colors.success, borderRadius: Radius.pill },
   progressCaption: { color: Colors.textMuted, marginTop: 8 },
 
+  lineItemsCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.xl,
+    padding: 14,
+    marginBottom: 16,
+    gap: 8,
+  },
+  lineItemsTitle: { color: Colors.textMuted, letterSpacing: 0.5, marginBottom: 2 },
+  lineItemRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
+  lineItemName: { color: Colors.text, flex: 1 },
+  lineItemAmt: { color: Colors.textSecondary },
+
   shareRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -326,8 +367,16 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   shareInfo: { flex: 1 },
-  shareName: { color: Colors.text },
+  shareNameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  shareName: { color: Colors.text, flexShrink: 1 },
   shareSubtitle: { color: Colors.textMuted, marginTop: 2 },
+  plusOneBadge: {
+    backgroundColor: Colors.warning,
+    borderRadius: Radius.pill,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  plusOneBadgeText: { color: '#fff', fontWeight: '700' },
 
   rowMarkBtn: {
     backgroundColor: Colors.primary,

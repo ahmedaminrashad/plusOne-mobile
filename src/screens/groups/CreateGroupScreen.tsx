@@ -17,7 +17,6 @@ import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
 import { ChevronLeftIcon } from '../../components/icons';
 import { useCreateGroupMutation } from '../../store/api/groupsApi';
-import { GroupCategory } from '../../types/models';
 
 type Props = AppScreenProps<'CreateGroup'>;
 
@@ -25,16 +24,7 @@ function CreateGroupScreen({ navigation }: Props) {
   const { t } = useTranslation('groups');
   const typography = useTypography();
 
-  const CATEGORIES: { key: GroupCategory; label: string }[] = [
-    { key: 'friends', label: t('createGroup.categoryFriends') },
-    { key: 'family', label: t('createGroup.categoryFamily') },
-    { key: 'work', label: t('createGroup.categoryWork') },
-    { key: 'travel', label: t('createGroup.categoryTravel') },
-    { key: 'other', label: t('createGroup.categoryOther') },
-  ];
-
   const [name, setName] = useState('');
-  const [category, setCategory] = useState<GroupCategory | undefined>();
   const [nameError, setNameError] = useState('');
 
   const [createGroup, { isLoading }] = useCreateGroupMutation();
@@ -46,12 +36,12 @@ function CreateGroupScreen({ navigation }: Props) {
     setNameError('');
 
     try {
-      const group = await createGroup({ name: trimmed, category }).unwrap();
+      const group = await createGroup({ name: trimmed }).unwrap();
       navigation.replace('InviteMembers', { groupId: group.id });
     } catch {
       Alert.alert(t('common:error'), t('createGroup.createError'));
     }
-  }, [name, category, createGroup, navigation, t]);
+  }, [name, createGroup, navigation, t]);
 
   return (
     <SafeScreen style={styles.container}>
@@ -72,24 +62,6 @@ function CreateGroupScreen({ navigation }: Props) {
           maxLength={50}
           autoFocus
         />
-
-        <Text style={[typography.labelSmall, styles.categoryLabel]}>{t('createGroup.categoryLabel')}</Text>
-        <View style={styles.grid}>
-          {CATEGORIES.map((c) => {
-            const selected = category === c.key;
-            return (
-              <TouchableOpacity
-                key={c.key}
-                style={[styles.card, selected && styles.cardSelected]}
-                onPress={() => setCategory(selected ? undefined : c.key)}
-                activeOpacity={0.75}>
-                <Text style={[typography.labelSmall, selected ? styles.cardTextSelected : styles.cardText]}>
-                  {c.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
 
         <Button
           title={t('createGroup.nextCta')}
@@ -118,20 +90,5 @@ const styles = StyleSheet.create({
   },
   title: { color: Colors.text },
 
-  scroll: { padding: 16, paddingTop: 0 },
-
-  // category grid — 3 rounded cards per row, matching Figma's category picker
-  // (Background+Border, r=20, selected = surfaceElevated bg + primary border)
-  categoryLabel: { color: Colors.textSecondary, marginBottom: 12, marginTop: 8 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 28 },
-  card: {
-    width: '31%', height: 68, borderRadius: Radius.xl,
-    borderWidth: 1, borderColor: Colors.borderLight, backgroundColor: Colors.surface,
-    justifyContent: 'center', alignItems: 'center', paddingHorizontal: 4,
-  },
-  cardSelected: {
-    borderWidth: 1.5, borderColor: Colors.primary, backgroundColor: Colors.surfaceElevated,
-  },
-  cardText: { color: Colors.textSecondary, textAlign: 'center' },
-  cardTextSelected: { color: Colors.primary, textAlign: 'center' },
+  scroll: { paddingHorizontal: 16, paddingBottom: 40, gap: 8 },
 });

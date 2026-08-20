@@ -4,10 +4,9 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Platform,
-  PermissionsAndroid,
   Alert,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import SafeScreen from '../../components/common/SafeScreen';
 import { useTranslation } from 'react-i18next';
@@ -18,7 +17,8 @@ import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
 import { useParseQrBillMutation } from '../../store/api/billsApi';
 import { PrefilledBillData } from '../../types/models';
-import { CameraIcon } from '../../components/icons';
+import { CameraIcon, ChevronLeftIcon } from '../../components/icons';
+import { requestCameraPermission } from '../../utils/cameraPermission';
 
 type Props = AppScreenProps<'QRScanner'>;
 
@@ -33,34 +33,18 @@ function QRScannerScreen({ route, navigation }: Props) {
 
   useEffect(() => {
     (async () => {
-      if (Platform.OS === 'android') {
-        const result = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.CAMERA,
-          {
-            title: t('qrScanner.permissionTitle'),
-            message: t('qrScanner.permissionMessage'),
-            buttonPositive: t('common:ok'),
-            buttonNegative: t('common:cancel'),
-          },
-        );
-        const granted = result === PermissionsAndroid.RESULTS.GRANTED;
-        setHasPermission(granted);
-        if (!granted) handlePermissionDenied();
-      } else {
-        setHasPermission(true);
-      }
+      const granted = await requestCameraPermission({
+        title: t('qrScanner.permissionTitle'),
+        message: t('qrScanner.permissionMessage'),
+        ok: t('common:ok'),
+        cancel: t('common:cancel'),
+        deniedTitle: t('qrScanner.permissionDeniedTitle'),
+        deniedMessage: t('qrScanner.permissionDeniedMessage'),
+        manualEntryLabel: t('qrScanner.manualEntryButton'),
+        onManualEntry: () => navigation.replace('AddBill', { groupId, groupName }),
+      });
+      setHasPermission(granted);
     })();
-  }, []);
-
-  const handlePermissionDenied = useCallback(() => {
-    Alert.alert(
-      t('qrScanner.permissionDeniedTitle'),
-      t('qrScanner.permissionDeniedMessage'),
-      [
-        { text: t('qrScanner.manualEntryButton'), onPress: () => navigation.replace('AddBill', { groupId, groupName }) },
-        { text: t('common:cancel'), onPress: () => navigation.goBack() },
-      ],
-    );
   }, [navigation, groupId, groupName, t]);
 
   const handlePayload = useCallback(
@@ -162,6 +146,14 @@ function QRScannerScreen({ route, navigation }: Props) {
         frameColor={Colors.accent}
       />
 
+      <TouchableOpacity
+        style={styles.overlayBackBtn}
+        onPress={() => navigation.goBack()}
+        hitSlop={12}
+        activeOpacity={0.8}>
+        <ChevronLeftIcon size={20} color="#fff" />
+      </TouchableOpacity>
+
       <View style={styles.overlay}>
         <View style={styles.overlayTop} />
         <View style={styles.overlayMiddle}>
@@ -232,6 +224,18 @@ const styles = StyleSheet.create({
   manualBtnText: { color: '#fff' },
   backBtn: { paddingHorizontal: 32, paddingVertical: 12 },
   backBtnText: { color: Colors.textSecondary },
+  overlayBackBtn: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 54 : 16,
+    left: 16,
+    zIndex: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 
   // Figma shows a bright, minimal overlay (a subtle white radial highlight, not a
   // darkened mask) — no dimming bars behind the corner brackets/hint/buttons.

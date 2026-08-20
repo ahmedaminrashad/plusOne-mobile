@@ -36,7 +36,8 @@ export default function AppStack() {
         headerTintColor: Colors.accent,
         headerTitleStyle: { fontWeight: '700', color: Colors.text },
         headerShadowVisible: false,
-        headerBackTitleVisible: false,
+        headerBackTitle: '',
+        headerBackButtonDisplayMode: 'minimal',
         contentStyle: { backgroundColor: Colors.background },
       }}>
       <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
@@ -55,7 +56,7 @@ export default function AppStack() {
       <Stack.Screen
         name="QRScanner"
         component={QRScannerScreen}
-        options={{ title: t('appStack.qrScannerTitle'), headerTransparent: true, headerTintColor: '#fff' }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="OCRCapture"

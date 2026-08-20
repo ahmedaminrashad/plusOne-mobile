@@ -15,8 +15,8 @@ import { useTypography } from '../../hooks/useTypography';
 import { useGetGroupsQuery } from '../../store/api/groupsApi';
 import { GroupLedgerResponse } from '../../store/api/ledgerApi';
 import GroupLedgerCollector from '../../components/groups/GroupLedgerCollector';
-import { formatCurrency, formatDate } from '../../utils/format';
-import { ChevronLeftIcon, ChevronRightIcon, ReceiptIcon } from '../../components/icons';
+import { formatCurrency } from '../../utils/format';
+import { ChevronLeftIcon, ReceiptIcon } from '../../components/icons';
 
 type Props = AppScreenProps<'MyLedger'>;
 
@@ -70,7 +70,6 @@ function MyLedgerScreen({ navigation }: Props) {
   const outingsThisMonth = rows.reduce((sum, r) => sum + r.outingsCount, 0);
   const owedToMe = rows.filter((r) => r.netBalance > 0).reduce((sum, r) => sum + r.netBalance, 0);
   const iOwe = rows.filter((r) => r.netBalance < 0).reduce((sum, r) => sum - r.netBalance, 0);
-  const monthLabel = formatDate(new Date(), { month: 'short' });
 
   return (
     <SafeScreen style={styles.container}>
@@ -85,11 +84,6 @@ function MyLedgerScreen({ navigation }: Props) {
         <View style={styles.titleBlock}>
           <Text style={[typography.headingMedium, styles.title]}>{t('navigation:appStack.myLedgerTitle')}</Text>
           <Text style={[typography.bodySmall, styles.subtitle]}>{t('myLedger.allGroupsSubtitle')}</Text>
-        </View>
-        <View style={styles.monthChip}>
-          <ChevronLeftIcon size={14} color={Colors.text} />
-          <Text style={[typography.labelMedium, styles.monthChipText]}>{monthLabel}</Text>
-          <ChevronRightIcon size={14} color={Colors.text} />
         </View>
       </View>
 
@@ -189,21 +183,6 @@ const styles = StyleSheet.create({
   titleBlock: { flex: 1 },
   title: { color: Colors.text },
   subtitle: { color: Colors.textSecondary, marginTop: 1 },
-  monthChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    borderRadius: Radius.md,
-    backgroundColor: Colors.surface,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    shadowColor: Colors.primaryDark,
-    shadowOpacity: 0.06,
-    shadowOffset: { width: 0, height: 3 },
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  monthChipText: { color: Colors.text },
 
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 8 },
   emptyTitle: { color: Colors.text },

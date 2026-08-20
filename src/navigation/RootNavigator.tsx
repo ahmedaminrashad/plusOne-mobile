@@ -43,16 +43,18 @@ export default function RootNavigator() {
     })();
   }, [dispatch]);
 
-  // Stored tokens only prove a session existed at some point — the access token is
-  // short-lived, so re-verify it against the backend on every app open. If it's expired
-  // and the refresh (handled inside baseApi's reauth wrapper) fails, clearAuth() flips
-  // isAuthenticated to false and this redirects to the login stack below.
-  const { isFetching: verifyingSession } = useGetMeQuery(undefined, {
+  // Only block on the first session restore / first getMe — never on later
+  // isFetching, which remounts NavigationContainer and looks like an app reload
+  // (and resets Auth back to PhoneEntry after OTP).
+  const { isLoading: verifyingSession, isUninitialized: meUninitialized } = useGetMeQuery(undefined, {
     skip: !tokensRestored || !isAuthenticated,
   });
 
-  const loading = !tokensRestored || (isAuthenticated && verifyingSession);
+  const loading =
+    !tokensRestored ||
+    (isAuthenticated && (meUninitialized || verifyingSession));
   const showApp = isAuthenticated && isProfileComplete;
+  const pendingNotificationRef = useRef<Record<string, string> | null>(null);
 
   // Register FCM token when authenticated
   useEffect(() => {
@@ -69,7 +71,10 @@ export default function RootNavigator() {
   // and a cold-start tap (getInitialNotification), so the two paths can't drift apart.
   const navigateFromNotification = useCallback((data: Record<string, string>) => {
     const nav = navRef.current as any;
-    if (!nav) return;
+    if (!nav) {
+      pendingNotificationRef.current = data;
+      return;
+    }
     if (data.type === 'invitation') {
       nav.navigate('Home', { screen: 'Invitations' });
     } else if (data.type === 'member_joined' && data.groupId) {
@@ -82,18 +87,31 @@ export default function RootNavigator() {
         screen: 'GroupDetail',
         params: { groupId: data.groupId, groupName: data.groupName ?? '' },
       });
-    } else if (data.type === 'share_assigned' && data.groupId && data.billId) {
+    } else if (
+      (data.type === 'share_assigned' ||
+        data.type === 'share_reminder' ||
+        data.type === 'share_initiated') &&
+      data.groupId &&
+      data.billId
+    ) {
       nav.navigate('Home', {
         screen: 'PayShare',
         params: { groupId: data.groupId, groupName: data.groupName ?? '', billId: data.billId },
       });
-    } else if (data.type === 'share_reminder' && data.groupId && data.billId) {
+    } else if (data.type === 'share_settled' && data.groupId && data.billId) {
       nav.navigate('Home', {
-        screen: 'PayShare',
+        screen: 'BillStatus',
         params: { groupId: data.groupId, groupName: data.groupName ?? '', billId: data.billId },
       });
     }
   }, []);
+
+  useEffect(() => {
+    if (!navReady || !showApp || !pendingNotificationRef.current) return;
+    const data = pendingNotificationRef.current;
+    pendingNotificationRef.current = null;
+    navigateFromNotification(data);
+  }, [navReady, showApp, navigateFromNotification]);
 
   useEffect(() => {
     const unsub = onNotificationOpenedApp(navigateFromNotification);
