@@ -27,3 +27,7 @@ export function onForegroundMessage(
 export async function getInitialNotification(): Promise<Record<string, string> | null> {
   return null;
 }
+
+export async function getInitialNotificationWithRetry(): Promise<Record<string, string> | null> {
+  return null;
+}

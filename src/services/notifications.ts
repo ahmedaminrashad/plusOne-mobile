@@ -1,5 +1,19 @@
-import messaging from '@react-native-firebase/messaging';
+import messaging, { FirebaseMessagingTypes } from '@react-native-firebase/messaging';
 import { Platform, PermissionsAndroid } from 'react-native';
+
+function dataFromRemoteMessage(
+  remoteMessage: FirebaseMessagingTypes.RemoteMessage | null | undefined,
+): Record<string, string> | null {
+  if (!remoteMessage) return null;
+  const raw = remoteMessage.data;
+  if (!raw || typeof raw !== 'object') return null;
+  const out: Record<string, string> = {};
+  for (const [key, value] of Object.entries(raw)) {
+    if (value == null) continue;
+    out[key] = String(value);
+  }
+  return Object.keys(out).length > 0 ? out : null;
+}
 
 export async function requestNotificationPermission(): Promise<boolean> {
   if (Platform.OS === 'ios') {
@@ -39,22 +53,37 @@ export async function getFcmToken(): Promise<string | null> {
 
 export function onNotificationOpenedApp(handler: (data: Record<string, string>) => void) {
   return messaging().onNotificationOpenedApp((remoteMessage) => {
-    if (remoteMessage.data) handler(remoteMessage.data as Record<string, string>);
+    const data = dataFromRemoteMessage(remoteMessage);
+    if (data) handler(data);
   });
 }
 
-// FCM only auto-displays a system-tray notification when the app is backgrounded/killed —
-// while the app is in the foreground, Android/iOS deliver the message to JS instead and it's
-// up to the app to surface it. Without this, foreground notifications are silently dropped.
+// FCM doesn't auto-show a tray notification while the app is in the foreground —
+// surface it ourselves via an alert with a "View" action that reuses the same navigation.
 export function onForegroundMessage(
   handler: (notification: { title?: string; body?: string }, data: Record<string, string>) => void,
 ) {
   return messaging().onMessage((remoteMessage) => {
-    handler(remoteMessage.notification ?? {}, (remoteMessage.data as Record<string, string>) ?? {});
+    handler(remoteMessage.notification ?? {}, dataFromRemoteMessage(remoteMessage) ?? {});
   });
 }
 
 export async function getInitialNotification(): Promise<Record<string, string> | null> {
   const msg = await messaging().getInitialNotification();
-  return (msg?.data as Record<string, string>) ?? null;
+  return dataFromRemoteMessage(msg);
+}
+
+/** Cold-start race: Firebase may not expose the open intent on the first tick. */
+export async function getInitialNotificationWithRetry(
+  attempts = [0, 300, 800, 1600],
+): Promise<Record<string, string> | null> {
+  for (let i = 0; i < attempts.length; i++) {
+    const wait = attempts[i];
+    if (wait > 0) {
+      await new Promise((r) => setTimeout(r, wait - (attempts[i - 1] ?? 0)));
+    }
+    const data = await getInitialNotification();
+    if (data?.type || data?.groupId) return data;
+  }
+  return null;
 }

@@ -14,7 +14,7 @@ import {
   requestNotificationPermission,
   getFcmToken,
   onNotificationOpenedApp,
-  getInitialNotification,
+  getInitialNotificationWithRetry,
   onForegroundMessage,
 } from '../services/notifications';
 import { consumePendingSharedText, consumePendingSharedImage } from '../services/shareIntent';
@@ -42,6 +42,7 @@ export default function RootNavigator() {
   const [saveFcmToken] = useSaveFcmTokenMutation();
   const navRef = useRef<NavigationContainerRef<TabParamList>>(null);
   const pendingNotificationRef = useRef<Record<string, string> | null>(null);
+  const handledInitialRef = useRef(false);
   const navReadyRef = useRef(false);
   const showAppRef = useRef(false);
 
@@ -80,21 +81,32 @@ export default function RootNavigator() {
     })();
   }, [isAuthenticated, saveFcmToken]);
 
+  // Reset the Home stack onto the target screen so cold-start taps can't land
+  // on the group list when nested navigate races the AppStack mount.
   const openNestedHomeScreen = useCallback((screen: string, params?: Record<string, unknown>) => {
     const nav = navRef.current;
-    if (!nav) return;
+    if (!nav?.isReady()) return false;
 
-    // Prefer an explicit nested state so cold-start taps don't land on the Home
-    // list when the AppStack hasn't finished mounting yet.
     nav.dispatch(
-      CommonActions.navigate({
-        name: 'Home',
-        params: {
-          screen,
-          params,
-        },
+      CommonActions.reset({
+        index: 0,
+        routes: [
+          {
+            name: 'Home',
+            state: {
+              index: 1,
+              routes: [
+                { name: 'Home' },
+                { name: screen, params },
+              ],
+            },
+          },
+          { name: 'QuickAdd' },
+          { name: 'SettingsTab' },
+        ],
       }),
     );
+    return true;
   }, []);
 
   // Handle notification taps — same logic for both a background-tap (onNotificationOpenedApp)
@@ -108,9 +120,20 @@ export default function RootNavigator() {
     }
 
     const run = () => {
+      if (!navReadyRef.current || !showAppRef.current || !navRef.current) {
+        pendingNotificationRef.current = data;
+        return;
+      }
+
       if (data.type === 'invitation') {
         openNestedHomeScreen('Invitations');
-      } else if ((data.type === 'member_joined' || data.type === 'chat_message') && data.groupId) {
+      } else if (data.type === 'chat_message' && data.groupId) {
+        // Dedicated Chat screen — more reliable than GroupDetail + initialTab.
+        openNestedHomeScreen('Chat', {
+          groupId: data.groupId,
+          groupName: data.groupName ?? '',
+        });
+      } else if (data.type === 'member_joined' && data.groupId) {
         openNestedHomeScreen('GroupDetail', {
           groupId: data.groupId,
           groupName: data.groupName ?? '',
@@ -134,12 +157,20 @@ export default function RootNavigator() {
           groupName: data.groupName ?? '',
           billId: data.billId,
         });
+      } else if (data.groupId && !data.type) {
+        // Defensive: some Android OEMs drop `type` but keep groupId on tray taps.
+        openNestedHomeScreen('Chat', {
+          groupId: data.groupId,
+          groupName: data.groupName ?? '',
+        });
       }
     };
 
     InteractionManager.runAfterInteractions(() => {
-      // One frame later covers the Tab → AppStack mount race on cold start.
-      setTimeout(run, 50);
+      // Retries cover Tab → AppStack mount races on cold start.
+      run();
+      setTimeout(run, 200);
+      setTimeout(run, 700);
     });
   }, [openNestedHomeScreen]);
 
@@ -152,9 +183,12 @@ export default function RootNavigator() {
 
   useEffect(() => {
     const unsub = onNotificationOpenedApp(navigateFromNotification);
-    getInitialNotification().then((data) => {
-      if (data) navigateFromNotification(asDataRecord(data));
-    });
+    if (!handledInitialRef.current) {
+      handledInitialRef.current = true;
+      getInitialNotificationWithRetry().then((data) => {
+        if (data) navigateFromNotification(asDataRecord(data));
+      });
+    }
     return unsub;
   }, [navigateFromNotification]);
 
