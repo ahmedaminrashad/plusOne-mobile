@@ -23,7 +23,7 @@ import { useCreateBillMutation } from '../../store/api/billsApi';
 import { useGetGroupMembersQuery } from '../../store/api/groupsApi';
 import { useGetMeQuery } from '../../store/api/usersApi';
 import { GroupMember, TaxServiceType, ParsedReceiptData } from '../../types/models';
-import { formatCurrency } from '../../utils/format';
+import { formatCurrency, formatMoneyDigits, roundMoney } from '../../utils/format';
 import { useInputTextAlign } from '../../utils/rtl';
 import { CheckIcon, CloseIcon, ChevronDownIcon } from '../../components/icons';
 
@@ -82,16 +82,16 @@ function CreateBillScreen({ route, navigation }: Props) {
         id: newItemId(),
         name: it.name,
         qty: String(it.qty),
-        unitPrice: String(it.unitPrice),
+        unitPrice: formatMoneyDigits(it.unitPrice),
       }));
     }
     return [{ id: newItemId(), name: '', qty: '1', unitPrice: '' }];
   });
-  const [taxValue, setTaxValue] = useState(prefilledData?.tax != null ? String(prefilledData.tax) : '');
+  const [taxValue, setTaxValue] = useState(prefilledData?.tax != null ? formatMoneyDigits(prefilledData.tax) : '');
   const [taxType, setTaxType] = useState<TaxServiceType>(prefilledData?.taxType ?? 'percent');
-  const [deliveryValue, setDeliveryValue] = useState(prefilledData?.delivery != null ? String(prefilledData.delivery) : '');
+  const [deliveryValue, setDeliveryValue] = useState(prefilledData?.delivery != null ? formatMoneyDigits(prefilledData.delivery) : '');
   const [deliveryType, setDeliveryType] = useState<TaxServiceType>(prefilledData?.deliveryType ?? 'percent');
-  const [vatValue, setVatValue] = useState(prefilledData?.vat != null ? String(prefilledData.vat) : '');
+  const [vatValue, setVatValue] = useState(prefilledData?.vat != null ? formatMoneyDigits(prefilledData.vat) : '');
   const [vatType, setVatType] = useState<TaxServiceType>(prefilledData?.vatType ?? 'percent');
   const [grandTotalOverride, setGrandTotalOverride] = useState('');
   const [paidByUserId, setPaidByUserId] = useState('');
@@ -109,19 +109,19 @@ function CreateBillScreen({ route, navigation }: Props) {
     if (me && !paidByUserId) setPaidByUserId(me.id);
   }, [me, paidByUserId]);
 
-  const subtotal = items.reduce((sum, it) => sum + parseNum(it.qty) * parseNum(it.unitPrice), 0);
+  const subtotal = roundMoney(items.reduce((sum, it) => sum + parseNum(it.qty) * parseNum(it.unitPrice), 0));
   const taxAmt = taxValue
-    ? taxType === 'percent' ? subtotal * parseNum(taxValue) / 100 : parseNum(taxValue)
+    ? roundMoney(taxType === 'percent' ? subtotal * parseNum(taxValue) / 100 : parseNum(taxValue))
     : 0;
   const vatAmt = vatValue
-    ? vatType === 'percent' ? (subtotal + taxAmt) * parseNum(vatValue) / 100 : parseNum(vatValue)
+    ? roundMoney(vatType === 'percent' ? (subtotal + taxAmt) * parseNum(vatValue) / 100 : parseNum(vatValue))
     : 0;
   const deliveryAmt = deliveryValue
-    ? deliveryType === 'percent' ? (subtotal + taxAmt + vatAmt) * parseNum(deliveryValue) / 100 : parseNum(deliveryValue)
+    ? roundMoney(deliveryType === 'percent' ? (subtotal + taxAmt + vatAmt) * parseNum(deliveryValue) / 100 : parseNum(deliveryValue))
     : 0;
-  const calculatedTotal = subtotal + taxAmt + vatAmt + deliveryAmt;
+  const calculatedTotal = roundMoney(subtotal + taxAmt + vatAmt + deliveryAmt);
   const hasOverride = grandTotalOverride.trim().length > 0;
-  const grandTotal = hasOverride ? parseNum(grandTotalOverride) : calculatedTotal;
+  const grandTotal = hasOverride ? roundMoney(parseNum(grandTotalOverride)) : calculatedTotal;
   const totalMismatch = hasOverride && Math.abs(grandTotal - calculatedTotal) > 0.01;
 
   const hasValidItems = items.some((it) => it.name.trim() && parseNum(it.unitPrice) > 0);
@@ -150,7 +150,7 @@ function CreateBillScreen({ route, navigation }: Props) {
     if (!canContinue) return;
 
     if (isLumpSum) {
-      const amount = parseNum(lumpSumTotal);
+      const amount = roundMoney(parseNum(lumpSumTotal));
       if (amount <= 0) {
         Alert.alert(t('common:error'), t('createBill.amountMustBePositive'));
         return;
@@ -179,14 +179,14 @@ function CreateBillScreen({ route, navigation }: Props) {
       items: validItems.map((it) => ({
         id: it.id,
         name: it.name.trim(),
-        price: parseNum(it.unitPrice),
+        price: roundMoney(parseNum(it.unitPrice)),
         qty: Math.max(1, Math.floor(parseNum(it.qty))),
       })),
-      tax: taxValue ? parseNum(taxValue) : undefined,
+      tax: taxValue ? roundMoney(parseNum(taxValue)) : undefined,
       taxType: taxValue ? taxType : undefined,
-      delivery: deliveryValue ? parseNum(deliveryValue) : undefined,
+      delivery: deliveryValue ? roundMoney(parseNum(deliveryValue)) : undefined,
       deliveryType: deliveryValue ? deliveryType : undefined,
-      vat: vatValue ? parseNum(vatValue) : undefined,
+      vat: vatValue ? roundMoney(parseNum(vatValue)) : undefined,
       vatType: vatValue ? vatType : undefined,
       grandTotal: hasOverride ? grandTotal : undefined,
       captureMethod: prefilledData?.captureMethod ?? 'manual',

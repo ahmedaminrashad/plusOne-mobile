@@ -21,7 +21,7 @@ import { useGetGroupMembersQuery } from '../../store/api/groupsApi';
 import { useGetMeQuery } from '../../store/api/usersApi';
 import { useCreateBillMutation } from '../../store/api/billsApi';
 import { GroupMember, ParsedReceiptData } from '../../types/models';
-import { formatCurrency, resolveAssetUrl } from '../../utils/format';
+import { formatCurrency, resolveAssetUrl, roundMoney } from '../../utils/format';
 import i18n from '../../i18n';
 import { ChevronLeftIcon, CheckIcon, ChevronDownIcon } from '../../components/icons';
 
@@ -76,7 +76,7 @@ function ItemRow({
         <View style={styles.itemNameBlock}>
           <Text style={[typography.labelLarge, styles.itemName]}>{item.name}</Text>
           {item.qty > 1 && (
-            <Text style={[typography.bodySmall, styles.itemQty]}>{item.qty} × {item.price.toFixed(2)}</Text>
+            <Text style={[typography.bodySmall, styles.itemQty]}>{item.qty} × {roundMoney(item.price).toFixed(2)}</Text>
           )}
         </View>
         <Text style={[typography.amountMedium, styles.itemSubtotal]}>{formatCurrency(subtotal)}</Text>
@@ -132,7 +132,7 @@ function AssignItemsScreen({ route, navigation }: Props) {
       const mapped = parsed.items.map((it, idx) => ({
         id: it.id ?? String(idx),
         name: it.name,
-        price: Number(it.price),
+        price: roundMoney(Number(it.price)),
         qty: Number(it.qty ?? 1),
         claimedBy: [],
       }));
@@ -148,29 +148,31 @@ function AssignItemsScreen({ route, navigation }: Props) {
     if (me && !paidByUserId) setPaidByUserId(me.id);
   }, [me, paidByUserId]);
 
-  const subtotal = useMemo(() => items.reduce((sum, it) => sum + it.price * it.qty, 0), [items]);
+  const subtotal = useMemo(() => roundMoney(items.reduce((sum, it) => sum + it.price * it.qty, 0)), [items]);
 
   const taxAmt = useMemo(() => {
     if (receipt.tax == null) return 0;
-    return receipt.taxType === 'percent' ? subtotal * receipt.tax / 100 : receipt.tax;
+    return roundMoney(receipt.taxType === 'percent' ? subtotal * receipt.tax / 100 : receipt.tax);
   }, [receipt.tax, receipt.taxType, subtotal]);
 
   const deliveryAmt = useMemo(() => {
     if (receipt.delivery == null) return 0;
-    return receipt.deliveryType === 'percent' ? subtotal * receipt.delivery / 100 : receipt.delivery;
+    return roundMoney(receipt.deliveryType === 'percent' ? subtotal * receipt.delivery / 100 : receipt.delivery);
   }, [receipt.delivery, receipt.deliveryType, subtotal]);
 
   const vatAmt = useMemo(() => {
     if (receipt.vat == null) return 0;
-    return receipt.vatType === 'percent' ? (subtotal + taxAmt + deliveryAmt) * receipt.vat / 100 : receipt.vat;
+    return roundMoney(
+      receipt.vatType === 'percent' ? (subtotal + taxAmt + deliveryAmt) * receipt.vat / 100 : receipt.vat,
+    );
   }, [receipt.vat, receipt.vatType, subtotal, taxAmt, deliveryAmt]);
 
-  const grandTotal = subtotal + taxAmt + deliveryAmt + vatAmt;
+  const grandTotal = roundMoney(subtotal + taxAmt + deliveryAmt + vatAmt);
 
   const memberTotals = useMemo(() => {
     if (mode === 'equally') {
       if (!activeMembers.length) return {};
-      const share = grandTotal / activeMembers.length;
+      const share = roundMoney(grandTotal / activeMembers.length);
       const totals: Record<string, number> = {};
       for (const m of activeMembers) totals[getMemberId(m)] = share;
       return totals;
@@ -189,15 +191,18 @@ function AssignItemsScreen({ route, navigation }: Props) {
         totals[id] = totals[id]! + extras * share;
       }
     }
+    for (const id of Object.keys(totals)) {
+      totals[id] = roundMoney(totals[id]!);
+    }
     return totals;
   }, [mode, activeMembers, grandTotal, items, taxAmt, deliveryAmt, vatAmt, subtotal]);
 
   const unassignedTotal = useMemo(() => {
     if (mode !== 'byItem') return 0;
-    return items.filter((it) => it.claimedBy.length === 0).reduce((sum, it) => sum + it.price * it.qty, 0);
+    return roundMoney(items.filter((it) => it.claimedBy.length === 0).reduce((sum, it) => sum + it.price * it.qty, 0));
   }, [items, mode]);
 
-  const assignedTotal = subtotal - unassignedTotal;
+  const assignedTotal = roundMoney(subtotal - unassignedTotal);
 
   const toggleClaim = useCallback((itemId: string, memberId: string) => {
     setItems((prev) =>
@@ -249,7 +254,7 @@ function AssignItemsScreen({ route, navigation }: Props) {
         captureMethod: receipt.captureMethod ?? 'manual',
         sourceRef: receipt.sourceRef,
         receiptPhotoUrl: receipt.receiptPhotoUrl,
-        lineItems: items.map((it) => ({ name: it.name, qty: it.qty, unitPrice: it.price })),
+        lineItems: items.map((it) => ({ name: it.name, qty: it.qty, unitPrice: roundMoney(it.price) })),
         tax: receipt.tax,
         taxType: receipt.taxType,
         delivery: receipt.delivery,

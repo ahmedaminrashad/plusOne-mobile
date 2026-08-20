@@ -10,12 +10,26 @@ export function resolveAssetUrl(url: string | null | undefined): string | null {
   return `${ASSET_BASE_URL}${url}`;
 }
 
+/** Round a money amount to exactly 2 decimal places (piastres). */
+export function roundMoney(amount: number): number {
+  if (!Number.isFinite(amount)) return 0;
+  return Math.round((amount + Number.EPSILON) * 100) / 100;
+}
+
+/** Format a number for money inputs / plain display — always `0.00` style. */
+export function formatMoneyDigits(amount: number | string | null | undefined): string {
+  if (amount == null || amount === '') return '';
+  const n = typeof amount === 'number' ? amount : parseFloat(String(amount).replace(',', '.'));
+  if (!Number.isFinite(n)) return '';
+  return roundMoney(n).toFixed(2);
+}
+
 function locale(): string {
   return i18n.language === 'en' ? 'en-US' : 'ar-EG';
 }
 
 export function formatCurrency(amount: number, currency: string = 'EGP'): string {
-  const amountText = amount.toFixed(2);
+  const amountText = roundMoney(Number(amount)).toFixed(2);
   if (i18n.language === 'en') {
     return `${currency} ${amountText}`;
   }

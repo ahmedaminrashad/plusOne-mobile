@@ -128,7 +128,7 @@ function BillCard({
           </Text>
         </View>
         <View style={styles.billAmountBlock}>
-          <Text style={[typography.amountMedium, styles.billAmount]}>{Number(bill.amount).toFixed(2)}</Text>
+          <Text style={[typography.amountMedium, styles.billAmount]}>{formatCurrency(Number(bill.amount), bill.currency)}</Text>
           <Text style={[typography.bodySmall, styles.billCurrency]}>{bill.currency}</Text>
         </View>
         {canDelete && (

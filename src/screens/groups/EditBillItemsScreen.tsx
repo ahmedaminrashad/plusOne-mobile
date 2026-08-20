@@ -22,7 +22,7 @@ import Avatar from '../../components/common/Avatar';
 import { useGetGroupMembersQuery } from '../../store/api/groupsApi';
 import { useGetBillDetailQuery, useUpdateBillItemsMutation } from '../../store/api/billsApi';
 import { GroupMember, TaxServiceType } from '../../types/models';
-import { formatCurrency, resolveAssetUrl } from '../../utils/format';
+import { formatCurrency, formatMoneyDigits, roundMoney, resolveAssetUrl } from '../../utils/format';
 import { useInputTextAlign } from '../../utils/rtl';
 import { useKeyboardInsetHeight } from '../../services/keyboardInsets';
 import i18n from '../../i18n';
@@ -121,16 +121,13 @@ function ItemRow({
             <Text style={[typography.bodySmall, styles.itemQty]}>{item.qty} ×</Text>
           )}
         </View>
-        <View style={styles.priceCol}>
-          <TextInput
-            style={[typography.bodySmall, styles.priceInput]}
-            value={item.price}
-            onChangeText={(v) => onPriceChange(item.id, v)}
-            keyboardType="decimal-pad"
-            textAlign="right"
-          />
-          <Text style={[typography.amountMedium, styles.itemSubtotal]}>{formatCurrency(subtotal)}</Text>
-        </View>
+        <TextInput
+          style={[typography.bodySmall, styles.priceInput]}
+          value={item.price}
+          onChangeText={(v) => onPriceChange(item.id, v)}
+          keyboardType="decimal-pad"
+          textAlign="right"
+        />
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsRow}>
         {members.map((m) => (
@@ -142,12 +139,17 @@ function ItemRow({
           />
         ))}
       </ScrollView>
-      {unclaimed && <Text style={[typography.caption, styles.unclaimedNote]}>{t('receiptSplit.unclaimedNote')}</Text>}
-      {item.claimedBy.length > 1 && (
-        <Text style={[typography.caption, styles.splitNote]}>
-          {t('receiptSplit.perPersonShare', { amount: formatCurrency(subtotal / item.claimedBy.length) })}
-        </Text>
-      )}
+      <View style={styles.itemFooter}>
+        <View style={styles.itemFooterNotes}>
+          {unclaimed && <Text style={[typography.caption, styles.unclaimedNote]}>{t('receiptSplit.unclaimedNote')}</Text>}
+          {item.claimedBy.length > 1 && (
+            <Text style={[typography.caption, styles.splitNote]}>
+              {t('receiptSplit.perPersonShare', { amount: formatCurrency(subtotal / item.claimedBy.length) })}
+            </Text>
+          )}
+        </View>
+        <Text style={[typography.amountMedium, styles.itemSubtotal]}>{formatCurrency(subtotal)}</Text>
+      </View>
     </View>
   );
 }
@@ -186,43 +188,45 @@ function EditBillItemsScreen({ route, navigation }: Props) {
       (bill.lineItems ?? []).map((it, idx) => ({
         id: String(idx),
         name: it.name,
-        price: String(it.unitPrice),
+        price: formatMoneyDigits(it.unitPrice),
         qty: Number(it.qty),
         claimedBy: it.claimedBy ?? [],
       })),
     );
-    setTaxValue(bill.tax != null ? String(bill.tax) : '');
+    setTaxValue(bill.tax != null ? formatMoneyDigits(bill.tax) : '');
     setTaxType(bill.taxType ?? 'percent');
-    setDeliveryValue(bill.delivery != null ? String(bill.delivery) : '');
+    setDeliveryValue(bill.delivery != null ? formatMoneyDigits(bill.delivery) : '');
     setDeliveryType(bill.deliveryType ?? 'percent');
-    setVatValue(bill.vat != null ? String(bill.vat) : '');
+    setVatValue(bill.vat != null ? formatMoneyDigits(bill.vat) : '');
     setVatType(bill.vatType ?? 'percent');
     setHydrated(true);
   }, [bill, hydrated]);
 
   const subtotal = useMemo(
-    () => items.reduce((sum, it) => sum + parseNum(it.price) * it.qty, 0),
+    () => roundMoney(items.reduce((sum, it) => sum + parseNum(it.price) * it.qty, 0)),
     [items],
   );
 
   const taxAmt = useMemo(() => {
     if (!taxValue.trim()) return 0;
-    return taxType === 'percent' ? subtotal * parseNum(taxValue) / 100 : parseNum(taxValue);
+    return roundMoney(taxType === 'percent' ? subtotal * parseNum(taxValue) / 100 : parseNum(taxValue));
   }, [taxValue, taxType, subtotal]);
 
   const deliveryAmt = useMemo(() => {
     if (!deliveryValue.trim()) return 0;
-    return deliveryType === 'percent' ? subtotal * parseNum(deliveryValue) / 100 : parseNum(deliveryValue);
+    return roundMoney(deliveryType === 'percent' ? subtotal * parseNum(deliveryValue) / 100 : parseNum(deliveryValue));
   }, [deliveryValue, deliveryType, subtotal]);
 
   const vatAmt = useMemo(() => {
     if (!vatValue.trim()) return 0;
-    return vatType === 'percent'
-      ? (subtotal + taxAmt + deliveryAmt) * parseNum(vatValue) / 100
-      : parseNum(vatValue);
+    return roundMoney(
+      vatType === 'percent'
+        ? (subtotal + taxAmt + deliveryAmt) * parseNum(vatValue) / 100
+        : parseNum(vatValue),
+    );
   }, [vatValue, vatType, subtotal, taxAmt, deliveryAmt]);
 
-  const grandTotal = subtotal + taxAmt + deliveryAmt + vatAmt;
+  const grandTotal = roundMoney(subtotal + taxAmt + deliveryAmt + vatAmt);
 
   const memberTotals = useMemo(() => {
     const totals: Record<string, number> = {};
@@ -240,20 +244,29 @@ function EditBillItemsScreen({ route, navigation }: Props) {
         totals[id] = totals[id]! + extras * share;
       }
     }
+    for (const id of Object.keys(totals)) {
+      totals[id] = roundMoney(totals[id]!);
+    }
     return totals;
   }, [items, taxAmt, deliveryAmt, vatAmt, subtotal]);
 
   const handleAddItem = useCallback(() => {
     const name = newItemName.trim();
     const qty = parseInt(newItemQty, 10);
-    const price = parseNum(newItemPrice);
+    const price = roundMoney(parseNum(newItemPrice));
     if (!name || price <= 0 || !qty || qty <= 0) {
       Alert.alert(t('common:error'), t('editBillItems.addItemInvalid'));
       return;
     }
     setItems((prev) => [
       ...prev,
-      { id: `new-${Date.now()}-${Math.random().toString(36).slice(2)}`, name, price: newItemPrice.trim(), qty, claimedBy: [] },
+      {
+        id: `new-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        name,
+        price: formatMoneyDigits(price),
+        qty,
+        claimedBy: [],
+      },
     ]);
     setNewItemName('');
     setNewItemQty('1');
@@ -292,14 +305,14 @@ function EditBillItemsScreen({ route, navigation }: Props) {
         lineItems: items.map((it) => ({
           name: it.name,
           qty: it.qty,
-          unitPrice: parseNum(it.price),
+          unitPrice: roundMoney(parseNum(it.price)),
           claimedBy: it.claimedBy,
         })),
-        tax: taxValue.trim() ? parseNum(taxValue) : null,
+        tax: taxValue.trim() ? roundMoney(parseNum(taxValue)) : null,
         taxType: taxValue.trim() ? taxType : null,
-        delivery: deliveryValue.trim() ? parseNum(deliveryValue) : null,
+        delivery: deliveryValue.trim() ? roundMoney(parseNum(deliveryValue)) : null,
         deliveryType: deliveryValue.trim() ? deliveryType : null,
-        vat: vatValue.trim() ? parseNum(vatValue) : null,
+        vat: vatValue.trim() ? roundMoney(parseNum(vatValue)) : null,
         vatType: vatValue.trim() ? vatType : null,
         shares,
       }).unwrap();
@@ -528,8 +541,7 @@ const styles = StyleSheet.create({
   itemNameBlock: { flex: 1, minWidth: 0, alignItems: 'flex-start', paddingRight: 8 },
   itemName: { color: Colors.text, textAlign: 'left' },
   itemQty: { color: Colors.textMuted, marginTop: 4 },
-  priceCol: { alignItems: 'flex-end', gap: 4 },
-  itemSubtotal: { color: Colors.text, textAlign: 'right' },
+  itemSubtotal: { color: Colors.text, textAlign: 'right', marginLeft: 12 },
   priceInput: {
     color: Colors.text,
     backgroundColor: Colors.background,
@@ -541,6 +553,14 @@ const styles = StyleSheet.create({
     minWidth: 72,
     textAlign: 'right',
   },
+  itemFooter: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    marginTop: 8,
+    gap: 8,
+  },
+  itemFooterNotes: { flex: 1, minWidth: 0 },
 
   chipsRow: { flexDirection: 'row', gap: 8, paddingBottom: 4 },
   chip: {
@@ -561,8 +581,8 @@ const styles = StyleSheet.create({
   chipName: { color: Colors.textSecondary },
   chipNameSelected: { color: Colors.textOnPrimary, fontWeight: '700' },
 
-  unclaimedNote: { color: Colors.danger, textAlign: 'left', marginTop: 6 },
-  splitNote: { color: Colors.textMuted, textAlign: 'left', marginTop: 4 },
+  unclaimedNote: { color: Colors.danger, textAlign: 'left' },
+  splitNote: { color: Colors.textMuted, textAlign: 'left', marginTop: 2 },
 
   extrasPanel: {
     backgroundColor: Colors.surface,

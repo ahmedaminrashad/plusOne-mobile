@@ -102,7 +102,7 @@ function SettleUpScreen({ navigation }: Props) {
         {!isEmpty && net !== 0 && (
           <View style={[styles.netPill, net >= 0 ? styles.netPillPositive : styles.netPillNegative]}>
             <Text style={[typography.labelMedium, net >= 0 ? styles.netPillPositiveText : styles.netPillNegativeText]}>
-              {t(net >= 0 ? 'settleUp.netPositive' : 'settleUp.netNegative', { amount: Math.round(Math.abs(net) / 100) })}
+              {t(net >= 0 ? 'settleUp.netPositive' : 'settleUp.netNegative', { amount: formatCurrency(Math.abs(net) / 100) })}
             </Text>
           </View>
         )}
