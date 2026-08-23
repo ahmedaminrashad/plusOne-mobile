@@ -16,7 +16,10 @@ import Input from '../../components/common/Input';
 import { Colors } from '../../constants/colors';
 import { useTypography } from '../../hooks/useTypography';
 import { isValidPhone, formatPhone } from '../../utils/validation';
-import { useSendOtpMutation } from '../../store/api/authApi';
+import { useLoginWithFirebaseMutation } from '../../store/api/authApi';
+import { sendFirebasePhoneCode, getFirebaseIdToken } from '../../services/firebasePhoneAuth';
+import { useAppDispatch } from '../../hooks/useAppDispatch';
+import { applyAuthSession } from '../../utils/applyAuthSession';
 import { resolveErrorMessage } from '../../utils/errors';
 
 type Props = AuthScreenProps<'PhoneEntry'>;
@@ -29,8 +32,11 @@ function PhoneEntryScreen({ navigation }: Props) {
   const [phone, setPhone] = useState('');
   const [countryCode] = useState(COUNTRY_CODE);
   const [error, setError] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const dispatch = useAppDispatch();
 
-  const [sendOtp, { isLoading }] = useSendOtpMutation();
+  const [loginWithFirebase, { isLoading: isLoggingIn }] = useLoginWithFirebaseMutation();
+  const isLoading = isSending || isLoggingIn;
 
   const fullPhone = formatPhone(phone, countryCode);
 
@@ -42,13 +48,25 @@ function PhoneEntryScreen({ navigation }: Props) {
       return;
     }
 
+    setIsSending(true);
     try {
-      await sendOtp({ phone: fullPhone }).unwrap();
+      const outcome = await sendFirebasePhoneCode(fullPhone);
+      if (outcome === 'auto-verified') {
+        const idToken = await getFirebaseIdToken();
+        const result = await loginWithFirebase({ idToken }).unwrap();
+        await applyAuthSession(result, dispatch);
+        if (!result.isProfileComplete) {
+          navigation.navigate('ProfileSetup');
+        }
+        return;
+      }
       navigation.navigate('OTPVerification', { phone: fullPhone });
     } catch (err: any) {
       setError(resolveErrorMessage(err));
+    } finally {
+      setIsSending(false);
     }
-  }, [fullPhone, sendOtp, navigation, t]);
+  }, [fullPhone, loginWithFirebase, dispatch, navigation, t]);
 
   const handlePhoneChange = useCallback((v: string) => {
     // Keep only digits in the editable field — country code lives in the prefix chip.

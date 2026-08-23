@@ -34,5 +34,9 @@
   "DISPLAY_NAME_CHARS_INVALID": "الاسم يحتوي على أحرف غير مسموح بها",
   "INSTAPAY_ALIAS_INVALID": "اسم InstaPay غير صحيح",
   "GROUP_NAME_TOO_LONG": "اسم المجموعة طويل جداً (أقصى 50 حرف)",
-  "FAIL_REASON_REQUIRED": "يجب اختيار سبب لتعليم الدفع كفاشل"
+  "FAIL_REASON_REQUIRED": "يجب اختيار سبب لتعليم الدفع كفاشل",
+  "FIREBASE_TOKEN_INVALID": "انتهت صلاحية التحقق. اطلب كوداً جديداً.",
+  "FIREBASE_PHONE_REQUIRED": "تسجيل الدخول هذا يحتاج رقم هاتف.",
+  "FIREBASE_NOT_CONFIGURED": "تسجيل الدخول برقم الهاتف غير مُعد على الخادم.",
+  "FIREBASE_SHA_MISSING": "هذا الإصدار غير مسجّل في Firebase. أضف بصمتي SHA-1 و SHA-256 الخاصة بالـ debug."
 }
