@@ -1,0 +1,89 @@
+name: Android APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      api_url:
+        description: Backend API URL (without /api/v1 is fine)
+        required: false
+        default: https://api.plusone-app.com
+
+concurrency:
+  group: android-apk
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    name: Build release APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install JS dependencies
+        run: npm ci
+
+      - name: Set API base URL
+        env:
+          API_URL: ${{ inputs.api_url }}
+        run: |
+          NORMALIZED="${API_URL%/}"
+          case "$NORMALIZED" in
+            */api/v1) ;;
+            *) NORMALIZED="$NORMALIZED/api/v1" ;;
+          esac
+          cat > src/config.ts <<EOF
+          export const API_BASE_URL = '$NORMALIZED';
+          export const ASSET_BASE_URL = API_BASE_URL.replace(/\\/api\\/v1\\/?$/, '');
+          EOF
+          echo "API_BASE_URL=$NORMALIZED"
+
+      - name: Unset machine-specific Java home
+        run: sed -i '/^org.gradle.java.home=/d' android/gradle.properties
+
+      - name: Ensure debug keystore
+        run: |
+          if [ ! -f android/app/debug.keystore ]; then
+            keytool -genkeypair \
+              -keystore android/app/debug.keystore \
+              -storepass android \
+              -alias androiddebugkey \
+              -keypass android \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -dname "CN=Android Debug,O=Android,C=US"
+          fi
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x android/gradlew
+
+      - name: Build release APK
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=armeabi-v7a,arm64-v8a
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: plusone-release
+          path: android/app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+          retention-days: 14
