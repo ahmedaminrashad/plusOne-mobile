@@ -114,6 +114,8 @@ function RemindScreen({ navigation }: Props) {
                     </View>
                     <Text style={[typography.bodyMedium, styles.previewMessage]}>
                       {t('remind.previewMessage', {
+                        initiator: me?.displayName ?? '',
+                        bill: firstRow.billTitle ?? firstRow.groupName,
                         name: firstRow.counterpartName,
                         group: firstRow.groupName,
                         amount: (firstRow.amountPiastres / 100).toFixed(2),

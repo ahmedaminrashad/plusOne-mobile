@@ -9,6 +9,10 @@
     "securityLabel": "Security",
     "languageLabel": "Language",
     "helpSupportLabel": "Help & Support",
+    "feedbackLabel": "Send tester feedback",
+    "feedbackTitle": "Tester feedback",
+    "feedbackMessage": "Email what broke, with screenshots if you can. This helps us ship a production build.",
+    "feedbackEmail": "Write email",
     "aboutLabel": "About",
     "logoutLabel": "Log Out",
     "logoutConfirmMessage": "Do you want to log out?",
@@ -45,6 +49,9 @@
     "fullNamePlaceholder": "Your full name",
     "instaPayLabel": "InstaPay ID or phone (optional)",
     "instaPayPlaceholder": "e.g. ahmed_hassan or 01001234567",
+    "instaPayHelpLink": "How do I find it?",
+    "instaPayHelpTitle": "Getting your InstaPay link",
+    "instaPayHelpBody": "1. Open the InstaPay app\n2. Go to your Home and tap Link under your account\n3. Choose +One from the share menu, then press Post\n4. Come back here and tap Save Changes\n\nYour InstaPay link lets friends pay you directly from a split.",
     "saveButton": "Save Changes"
   },
   "paymentMethods": {

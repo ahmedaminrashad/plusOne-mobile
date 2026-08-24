@@ -108,6 +108,12 @@ function EditProfileScreen({ navigation, route }: Props) {
           placeholder={t('editProfile.instaPayPlaceholder')}
           maxLength={60}
         />
+        <TouchableOpacity
+          onPress={() => Alert.alert(t('editProfile.instaPayHelpTitle'), t('editProfile.instaPayHelpBody'))}
+          hitSlop={8}
+          style={{ alignSelf: 'flex-start', marginTop: -8, marginBottom: 16, paddingVertical: 4 }}>
+          <Text style={[typography.labelMedium, { color: Colors.primary }]}>{t('editProfile.instaPayHelpLink')}</Text>
+        </TouchableOpacity>
 
         <Button
           title={t('editProfile.saveButton')}

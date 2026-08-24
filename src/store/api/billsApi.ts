@@ -92,11 +92,11 @@ export const billsApi = baseApi.injectEndpoints({
         body,
       }),
       // Creating a bill also shares it into the group chat as a message, so refresh that feed too.
-      invalidatesTags: ['Bill', 'Message'],
+      invalidatesTags: ['Bill', 'Message', 'Share', 'Ledger'],
     }),
     deleteBill: builder.mutation<void, string>({
       query: (billId) => ({ url: `/bills/${billId}`, method: 'DELETE' }),
-      invalidatesTags: ['Bill'],
+      invalidatesTags: ['Bill', 'Share', 'Ledger'],
     }),
     updateBillItems: builder.mutation<BillDetail, UpdateBillItemsPayload>({
       query: ({ billId, ...body }) => ({
@@ -104,11 +104,21 @@ export const billsApi = baseApi.injectEndpoints({
         method: 'PATCH',
         body,
       }),
-      invalidatesTags: (result, error, { billId }) => [{ type: 'Bill', id: billId }, 'Bill'],
+      invalidatesTags: (result, error, { billId }) => [
+        { type: 'Bill', id: billId },
+        'Bill',
+        'Share',
+        'Ledger',
+      ],
     }),
     closeBill: builder.mutation<Bill, string>({
       query: (billId) => ({ url: `/bills/${billId}/close`, method: 'POST' }),
-      invalidatesTags: (result, error, billId) => [{ type: 'Bill', id: billId }, 'Bill'],
+      invalidatesTags: (result, error, billId) => [
+        { type: 'Bill', id: billId },
+        'Bill',
+        'Share',
+        'Ledger',
+      ],
     }),
     parseQrBill: builder.mutation<ParsedBillResult, ParseQrPayload>({
       query: ({ groupId, payload }) => ({

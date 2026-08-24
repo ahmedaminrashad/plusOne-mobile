@@ -8,6 +8,7 @@ import {
   Platform,
   Animated,
   Easing,
+  Alert,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { createBottomTabNavigator, BottomTabBarProps } from '@react-navigation/bottom-tabs';
@@ -17,7 +18,8 @@ import SettingsStack from './SettingsStack';
 import { Colors } from '../constants/colors';
 import { Radius } from '../constants/radius';
 import { useTypography } from '../hooks/useTypography';
-import { HomeIcon, PersonIcon, PeopleIcon, AddPersonIcon } from '../components/icons';
+import { HomeIcon, PersonIcon, PeopleIcon, AddPersonIcon, ReceiptIcon } from '../components/icons';
+import { useGetGroupsQuery } from '../store/api/groupsApi';
 
 const Tab = createBottomTabNavigator<TabParamList>();
 
@@ -58,6 +60,26 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
     navigation.navigate('Home', { screen: 'MyCircle' } as any);
   }, [navigation]);
 
+  const { data: groups } = useGetGroupsQuery();
+  const handleAddBill = useCallback(() => {
+    setMenuOpen(false);
+    if (!groups?.length) {
+      Alert.alert(t('quickAdd.needGroupTitle'), t('quickAdd.needGroupMessage'), [
+        { text: t('common:cancel'), style: 'cancel' },
+        { text: t('quickAdd.newGroup'), onPress: () => navigation.navigate('Home', { screen: 'CreateGroup' } as any) },
+      ]);
+      return;
+    }
+    if (groups.length === 1) {
+      navigation.navigate('Home', {
+        screen: 'AddBillChooser',
+        params: { groupId: groups[0].id, groupName: groups[0].name },
+      } as any);
+      return;
+    }
+    navigation.navigate('Home', { screen: 'AllGroups' } as any);
+  }, [groups, navigation, t]);
+
   const fabSpin = fabRotate.interpolate({
     inputRange: [0, 1],
     outputRange: ['0deg', '180deg'],
@@ -90,6 +112,15 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
                 <Text style={[typography.bodySmall, styles.menuItemSubtitle]}>{t('quickAdd.addPlusOneSubtitle')}</Text>
               </View>
             </TouchableOpacity>
+            <TouchableOpacity style={[styles.menuCard, styles.menuCardSecond]} onPress={handleAddBill} activeOpacity={0.75}>
+              <View style={[styles.menuIconWrap, { backgroundColor: Colors.successTint }]}>
+                <ReceiptIcon size={20} color={Colors.success} />
+              </View>
+              <View style={styles.menuCardText}>
+                <Text style={[typography.labelLarge, styles.menuItemTitle]}>{t('quickAdd.addBill')}</Text>
+                <Text style={[typography.bodySmall, styles.menuItemSubtitle]}>{t('quickAdd.addBillSubtitle')}</Text>
+              </View>
+            </TouchableOpacity>
           </View>
         </Pressable>
       )}
@@ -100,7 +131,6 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
             <View style={styles.tabItemInner}>
               <HomeIcon size={20} color={homeActive ? Colors.navActive : Colors.navInactive} />
               <Text style={[typography.labelSmall, styles.tabLabel, homeActive && styles.tabLabelActive]}>{t('tabBar.homeLabel')}</Text>
-              {homeActive && <View style={styles.tabActiveDot} />}
             </View>
           </TouchableOpacity>
 
@@ -111,7 +141,6 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
             <View style={styles.tabItemInner}>
               <PersonIcon size={20} color={profileActive ? Colors.navActive : Colors.navInactive} />
               <Text style={[typography.labelSmall, styles.tabLabel, profileActive && styles.tabLabelActive]}>{t('tabBar.profileLabel')}</Text>
-              {profileActive && <View style={styles.tabActiveDot} />}
             </View>
           </TouchableOpacity>
         </View>
@@ -148,7 +177,7 @@ const TAB_BAR_MARGIN = 23;
 const TAB_BAR_BOTTOM = Platform.OS === 'ios' ? 22 : 14;
 const FAB_SIZE = 54;
 const FAB_INNER_SIZE = 28;
-const FAB_OVERLAP = 12;
+const FAB_OVERLAP = 22;
 const TAB_BAR_WRAP_HEIGHT = TAB_BAR_HEIGHT + TAB_BAR_BOTTOM + FAB_OVERLAP;
 
 const styles = StyleSheet.create({
@@ -183,14 +212,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 3,
   },
-  tabActiveDot: {
-    position: 'absolute',
-    bottom: -8,
-    width: 4, height: 4, borderRadius: 2,
-    backgroundColor: Colors.navActive,
-  },
   tabLabel: { color: Colors.navInactive },
-  tabLabelActive: { color: Colors.navActive },
+  tabLabelActive: { color: Colors.navActive, fontWeight: '700' },
   fabSpacer: { width: FAB_SIZE + 10 },
   fabRing: {
     position: 'absolute',

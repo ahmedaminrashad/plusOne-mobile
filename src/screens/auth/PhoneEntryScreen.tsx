@@ -8,6 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  TouchableOpacity,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { AuthScreenProps } from '../../types/navigation';
@@ -27,7 +28,7 @@ type Props = AuthScreenProps<'PhoneEntry'>;
 const COUNTRY_CODE = '+20';
 
 function PhoneEntryScreen({ navigation }: Props) {
-  const { t } = useTranslation('auth');
+  const { t, i18n } = useTranslation('auth');
   const typography = useTypography();
   const [phone, setPhone] = useState('');
   const [countryCode] = useState(COUNTRY_CODE);
@@ -90,6 +91,14 @@ function PhoneEntryScreen({ navigation }: Props) {
             tintColor={Colors.primaryDark}
             resizeMode="contain"
           />
+          <View style={{ flexDirection: 'row', alignSelf: 'flex-end', gap: 8, marginBottom: 8 }}>
+            <TouchableOpacity onPress={() => i18n.changeLanguage('en')}>
+              <Text style={[typography.labelMedium, { color: i18n.language.startsWith('en') ? Colors.primary : Colors.textSecondary }]}>{t('phoneEntry.langEnglish')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => i18n.changeLanguage('ar')}>
+              <Text style={[typography.labelMedium, { color: i18n.language.startsWith('ar') ? Colors.primary : Colors.textSecondary }]}>{t('phoneEntry.langArabic')}</Text>
+            </TouchableOpacity>
+          </View>
           <Text style={[typography.headingLarge, styles.headline]}>{t('phoneEntry.tagline')}</Text>
 
           <View style={styles.form}>

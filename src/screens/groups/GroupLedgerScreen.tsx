@@ -52,7 +52,7 @@ function GroupLedgerScreen({ groupId }: Props) {
           </View>
           <View style={styles.statsRow}>
             <View style={[styles.statCard, styles.statCardNeutral]}>
-              <Text style={[typography.labelMedium, styles.statLabelNeutral]}>{t('groupLedger.youPaid')}</Text>
+              <Text style={[typography.labelMedium, styles.statLabelNeutral]}>{t('groupLedger.owedToYou')}</Text>
               <Text style={[typography.labelLarge, styles.statValueNeutral]}>
                 {formatCurrency(youPaid / 100)}
               </Text>

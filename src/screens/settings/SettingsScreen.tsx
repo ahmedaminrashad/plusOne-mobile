@@ -9,6 +9,7 @@ import {
   Alert,
   StatusBar,
   Modal,
+  Linking,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { SettingsScreenProps } from '../../types/navigation';
@@ -149,7 +150,16 @@ function SettingsScreen({ navigation }: Props) {
             onPress={() => setLanguagePickerVisible(true)}
           />
           <View style={styles.divider} />
-          <SettingsRow icon={<HelpIcon size={18} color={Colors.primary} />} label={t('settings.helpSupportLabel')} onPress={() => {}} />
+          <SettingsRow
+            icon={<HelpIcon size={18} color={Colors.primary} />}
+            label={t('settings.feedbackLabel')}
+            onPress={() => {
+              Alert.alert(t('settings.feedbackTitle'), t('settings.feedbackMessage'), [
+                { text: t('common:cancel'), style: 'cancel' },
+                { text: t('settings.feedbackEmail'), onPress: () => Linking.openURL('mailto:testers@plusone.app?subject=%2BOne%20tester%20feedback') },
+              ]);
+            }}
+          />
           <View style={styles.divider} />
           <SettingsRow icon={<InfoIcon size={18} color={Colors.primary} />} label={t('settings.aboutLabel')} value="v1.0.0" onPress={() => {}} />
         </SettingsSection>

@@ -79,11 +79,7 @@ function MyLedgerScreen({ navigation }: Props) {
           <Text style={[typography.headingMedium, styles.title]}>{t('navigation:appStack.myLedgerTitle')}</Text>
           <Text style={[typography.bodySmall, styles.subtitle]}>{t('myLedger.allGroupsSubtitle')}</Text>
         </View>
-        <View style={styles.monthChip}>
-          <ChevronLeftIcon size={14} color={Colors.text} />
-          <Text style={[typography.labelMedium, styles.monthChipText]}>{monthLabel}</Text>
-          <ChevronRightIcon size={14} color={Colors.text} />
-        </View>
+        {null}
       </View>
 
       {rows.length === 0 ? (

@@ -18,6 +18,8 @@
     "tileRemind": "Remind",
     "tileMyLedger": "My tab",
     "yourGroups": "Your groups",
+    "groupsSubtitle": "Your crews and their shared bills.",
+    "circleSubtitle": "People you split with most.",
     "viewAll": "View all",
     "cardMeta": "{{members}} members · {{bills}} open bills",
     "cardMetaNoBills": "{{members}} members",
@@ -43,6 +45,7 @@
   },
   "myCircle": {
     "peopleCount": "{{count}} people",
+    "screenSubtitle": "People you split with most.",
     "searchPlaceholder": "Name or phone number…",
     "growTitle": "Grow your Circle",
     "growSubtitle": "Add someone by phone — they join as a \"+1\" if they're not on +one yet",
@@ -73,13 +76,16 @@
     "byGroupHeader": "By group",
     "settledLabel": "Settled",
     "emptyTitle": "No activity yet",
-    "emptySubtitle": "Once you split a bill, your monthly tab shows up here."
+    "emptySubtitle": "Once you split a bill, your monthly tab shows up here.",
+    "viewAll": "View all"
   },
   "groupLedger": {
     "spentThisMonth": "Spent this month",
     "outingsLabel": "Outings",
     "youPaid": "You paid",
     "yourFairShare": "Your fair share",
+    "owedToYou": "Owed to you",
+    "youOwe": "You owe",
     "balance": "Balance",
     "settledThisMonth": "Settled this month",
     "settledCheckmark": "settled ✓"
@@ -108,7 +114,7 @@
     "theyllReceive": "They'll receive",
     "rateLimitNote": "Reminders are rate-limited to once per day per person.",
     "previewSender": "+one · friendly nudge",
-    "previewMessage": "Hey {{name}} 👋 quick one — your share from {{group}} is EGP {{amount}}. Tap to settle in seconds.",
+    "previewMessage": "{{initiator}} is reminding you to pay EGP {{amount}} for {{bill}} in {{group}}.",
     "sendButton": "Send {{count}} reminders",
     "emptyTitle": "No one to remind",
     "emptySubtitle": "Everyone's either paid up or hasn't been asked yet.",
@@ -122,6 +128,7 @@
     "filterIOwe": "I owe",
     "filterSettled": "Settled",
     "newGroupCta": "+ New group",
+    "screenSubtitle": "Your crews and their shared bills.",
     "emptyTitle": "No groups match this filter"
   },
   "groupDetail": {
@@ -152,7 +159,20 @@
     "splitNow": "Split now →",
     "fullySettled": "Fully settled ✓",
     "paidCount": "{{paid}} of {{total}} paid",
-    "pendingCount": "{{count}} pending"
+    "pendingCount": "{{count}} pending",
+    "renameAction": "Rename group",
+    "renameTitle": "Group name",
+    "renamePlaceholder": "Group name",
+    "renameSave": "Save",
+    "renameFailed": "Couldn't rename the group",
+    "deleteGroupAction": "Delete group",
+    "deleteGroupTitle": "Delete this group?",
+    "deleteGroupMessage": "Outstanding shares stay in history. This cannot be undone.",
+    "deleteGroupFailed": "Couldn't delete the group",
+    "makeAdminAction": "Make admin",
+    "makeAdminTitle": "Make {{name}} an admin?",
+    "makeAdminMessage": "They will be able to invite, remove members, and edit the group.",
+    "makeAdminFailed": "Couldn't update the member role"
   },
   "createGroup": {
     "categoryFriends": "👫 Friends",
@@ -185,7 +205,10 @@
     "phonePlaceholder": "+20 10 XXXX XXXX",
     "sendCta": "Send",
     "invitationsWord": "invitation(s)",
-    "fromContacts": "Add from contacts"
+    "fromContacts": "Add from contacts",
+    "fromCircle": "Add from Circle",
+    "circleEmpty": "Your Circle is empty",
+    "alreadySelected": "Already added"
   },
   "invitations": {
     "invitedToJoin": "You've been invited to join",

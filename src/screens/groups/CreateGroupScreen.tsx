@@ -73,8 +73,8 @@ function CreateGroupScreen({ navigation }: Props) {
           autoFocus
         />
 
-        <Text style={[typography.labelSmall, styles.categoryLabel]}>{t('createGroup.categoryLabel')}</Text>
-        <View style={styles.grid}>
+        {false && <Text style={[typography.labelSmall, styles.categoryLabel]}>{t('createGroup.categoryLabel')}</Text>}
+        {false && <View style={styles.grid}>
           {CATEGORIES.map((c) => {
             const selected = category === c.key;
             return (
@@ -89,7 +89,7 @@ function CreateGroupScreen({ navigation }: Props) {
               </TouchableOpacity>
             );
           })}
-        </View>
+        </View>}
 
         <Button
           title={t('createGroup.nextCta')}

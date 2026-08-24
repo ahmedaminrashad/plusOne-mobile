@@ -26,7 +26,11 @@
     "newGroup": "New group",
     "newGroupSubtitle": "Start a shared tab",
     "addPlusOne": "Add a +One",
-    "addPlusOneSubtitle": "Bring someone into your Circle"
+    "addPlusOneSubtitle": "Bring someone into your Circle",
+    "addBill": "Add a receipt",
+    "addBillSubtitle": "Scan or enter a bill for a group",
+    "needGroupTitle": "Create a group first",
+    "needGroupMessage": "Add a group so you have somewhere to share the receipt."
   },
   "rootNavigator": {
     "newNotificationTitle": "New Notification",

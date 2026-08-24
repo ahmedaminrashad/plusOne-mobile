@@ -18,6 +18,28 @@ export const groupsApi = baseApi.injectEndpoints({
       invalidatesTags: ['Group'],
     }),
 
+    updateGroup: builder.mutation<Group, { groupId: string; name?: string; category?: string }>({
+      query: ({ groupId, ...body }) => ({ url: `/groups/${groupId}`, method: 'PATCH', body }),
+      invalidatesTags: (_r, _e, { groupId }) => [{ type: 'Group', id: groupId }, 'Group'],
+    }),
+
+    deleteGroup: builder.mutation<void, string>({
+      query: (groupId) => ({ url: `/groups/${groupId}`, method: 'DELETE' }),
+      invalidatesTags: ['Group', 'Ledger', 'Bill', 'Share'],
+    }),
+
+    updateMemberRole: builder.mutation<GroupMember, { groupId: string; memberId: string; role: 'admin' | 'member' }>({
+      query: ({ groupId, memberId, role }) => ({
+        url: `/groups/${groupId}/members/${memberId}`,
+        method: 'PATCH',
+        body: { role },
+      }),
+      invalidatesTags: (_r, _e, { groupId }) => [
+        { type: 'GroupMember', id: groupId },
+        { type: 'Group', id: groupId },
+      ],
+    }),
+
     getGroupMembers: builder.query<GroupMember[], string>({
       query: (id) => `/groups/${id}/members`,
       providesTags: (_r, _e, id) => [{ type: 'GroupMember', id }],
@@ -114,6 +136,9 @@ export const {
   useGetGroupsQuery,
   useGetGroupQuery,
   useCreateGroupMutation,
+  useUpdateGroupMutation,
+  useDeleteGroupMutation,
+  useUpdateMemberRoleMutation,
   useGetGroupMembersQuery,
   useInviteMembersMutation,
   useRemoveMemberMutation,

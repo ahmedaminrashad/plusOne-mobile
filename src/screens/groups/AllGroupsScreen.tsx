@@ -64,7 +64,9 @@ function AllGroupsScreen({ navigation }: Props) {
         return net === 0;
       });
     }
-    return list;
+    return [...list].sort(
+      (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+    );
   }, [groups, query, filter, balances]);
 
   const handleGroupPress = useCallback(
@@ -90,7 +92,10 @@ function AllGroupsScreen({ navigation }: Props) {
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} hitSlop={12}>
             <ChevronLeftIcon size={20} color={Colors.text} />
           </TouchableOpacity>
-          <Text style={[typography.headingMedium, styles.title]}>{t('navigation:appStack.allGroupsTitle')}</Text>
+          <View>
+            <Text style={[typography.headingMedium, styles.title]}>{t('navigation:appStack.allGroupsTitle')}</Text>
+            <Text style={[typography.bodySmall, { color: Colors.textSecondary }]}>{t('allGroups.screenSubtitle')}</Text>
+          </View>
         </View>
         <View style={styles.countPill}>
           <Text style={[typography.labelSmall, styles.countPillText]}>

@@ -26,7 +26,11 @@
     "newGroup": "مجموعة جديدة",
     "newGroupSubtitle": "ابدأ حساب مشترك",
     "addPlusOne": "إضافة +One",
-    "addPlusOneSubtitle": "ضيف حد لدائرتك"
+    "addPlusOneSubtitle": "ضيف حد لدائرتك",
+    "addBill": "إضافة إيصال",
+    "addBillSubtitle": "امسح أو أدخل فاتورة لمجموعة",
+    "needGroupTitle": "أنشئ مجموعة أولاً",
+    "needGroupMessage": "أضف مجموعة عشان يبقى عندك مكان تشارك فيه الإيصال."
   },
   "rootNavigator": {
     "newNotificationTitle": "إشعار جديد",

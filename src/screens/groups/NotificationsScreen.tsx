@@ -200,6 +200,9 @@ function NotificationsScreen({ navigation }: Props) {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
       <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={12} style={{ marginBottom: 8 }}>
+          <Text style={[typography.labelLarge, { color: Colors.primary }]}>{t('common:back')}</Text>
+        </TouchableOpacity>
         <Text style={[typography.headingLarge, styles.headerTitle]}>
           {t('notifications.title', { defaultValue: 'Notifications' })}
         </Text>

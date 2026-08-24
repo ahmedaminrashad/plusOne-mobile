@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { NativeEventEmitter, NativeModules, Platform } from 'react-native';
+import { Keyboard, NativeEventEmitter, NativeModules, Platform } from 'react-native';
 
 const { KeyboardInsetsModule } = NativeModules as { KeyboardInsetsModule?: object };
 
@@ -19,11 +19,23 @@ export function useKeyboardInsetHeight(): number {
   const [height, setHeight] = useState(0);
 
   useEffect(() => {
-    if (!emitter) return;
-    const subscription = emitter.addListener('keyboardInsetHeight', (heightDp: number) => {
-      setHeight(heightDp);
+    if (emitter) {
+      const subscription = emitter.addListener('keyboardInsetHeight', (heightDp: number) => {
+        setHeight(heightDp);
+      });
+      return () => subscription.remove();
+    }
+
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const showSub = Keyboard.addListener(showEvent, (e) => {
+      setHeight(e.endCoordinates?.height ?? 0);
     });
-    return () => subscription.remove();
+    const hideSub = Keyboard.addListener(hideEvent, () => setHeight(0));
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
   }, []);
 
   return height;

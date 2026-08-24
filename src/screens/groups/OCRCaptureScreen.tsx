@@ -10,6 +10,7 @@ import {
   Alert,
   ActivityIndicator,
   Image,
+  Linking,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { launchCamera, launchImageLibrary, Asset } from 'react-native-image-picker';
@@ -46,7 +47,10 @@ function OCRCaptureScreen({ route, navigation }: Props) {
   }, []);
 
   const requestCameraPermission = useCallback(async (): Promise<boolean> => {
-    if (Platform.OS === 'ios') return true;
+    if (Platform.OS === 'ios') {
+      // launchCamera shows the iOS prompt; if it comes back denied we route to Settings below.
+      return true;
+    }
     const result = await PermissionsAndroid.request(
       PermissionsAndroid.PERMISSIONS.CAMERA,
       {
@@ -62,6 +66,7 @@ function OCRCaptureScreen({ route, navigation }: Props) {
         t('ocrCapture.permissionDeniedMessage'),
         [
           { text: t('ocrCapture.manualEntryButton'), onPress: () => navigation.replace('AddBill', { groupId, groupName }) },
+          { text: t('common:openSettings'), onPress: () => { void Linking.openSettings(); } },
           { text: t('common:cancel'), onPress: () => navigation.goBack() },
         ],
       );
@@ -78,6 +83,17 @@ function OCRCaptureScreen({ route, navigation }: Props) {
       { mediaType: 'photo', quality: 1.0, includeBase64: false },
       (response) => {
         if (response.didCancel) return;
+        if (response.errorCode === 'permission') {
+          Alert.alert(
+            t('ocrCapture.permissionDeniedTitle'),
+            t('ocrCapture.permissionDeniedMessage'),
+            [
+              { text: t('common:openSettings'), onPress: () => { void Linking.openSettings(); } },
+              { text: t('common:cancel'), style: 'cancel' },
+            ],
+          );
+          return;
+        }
         if (response.errorCode) {
           Alert.alert(t('common:error'), t('ocrCapture.cameraOpenFailed'));
           return;

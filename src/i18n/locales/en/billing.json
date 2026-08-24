@@ -52,7 +52,8 @@
     "paidByLabel": "Paid by",
     "modeByItem": "By item",
     "modeEqually": "Equally",
-    "saveButton": "Save & request payments"
+    "saveButton": "Save & request payments",
+    "skipButton": "Skip and let your group decide"
   },
   "receiptSplit": {
     "defaultMemberName": "User",
@@ -62,7 +63,7 @@
     "selectPayerFallback": "Choose who paid",
     "selectPayerRequired": "Please specify who paid the receipt",
     "unclaimedItemsTitle": "Unassigned items",
-    "unclaimedItemsMessage": "{{count}} item(s) have no one assigned. Do you want to continue?",
+    "unclaimedItemsMessage": "{{count}} item(s) have no one assigned. Assign them, or skip and let the group claim.",
     "reviewButton": "Review",
     "breakdownLine": "{{name}}: {{amount}}",
     "fromVenue": "From: {{venue}}",
@@ -92,6 +93,9 @@
     "payLinkSentBySms": "Pay link sent by SMS",
     "remindButton": "Remind ({{count}})",
     "markReceivedButton": "Mark received",
+    "confirmThisPayment": "Confirm received",
+    "itemsHeading": "Items",
+    "plusOnePending": "Not on +One yet",
     "confirmFailed": "Couldn't confirm the payment, please try again"
   },
   "payShare": {

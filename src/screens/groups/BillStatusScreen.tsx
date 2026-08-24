@@ -19,7 +19,17 @@ import { ChevronLeftIcon } from '../../components/icons';
 
 type Props = AppScreenProps<'BillStatus'>;
 
-function ShareRow({ share, payerName }: { share: Share; payerName: string }) {
+function ShareRow({
+  share,
+  payerName,
+  isPayer,
+  onConfirm,
+}: {
+  share: Share;
+  payerName: string;
+  isPayer?: boolean;
+  onConfirm?: (shareId: string) => void;
+}) {
   const { t } = useTranslation('billing');
   const typography = useTypography();
   const name = share.owner?.displayName ?? share.ownerPendingPhone ?? t('viewReceipt.defaultUserName');
@@ -50,12 +60,27 @@ function ShareRow({ share, payerName }: { share: Share; payerName: string }) {
     <View style={styles.shareRow}>
       <Avatar uri={resolveAssetUrl(share.owner?.photoUrl)} name={name} size={28} />
       <View style={styles.shareInfo}>
-        <Text style={[typography.labelLarge, styles.shareName]}>{name}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          {isNonApp && (
+            <View style={{ backgroundColor: Colors.warningTint, borderRadius: 8, paddingHorizontal: 6, paddingVertical: 2 }}>
+              <Text style={[typography.labelSmall, { color: Colors.warningDark }]}>+One</Text>
+            </View>
+          )}
+          <Text style={[typography.labelLarge, styles.shareName]}>{name}</Text>
+        </View>
         {!!subtitle && <Text style={[typography.bodySmall, styles.shareSubtitle]}>{subtitle}</Text>}
       </View>
-      <View style={[styles.badge, badgeStyle]}>
-        <Text style={[typography.labelSmall, badgeTextStyle]}>{badgeLabel}</Text>
-      </View>
+      {isPayer && share.status === 'initiated' && onConfirm ? (
+        <TouchableOpacity
+          onPress={() => onConfirm(share.id)}
+          style={{ backgroundColor: Colors.primary, borderRadius: 16, paddingHorizontal: 10, paddingVertical: 6 }}>
+          <Text style={[typography.labelSmall, { color: Colors.textOnPrimary }]}>{t('billStatus.confirmThisPayment')}</Text>
+        </TouchableOpacity>
+      ) : (
+        <View style={[styles.badge, badgeStyle]}>
+          <Text style={[typography.labelSmall, badgeTextStyle]}>{badgeLabel}</Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -177,7 +202,9 @@ function BillStatusScreen({ route, navigation }: Props) {
       <FlatList
         data={activeShares}
         keyExtractor={(s) => s.id}
-        renderItem={({ item }) => <ShareRow share={item} payerName={payerName} />}
+        renderItem={({ item }) => (
+          <ShareRow share={item} payerName={payerName} isPayer={isPayer} onConfirm={(id) => confirmShare(id)} />
+        )}
         contentContainerStyle={styles.list}
         ListHeaderComponent={
           <View style={styles.totalCard}>
@@ -186,6 +213,17 @@ function BillStatusScreen({ route, navigation }: Props) {
             <Text style={[typography.bodySmall, styles.paidBySubtitle]}>
               {t('viewReceipt.paidByAndDate', { payerName, date })}
             </Text>
+            {!!bill.lineItems?.length && (
+              <View style={{ alignSelf: 'stretch', marginTop: 14 }}>
+                <Text style={[typography.labelMedium, { color: Colors.text, marginBottom: 8 }]}>{t('billStatus.itemsHeading')}</Text>
+                {bill.lineItems.map((it, idx) => (
+                  <View key={it.name + '-' + idx} style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <Text style={[typography.bodySmall, { color: Colors.textSecondary, flex: 1 }]}>{it.qty > 1 ? it.qty + '× ' + it.name : it.name}</Text>
+                    <Text style={[typography.bodySmall, { color: Colors.text }]}>{formatCurrency(it.unitPrice * (it.qty || 1), bill.currency)}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
             <View style={styles.progressTrack}>
               <View style={[styles.progressFill, { width: `${Math.min(100, progress * 100)}%` }]} />
             </View>
@@ -218,9 +256,9 @@ function BillStatusScreen({ route, navigation }: Props) {
             </TouchableOpacity>
           )}
           {initiatedShares.length > 0 && (
-            <TouchableOpacity style={styles.markReceivedBtn} onPress={handleMarkReceived}>
-              <Text style={[typography.labelLarge, styles.markReceivedText]}>{t('billStatus.markReceivedButton')}</Text>
-            </TouchableOpacity>
+            <Text style={[typography.bodySmall, { color: Colors.textSecondary, flex: 1 }]}>
+              {t('billStatus.confirmThisPayment')}
+            </Text>
           )}
         </View>
       )}

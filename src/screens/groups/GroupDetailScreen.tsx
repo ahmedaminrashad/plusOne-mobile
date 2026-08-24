@@ -13,7 +13,7 @@ import {
   Platform,
 } from 'react-native';
 import { AppScreenProps } from '../../types/navigation';
-import { useGetGroupMembersQuery, useRemoveMemberMutation } from '../../store/api/groupsApi';
+import { useGetGroupMembersQuery, useRemoveMemberMutation, useUpdateGroupMutation, useDeleteGroupMutation, useUpdateMemberRoleMutation } from '../../store/api/groupsApi';
 import { useGetGroupBillsQuery, useDeleteBillMutation } from '../../store/api/billsApi';
 import { useGetBillSharesQuery } from '../../store/api/sharesApi';
 import { GroupMember, Bill } from '../../types/models';
@@ -26,7 +26,7 @@ import { useGetMeQuery } from '../../store/api/usersApi';
 import { formatDate, formatCurrency, resolveAssetUrl } from '../../utils/format';
 import GroupChatPane from './GroupChatPane';
 import GroupLedgerScreen from './GroupLedgerScreen';
-import { ChevronLeftIcon, TrashIcon, ReceiptIcon } from '../../components/icons';
+import { ChevronLeftIcon, TrashIcon, ReceiptIcon, EditIcon } from '../../components/icons';
 
 type Props = AppScreenProps<'GroupDetail'>;
 type Tab = 'chat' | 'bills' | 'ledger' | 'members';
@@ -42,11 +42,13 @@ function MemberRow({
   isAdmin,
   isSelf,
   onRemove,
+  onMakeAdmin,
 }: {
   member: GroupMember;
   isAdmin: boolean;
   isSelf: boolean;
   onRemove: () => void;
+  onMakeAdmin: () => void;
 }) {
   const { t } = useTranslation('groups');
   const typography = useTypography();
@@ -68,9 +70,16 @@ function MemberRow({
         <Text style={[typography.bodySmall, styles.memberPhone]}>{member.user?.phone ?? member.pendingPhone ?? ''}</Text>
       </View>
       {isAdmin && !isSelf && (
-        <TouchableOpacity onPress={onRemove} style={styles.removeBtn}>
-          <Text style={[typography.labelMedium, styles.removeText]}>{t('groupDetail.removeAction')}</Text>
-        </TouchableOpacity>
+        <View style={{ alignItems: 'flex-end', gap: 6 }}>
+          {member.role !== 'admin' && member.status === 'active' && (
+            <TouchableOpacity onPress={onMakeAdmin}>
+              <Text style={[typography.labelMedium, { color: Colors.primary }]}>{t('groupDetail.makeAdminAction')}</Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity onPress={onRemove} style={styles.removeBtn}>
+            <Text style={[typography.labelMedium, styles.removeText]}>{t('groupDetail.removeAction')}</Text>
+          </TouchableOpacity>
+        </View>
       )}
     </View>
   );
@@ -183,6 +192,9 @@ function GroupDetailScreen({ route, navigation }: Props) {
   });
   const [removeMember] = useRemoveMemberMutation();
   const [deleteBill] = useDeleteBillMutation();
+  const [updateGroup] = useUpdateGroupMutation();
+  const [deleteGroup] = useDeleteGroupMutation();
+  const [updateMemberRole] = useUpdateMemberRoleMutation();
   const { data: me } = useGetMeQuery();
 
   const activeMembers = useMemo(() => members?.filter((m) => m.status === 'active') ?? [], [members]);
@@ -261,6 +273,15 @@ function GroupDetailScreen({ route, navigation }: Props) {
         isAdmin={isAdmin}
         isSelf={item.userId === me?.id}
         onRemove={() => handleRemove(item)}
+        onMakeAdmin={() => {
+          Alert.alert(t('groupDetail.makeAdminTitle', { name: item.user?.displayName ?? item.pendingPhone }), t('groupDetail.makeAdminMessage'), [
+            { text: t('common:cancel'), style: 'cancel' },
+            { text: t('groupDetail.makeAdminAction'), onPress: async () => {
+              try { await updateMemberRole({ groupId, memberId: item.id, role: 'admin' }).unwrap(); }
+              catch { Alert.alert(t('common:error'), t('groupDetail.makeAdminFailed')); }
+            }},
+          ]);
+        }}
       />
     ),
     [isAdmin, me?.id, handleRemove],
@@ -310,6 +331,43 @@ function GroupDetailScreen({ route, navigation }: Props) {
               </View>
             )}
           </View>
+          {isAdmin && (
+            <TouchableOpacity
+              onPress={() => {
+                Alert.alert(groupName, undefined, [
+                  { text: t('groupDetail.renameAction'), onPress: () => {
+                    if (Platform.OS === 'ios') {
+                      Alert.prompt(t('groupDetail.renameTitle'), undefined, async (value) => {
+                        const name = (value || '').trim();
+                        if (!name) return;
+                        try { await updateGroup({ groupId, name }).unwrap(); }
+                        catch { Alert.alert(t('common:error'), t('groupDetail.renameFailed')); }
+                      }, 'plain-text', groupName);
+                    } else {
+                      Alert.alert(t('groupDetail.renameTitle'), t('groupDetail.renamePlaceholder'));
+                    }
+                  }},
+                  { text: t('groupDetail.deleteGroupAction'), style: 'destructive', onPress: () => {
+                    Alert.alert(t('groupDetail.deleteGroupTitle'), t('groupDetail.deleteGroupMessage'), [
+                      { text: t('common:cancel'), style: 'cancel' },
+                      { text: t('common:delete'), style: 'destructive', onPress: async () => {
+                        try {
+                          await deleteGroup(groupId).unwrap();
+                          navigation.goBack();
+                        } catch {
+                          Alert.alert(t('common:error'), t('groupDetail.deleteGroupFailed'));
+                        }
+                      }},
+                    ]);
+                  }},
+                  { text: t('common:cancel'), style: 'cancel' },
+                ]);
+              }}
+              hitSlop={8}
+              style={{ marginLeft: 8 }}>
+              <EditIcon size={18} color={Colors.text} />
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Segmented tab control */}

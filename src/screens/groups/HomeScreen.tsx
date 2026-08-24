@@ -58,6 +58,19 @@ function HomeScreen({ navigation }: Props) {
     setBalances((prev) => (prev[groupId] === net ? prev : { ...prev, [groupId]: net }));
   }, []);
 
+  useEffect(() => {
+    const ids = new Set((groups ?? []).map((g) => g.id));
+    setBalances((prev) => {
+      let changed = false;
+      const next: Record<string, number> = {};
+      for (const [id, net] of Object.entries(prev)) {
+        if (ids.has(id)) next[id] = net;
+        else changed = true;
+      }
+      return changed ? next : prev;
+    });
+  }, [groups]);
+
   const { owed, owe } = useMemo(() => {
     let owedTotal = 0;
     let oweTotal = 0;
@@ -92,7 +105,9 @@ function HomeScreen({ navigation }: Props) {
 
   const firstName = me?.displayName?.split(' ')[0];
   const greeting = firstName ? t('home.greetingWithName', { name: firstName }) : t('home.greeting');
-  const previewGroups = (groups ?? []).slice(0, PREVIEW_COUNT);
+  const previewGroups = [...(groups ?? [])]
+    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+    .slice(0, PREVIEW_COUNT);
 
   const renderEmpty = () => (
     <View style={styles.empty}>
@@ -170,7 +185,10 @@ function HomeScreen({ navigation }: Props) {
             </View>
 
             <View style={styles.sectionHeader}>
-              <Text style={[typography.headingMedium, styles.sectionTitle]}>{t('home.yourGroups')}</Text>
+              <View>
+                <Text style={[typography.headingMedium, styles.sectionTitle]}>{t('home.yourGroups')}</Text>
+                <Text style={[typography.bodySmall, { color: Colors.textSecondary, marginTop: 2 }]}>{t('home.groupsSubtitle')}</Text>
+              </View>
               <TouchableOpacity onPress={() => navigation.navigate('AllGroups')}>
                 <Text style={[typography.labelMedium, styles.viewAll]}>{t('home.viewAll')}</Text>
               </TouchableOpacity>

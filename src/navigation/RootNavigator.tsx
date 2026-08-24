@@ -47,7 +47,7 @@ export default function RootNavigator() {
   // short-lived, so re-verify it against the backend on every app open. If it's expired
   // and the refresh (handled inside baseApi's reauth wrapper) fails, clearAuth() flips
   // isAuthenticated to false and this redirects to the login stack below.
-  const { isFetching: verifyingSession } = useGetMeQuery(undefined, {
+  const { isLoading: verifyingSession } = useGetMeQuery(undefined, {
     skip: !tokensRestored || !isAuthenticated,
   });
 
@@ -85,6 +85,15 @@ export default function RootNavigator() {
     } else if (data.type === 'share_assigned' && data.groupId && data.billId) {
       nav.navigate('Home', {
         screen: 'PayShare',
+        params: { groupId: data.groupId, groupName: data.groupName ?? '', billId: data.billId },
+      });
+    } else if (
+      (data.type === 'share_initiated' || data.type === 'share_settled' || data.type === 'reminder') &&
+      data.groupId &&
+      data.billId
+    ) {
+      nav.navigate('Home', {
+        screen: 'BillStatus',
         params: { groupId: data.groupId, groupName: data.groupName ?? '', billId: data.billId },
       });
     }

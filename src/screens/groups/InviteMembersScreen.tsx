@@ -8,6 +8,7 @@ import {
   FlatList,
   TouchableOpacity,
   Alert,
+  Linking,
 } from 'react-native';
 import { AppScreenProps } from '../../types/navigation';
 import Button from '../../components/common/Button';
@@ -19,6 +20,7 @@ import { useTypography } from '../../hooks/useTypography';
 import { CloseIcon, PeopleIcon } from '../../components/icons';
 import { isValidPhone, formatPhone } from '../../utils/validation';
 import { useInviteMembersMutation } from '../../store/api/groupsApi';
+import { useGetMyCircleQuery } from '../../store/api/friendsApi';
 import { DeviceContact, requestContactsPermission } from '../../utils/contacts';
 
 type Props = AppScreenProps<'InviteMembers'>;
@@ -34,6 +36,7 @@ function InviteMembersScreen({ route, navigation }: Props) {
   const [pickerOpen, setPickerOpen] = useState(false);
 
   const [inviteMembers, { isLoading }] = useInviteMembersMutation();
+  const { data: circle } = useGetMyCircleQuery();
 
   const handleAddPhone = useCallback(() => {
     const formatted = formatPhone(phone.trim());
@@ -110,12 +113,48 @@ function InviteMembersScreen({ route, navigation }: Props) {
           onPress={async () => {
             const granted = await requestContactsPermission();
             if (granted) setPickerOpen(true);
+            else {
+              Alert.alert(
+                t('inviteMembers.fromContacts', { defaultValue: 'Add from contacts' }),
+                t('inviteMembers.contactsDenied', { defaultValue: 'Allow contacts access in Settings, or enter a phone number instead.' }),
+                [
+                  { text: t('common:cancel'), style: 'cancel' },
+                  { text: t('common:openSettings'), onPress: () => { void Linking.openSettings(); } },
+                ],
+              );
+            }
           }}
           activeOpacity={0.8}>
           <PeopleIcon size={18} color={Colors.primary} />
           <Text style={[typography.labelLarge, styles.contactsBtnText]}>
             {t('inviteMembers.fromContacts', { defaultValue: 'Add from contacts' })}
           </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.contactsBtn, { marginTop: 8 }]}
+          onPress={() => {
+            const friends = circle ?? [];
+            if (!friends.length) {
+              Alert.alert(t('inviteMembers.fromCircle'), t('inviteMembers.circleEmpty'));
+              return;
+            }
+            setSelected((prev) => {
+              const next = [...prev];
+              const names = { ...contactNames };
+              for (const f of friends) {
+                const phoneVal = f.friend?.phone ?? f.pendingPhone;
+                if (!phoneVal) continue;
+                const formatted = formatPhone(phoneVal);
+                if (!next.includes(formatted)) next.push(formatted);
+                names[formatted] = f.friend?.displayName ?? f.displayName ?? formatted;
+              }
+              setContactNames(names);
+              return next;
+            });
+          }}
+          activeOpacity={0.8}>
+          <PeopleIcon size={18} color={Colors.primary} />
+          <Text style={[typography.labelLarge, styles.contactsBtnText]}>{t('inviteMembers.fromCircle')}</Text>
         </TouchableOpacity>
 
         <View style={styles.inputRow}>

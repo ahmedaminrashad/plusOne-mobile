@@ -9,6 +9,7 @@ import {
   PermissionsAndroid,
   Alert,
   ActivityIndicator,
+  Linking,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Camera } from 'react-native-camera-kit';
@@ -47,7 +48,14 @@ function QRScannerScreen({ route, navigation }: Props) {
         setHasPermission(granted);
         if (!granted) handlePermissionDenied();
       } else {
-        setHasPermission(true);
+        try {
+          const CameraKit = require('react-native-camera-kit');
+          const granted = await CameraKit.Camera.requestDeviceCameraAuthorization();
+          setHasPermission(!!granted);
+          if (!granted) handlePermissionDenied();
+        } catch {
+          setHasPermission(true);
+        }
       }
     })();
   }, []);
@@ -58,6 +66,7 @@ function QRScannerScreen({ route, navigation }: Props) {
       t('qrScanner.permissionDeniedMessage'),
       [
         { text: t('qrScanner.manualEntryButton'), onPress: () => navigation.replace('AddBill', { groupId, groupName }) },
+        { text: t('common:openSettings'), onPress: () => { void Linking.openSettings(); } },
         { text: t('common:cancel'), onPress: () => navigation.goBack() },
       ],
     );

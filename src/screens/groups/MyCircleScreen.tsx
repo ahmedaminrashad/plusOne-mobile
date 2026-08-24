@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Modal,
   Alert,
+  Linking,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { AppScreenProps } from '../../types/navigation';
@@ -139,7 +140,10 @@ function MyCircleScreen({ navigation }: Props) {
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} hitSlop={12}>
           <ChevronLeftIcon size={20} color={Colors.text} />
         </TouchableOpacity>
-        <Text style={[typography.headingLarge, styles.title]}>{t('navigation:appStack.myCircleTitle')}</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={[typography.headingLarge, styles.title]}>{t('navigation:appStack.myCircleTitle')}</Text>
+          <Text style={[typography.bodySmall, { color: Colors.textSecondary }]}>{t('myCircle.screenSubtitle')}</Text>
+        </View>
         <View style={styles.countPill}>
           <Text style={[typography.labelMedium, styles.countPillText]}>{t('myCircle.peopleCount', { count: circle?.length ?? 0 })}</Text>
         </View>
@@ -170,6 +174,16 @@ function MyCircleScreen({ navigation }: Props) {
             onPress={async () => {
               const granted = await requestContactsPermission();
               if (granted) setContactPickerOpen(true);
+              else {
+                Alert.alert(
+                  t('myCircle.fromContacts', { defaultValue: 'Contacts' }),
+                  t('myCircle.contactsDenied', { defaultValue: 'Allow contacts access in Settings, or add someone by phone.' }),
+                  [
+                    { text: t('common:cancel'), style: 'cancel' },
+                    { text: t('common:openSettings'), onPress: () => { void Linking.openSettings(); } },
+                  ],
+                );
+              }
             }}>
             <Text style={[typography.labelMedium, styles.growBtnOutlineText]}>
               {t('myCircle.fromContacts', { defaultValue: 'Contacts' })}

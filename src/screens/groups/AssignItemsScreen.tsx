@@ -141,7 +141,7 @@ function AssignItemsScreen({ route, navigation }: Props) {
       const mapped = parsed.items.map((it, idx) => ({
         id: it.id ?? String(idx),
         name: it.name,
-        price: Number(it.price),
+        price: Math.round(Number(it.price) * 100) / 100,
         qty: Number(it.qty ?? 1),
         claimedBy: [],
       }));
@@ -305,7 +305,8 @@ function AssignItemsScreen({ route, navigation }: Props) {
           t('receiptSplit.unclaimedItemsMessage', { count: unclaimedItems.length }),
           [
             { text: t('receiptSplit.reviewButton'), style: 'cancel' },
-            { text: t('common:continue'), onPress: doSave },
+            { text: t('assignItems.skipButton'), onPress: doSave },
+            
           ],
         );
         return;
@@ -427,6 +428,11 @@ function AssignItemsScreen({ route, navigation }: Props) {
         )}
 
         <Button title={t('assignItems.saveButton')} onPress={handleSave} loading={isSaving} style={styles.saveBtn} />
+        {mode === 'byItem' && (
+          <TouchableOpacity onPress={doSave} style={{ alignItems: 'center', marginTop: 10 }}>
+            <Text style={[typography.labelMedium, { color: Colors.primary }]}>{t('assignItems.skipButton')}</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <Modal visible={payerModalVisible} transparent animationType="slide" onRequestClose={() => setPayerModalVisible(false)}>
@@ -552,7 +558,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surfaceElevated,
     minWidth: 54,
   },
-  chipSelected: { backgroundColor: Colors.tint },
+  chipSelected: { backgroundColor: Colors.primary },
   chipName: { color: Colors.textSecondary },
   chipNameSelected: { color: Colors.primary },
 

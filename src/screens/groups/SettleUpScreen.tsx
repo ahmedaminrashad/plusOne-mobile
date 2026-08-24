@@ -71,7 +71,7 @@ function SettleUpScreen({ navigation }: Props) {
           <ChevronLeftIcon size={20} color={Colors.text} />
         </TouchableOpacity>
         <Text style={[typography.headingLarge, styles.title]}>{t('navigation:appStack.settleUpTitle')}</Text>
-        {!isEmpty && net !== 0 && (
+        {false && !isEmpty && net !== 0 && (
           <View style={[styles.netPill, net >= 0 ? styles.netPillPositive : styles.netPillNegative]}>
             <Text style={[typography.labelMedium, net >= 0 ? styles.netPillPositiveText : styles.netPillNegativeText]}>
               {t(net >= 0 ? 'settleUp.netPositive' : 'settleUp.netNegative', { amount: Math.round(Math.abs(net) / 100) })}

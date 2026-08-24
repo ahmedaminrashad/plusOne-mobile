@@ -297,7 +297,7 @@ function CreateBillScreen({ route, navigation }: Props) {
                   placeholder={t('createBill.pricePlaceholder')}
                   placeholderTextColor={Colors.textMuted}
                   keyboardType="decimal-pad"
-                  textAlign={inputAlign}
+                  textAlign="right"
                 />
                 <Text style={styles.multiplySign}>×</Text>
                 <View style={styles.qtyChip}>

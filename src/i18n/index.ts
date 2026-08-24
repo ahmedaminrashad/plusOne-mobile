@@ -19,7 +19,7 @@ import enNavigation from './locales/en/navigation.json';
 
 export type AppLanguage = 'ar' | 'en';
 
-export const DEFAULT_LANGUAGE: AppLanguage = 'ar';
+export const DEFAULT_LANGUAGE: AppLanguage = 'en';
 
 i18n.use(initReactI18next).init({
   compatibilityJSON: 'v4',
