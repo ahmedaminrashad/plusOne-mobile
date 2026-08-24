@@ -70,6 +70,7 @@ function MyLedgerScreen({ navigation }: Props) {
   const outingsThisMonth = rows.reduce((sum, r) => sum + r.outingsCount, 0);
   const owedToMe = rows.filter((r) => r.netBalance > 0).reduce((sum, r) => sum + r.netBalance, 0);
   const iOwe = rows.filter((r) => r.netBalance < 0).reduce((sum, r) => sum - r.netBalance, 0);
+  const net = owedToMe - iOwe;
 
   return (
     <SafeScreen style={styles.container}>
@@ -120,6 +121,14 @@ function MyLedgerScreen({ navigation }: Props) {
                 <View style={[styles.statCard, styles.statCardOwe]}>
                   <Text style={[typography.labelMedium, styles.statLabelOwe]}>{t('myLedger.youOwe')}</Text>
                   <Text style={[typography.labelLarge, styles.statValueOwe]}>{formatCurrency(iOwe / 100)}</Text>
+                </View>
+                <View style={[styles.statCard, net >= 0 ? styles.statCardOwed : styles.statCardOwe]}>
+                  <Text style={[typography.labelMedium, net >= 0 ? styles.statLabelOwed : styles.statLabelOwe]}>
+                    {t('groupLedger.balance')}
+                  </Text>
+                  <Text style={[typography.labelLarge, net >= 0 ? styles.statValueOwed : styles.statValueOwe]}>
+                    {net >= 0 ? '+' : '−'} {formatCurrency(Math.abs(net) / 100)}
+                  </Text>
                 </View>
               </View>
               <Text style={[typography.labelMedium, styles.sectionHeader]}>{t('myLedger.byGroupHeader')}</Text>
@@ -201,8 +210,8 @@ const styles = StyleSheet.create({
   heroLabel: { color: 'rgba(255,255,255,0.75)', letterSpacing: 0.5 },
   heroAmount: { color: '#fff', marginTop: 6 },
 
-  statsRow: { flexDirection: 'row', gap: 12, marginHorizontal: 16, marginBottom: 8 },
-  statCard: { flex: 1, borderRadius: Radius.xl, padding: 14 },
+  statsRow: { flexDirection: 'row', gap: 10, marginHorizontal: 16, marginBottom: 8 },
+  statCard: { flex: 1, borderRadius: Radius.xl, padding: 12 },
   statCardOwed: { backgroundColor: Colors.successTint },
   statCardOwe: { backgroundColor: Colors.dangerTint },
   statLabelOwed: { color: Colors.secondaryDark, marginBottom: 2 },
