@@ -242,7 +242,7 @@ function CreateBillScreen({ route, navigation }: Props) {
   );
 
   return (
-    <SafeScreen style={styles.container}>
+    <SafeScreen style={styles.container} edges={[]}>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         {isPreview && (
           <View style={styles.previewBanner}>
@@ -464,7 +464,7 @@ export default memo(CreateBillScreen);
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-  scroll: { padding: 20, paddingBottom: 48 },
+  scroll: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 48 },
 
   previewBanner: {
     backgroundColor: Colors.tint,
