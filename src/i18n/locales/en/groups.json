@@ -85,13 +85,17 @@
     "outingsLabel": "Outings",
     "youPaid": "You paid",
     "yourFairShare": "Your fair share",
+    "youAreOwed": "Owed to you",
+    "youOwe": "You owe",
     "balance": "Balance",
     "settledThisMonth": "Settled this month",
-    "settledCheckmark": "settled ✓"
+    "receiptsHeader": "Receipts",
+    "viewAll": "View all",
+    "settledCheckmark": "settled ✓",
+    "partiallySettled": "partially settled",
+    "openStatus": "open"
   },
   "settleUp": {
-    "netPositive": "Net +{{amount}}",
-    "netNegative": "Net −{{amount}}",
     "heroPositive": "+ {{amount}}",
     "heroNegative": "− {{amount}}",
     "ifEveryoneSettles": "If everyone settles today",
@@ -204,7 +208,10 @@
     "phonePlaceholder": "+20 10 XXXX XXXX",
     "sendCta": "Send",
     "invitationsWord": "invitation(s)",
-    "fromContacts": "Add from contacts"
+    "fromContacts": "Add from contacts",
+    "fromCircle": "Add from Circle",
+    "fromCircleTitle": "Your Circle",
+    "fromCircleEmpty": "Your Circle is empty. Add people from My Circle first."
   },
   "invitations": {
     "invitedToJoin": "You've been invited to join",
@@ -240,6 +247,8 @@
   "selectGroupForBill": {
     "title": "Assign to group",
     "subtitle": "Choose which group this receipt belongs to",
+    "titleNew": "Which group?",
+    "subtitleNew": "Pick the group this receipt will be shared with",
     "membersCount": "{{count}} members",
     "loadError": "Couldn't load groups. Tap to retry.",
     "emptyTitle": "No groups yet",

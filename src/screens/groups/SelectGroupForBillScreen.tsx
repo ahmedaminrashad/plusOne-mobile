@@ -25,16 +25,21 @@ type Props = AppScreenProps<'SelectGroupForBill'>;
 function SelectGroupForBillScreen({ route, navigation }: Props) {
   const { t } = useTranslation('groups');
   const typography = useTypography();
-  const { receiptJson } = route.params;
+  const receiptJson = route.params?.receiptJson;
+  const pickingForNew = !receiptJson;
   const { data: groups, isLoading, isError, refetch } = useGetGroupsQuery();
 
   const handlePress = useCallback(
     (group: Group) => {
-      navigation.replace('AssignItems', {
-        groupId: group.id,
-        groupName: group.name,
-        receiptJson,
-      });
+      if (receiptJson) {
+        navigation.replace('AssignItems', {
+          groupId: group.id,
+          groupName: group.name,
+          receiptJson,
+        });
+        return;
+      }
+      navigation.navigate('AddBillChooser', { groupId: group.id, groupName: group.name });
     },
     [navigation, receiptJson],
   );
@@ -54,8 +59,12 @@ function SelectGroupForBillScreen({ route, navigation }: Props) {
           <ChevronLeftIcon size={20} color={Colors.text} />
         </TouchableOpacity>
         <View style={styles.headerText}>
-          <Text style={[typography.headingLarge, styles.title]}>{t('selectGroupForBill.title')}</Text>
-          <Text style={[typography.bodyMedium, styles.subtitle]}>{t('selectGroupForBill.subtitle')}</Text>
+          <Text style={[typography.headingLarge, styles.title]}>
+            {t(pickingForNew ? 'selectGroupForBill.titleNew' : 'selectGroupForBill.title')}
+          </Text>
+          <Text style={[typography.bodyMedium, styles.subtitle]}>
+            {t(pickingForNew ? 'selectGroupForBill.subtitleNew' : 'selectGroupForBill.subtitle')}
+          </Text>
         </View>
       </View>
 
@@ -90,10 +99,14 @@ function SelectGroupForBillScreen({ route, navigation }: Props) {
             <View style={styles.emptyIcon}>
               <ReceiptIcon size={40} color={Colors.textMuted} />
             </View>
-            <Text style={[typography.headingSmall, styles.emptyTitle]}>{t('selectGroupForBill.emptyTitle')}</Text>
-            <Text style={[typography.bodyMedium, styles.emptySubtitle]}>{t('selectGroupForBill.emptySubtitle')}</Text>
+            <Text style={[typography.headingSmall, styles.emptyTitle]}>
+              {t(pickingForNew ? 'home.emptyTitle' : 'selectGroupForBill.emptyTitle')}
+            </Text>
+            <Text style={[typography.bodyMedium, styles.emptySubtitle]}>
+              {t(pickingForNew ? 'home.emptySubtitle' : 'selectGroupForBill.emptySubtitle')}
+            </Text>
             <Button
-              title={t('selectGroupForBill.createGroupCta')}
+              title={t(pickingForNew ? 'home.createGroupCta' : 'selectGroupForBill.createGroupCta')}
               onPress={() => navigation.navigate('CreateGroup')}
               style={styles.emptyCta}
             />

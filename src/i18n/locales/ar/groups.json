@@ -85,13 +85,17 @@
     "outingsLabel": "خرجات",
     "youPaid": "دفعت",
     "yourFairShare": "نصيبك العادل",
+    "youAreOwed": "لك",
+    "youOwe": "عليك",
     "balance": "الرصيد",
     "settledThisMonth": "متسوّى الشهر ده",
-    "settledCheckmark": "متسواة ✓"
+    "receiptsHeader": "الإيصالات",
+    "viewAll": "عرض الكل",
+    "settledCheckmark": "متسواة ✓",
+    "partiallySettled": "متسوّى جزئياً",
+    "openStatus": "مفتوح"
   },
   "settleUp": {
-    "netPositive": "صافي +{{amount}}",
-    "netNegative": "صافي −{{amount}}",
     "heroPositive": "+ {{amount}}",
     "heroNegative": "− {{amount}}",
     "ifEveryoneSettles": "لو الكل سوّى النهاردة",
@@ -204,7 +208,10 @@
     "phonePlaceholder": "+20 10 XXXX XXXX",
     "sendCta": "إرسال",
     "invitationsWord": "دعوة",
-    "fromContacts": "إضافة من جهات الاتصال"
+    "fromContacts": "إضافة من جهات الاتصال",
+    "fromCircle": "إضافة من الدائرة",
+    "fromCircleTitle": "دائرتك",
+    "fromCircleEmpty": "دائرتك فاضية. ضيف ناس من دائرة أولاً."
   },
   "invitations": {
     "invitedToJoin": "تمت دعوتك للانضمام",
@@ -240,6 +247,8 @@
   "selectGroupForBill": {
     "title": "تعيين لمجموعة",
     "subtitle": "اختَر المجموعة اللي هتتحسب عليها الإيصال",
+    "titleNew": "أنهي مجموعة؟",
+    "subtitleNew": "اختَر المجموعة اللي هتشارك الإيصال معاها",
     "membersCount": "{{count}} أعضاء",
     "loadError": "تعذر تحميل المجموعات. اضغط للمحاولة.",
     "emptyTitle": "لا توجد مجموعات بعد",

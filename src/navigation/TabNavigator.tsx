@@ -57,7 +57,7 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
 
   const handleAddBill = useCallback(() => {
     setMenuOpen(false);
-    navigation.navigate('Home', { screen: 'AddBillChooser' } as any);
+    navigation.navigate('Home', { screen: 'SelectGroupForBill' } as any);
   }, [navigation]);
 
   const handleAddPlusOne = useCallback(() => {

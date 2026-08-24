@@ -18,8 +18,8 @@ export type AppStackParamList = {
   InviteMembers: { groupId: string };
   Chat: { groupId: string; groupName: string; sharedImageUri?: string };
   SelectGroupToShare: { imageUri: string };
-  /** Pick a group after the bill/receipt is ready (FAB flow). */
-  SelectGroupForBill: { receiptJson: string };
+  /** Pick a group for a new receipt, or after the bill/receipt is ready. */
+  SelectGroupForBill: { receiptJson?: string } | undefined;
   AddBillChooser: { groupId?: string; groupName?: string };
   AddBill: { groupId?: string; groupName?: string; prefilledData?: PrefilledBillData };
   QRScanner: { groupId?: string; groupName?: string };

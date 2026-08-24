@@ -99,13 +99,6 @@ function SettleUpScreen({ navigation }: Props) {
           <ChevronLeftIcon size={20} color={Colors.text} />
         </TouchableOpacity>
         <Text style={[typography.headingLarge, styles.title]}>{t('navigation:appStack.settleUpTitle')}</Text>
-        {!isEmpty && net !== 0 && (
-          <View style={[styles.netPill, net >= 0 ? styles.netPillPositive : styles.netPillNegative]}>
-            <Text style={[typography.labelMedium, net >= 0 ? styles.netPillPositiveText : styles.netPillNegativeText]}>
-              {t(net >= 0 ? 'settleUp.netPositive' : 'settleUp.netNegative', { amount: formatCurrency(Math.abs(net) / 100) })}
-            </Text>
-          </View>
-        )}
       </View>
 
       {isEmpty ? (
@@ -199,11 +192,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
   },
   title: { color: Colors.text, flex: 1 },
-  netPill: { borderRadius: Radius.pill, paddingHorizontal: 10, paddingVertical: 4 },
-  netPillPositive: { backgroundColor: Colors.successTint },
-  netPillNegative: { backgroundColor: Colors.dangerTint },
-  netPillPositiveText: { color: Colors.secondaryDark },
-  netPillNegativeText: { color: Colors.danger },
 
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 8 },
   emptyTitle: { color: Colors.text },

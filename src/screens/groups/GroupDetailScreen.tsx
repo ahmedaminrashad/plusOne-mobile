@@ -468,7 +468,17 @@ function GroupDetailScreen({ route, navigation }: Props) {
         )}
 
         {/* ── Tab (ledger) tab ─────────────────────────────── */}
-        {activeTab === 'ledger' && <GroupLedgerScreen groupId={groupId} />}
+        {activeTab === 'ledger' && (
+          <View style={styles.flex}>
+            <GroupLedgerScreen
+              groupId={groupId}
+              onViewAllReceipts={() => setActiveTab('bills')}
+              onOpenBill={(billId) =>
+                navigation.navigate('BillStatus', { groupId, groupName: displayName, billId })
+              }
+            />
+          </View>
+        )}
 
         {/* ── Members tab ──────────────────────────────────── */}
         {activeTab === 'members' && (

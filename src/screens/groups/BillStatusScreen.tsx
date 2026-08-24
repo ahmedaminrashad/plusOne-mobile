@@ -146,7 +146,6 @@ function BillStatusScreen({ route, navigation }: Props) {
   );
   const paidCount = activeShares.filter((s) => s.status === 'settled').length;
   const pendingShares = activeShares.filter((s) => s.status === 'pending' || s.status === 'failed');
-  const initiatedShares = activeShares.filter((s) => s.status === 'initiated');
   const collected = activeShares.filter((s) => s.status === 'settled').reduce((sum, s) => sum + s.amountPiastres, 0);
   const owed = activeShares.reduce((sum, s) => sum + s.amountPiastres, 0);
   const progress = owed > 0 ? collected / owed : 0;
@@ -170,14 +169,6 @@ function BillStatusScreen({ route, navigation }: Props) {
       Alert.alert(t('common:error'), t('billStatus.confirmFailed'));
     }
   }, [confirmShare, t]);
-
-  const handleMarkReceived = useCallback(async () => {
-    try {
-      await Promise.all(initiatedShares.map((s) => confirmShare(s.id).unwrap()));
-    } catch {
-      Alert.alert(t('common:error'), t('billStatus.confirmFailed'));
-    }
-  }, [initiatedShares, confirmShare, t]);
 
   if (isLoading || !bill) {
     return (
@@ -283,20 +274,13 @@ function BillStatusScreen({ route, navigation }: Props) {
         </View>
       )}
 
-      {isPayer && (pendingShares.length > 0 || initiatedShares.length > 0) && (
+      {isPayer && pendingShares.length > 0 && (
         <View style={styles.bottomBar}>
-          {pendingShares.length > 0 && (
-            <TouchableOpacity style={styles.remindBtn} onPress={handleRemind} disabled={isReminding}>
-              <Text style={[typography.labelLarge, styles.remindBtnText]}>
-                {t('billStatus.remindButton', { count: pendingShares.length })}
-              </Text>
-            </TouchableOpacity>
-          )}
-          {initiatedShares.length > 0 && (
-            <TouchableOpacity style={styles.markReceivedBtn} onPress={handleMarkReceived}>
-              <Text style={[typography.labelLarge, styles.markReceivedText]}>{t('billStatus.markReceivedButton')}</Text>
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity style={styles.remindBtn} onPress={handleRemind} disabled={isReminding}>
+            <Text style={[typography.labelLarge, styles.remindBtnText]}>
+              {t('billStatus.remindButton', { count: pendingShares.length })}
+            </Text>
+          </TouchableOpacity>
         </View>
       )}
     </SafeScreen>
