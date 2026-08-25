@@ -484,9 +484,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
     paddingHorizontal: 14,
-    paddingVertical: Platform.OS === 'ios' ? 13 : 10,
+    // bodyLarge lineHeight (24) is taller than fontSize (15). iOS UITextField
+    // puts that extra leading above the glyphs, so the caret sits on the bottom
+    // padding. Android EditText centers text, which is why it looked fine there.
+    paddingTop: 0,
+    paddingBottom: 0,
+    height: 48,
+    textAlignVertical: 'center',
     color: Colors.text,
     marginBottom: 12,
+    ...Platform.select({
+      ios: { lineHeight: 20 },
+      android: { includeFontPadding: false },
+    }),
   },
   flex1: { flex: 1, marginBottom: 0 },
 
