@@ -9,9 +9,8 @@ require Pod::Executable.execute_command('node', ['-p',
 platform :ios, '15.5'
 prepare_react_native_project!
 
-# Firebase Auth is Swift; static frameworks + modular headers are required.
-# https://rnfirebase.io/#altering-cocoapods-to-use-frameworks
-use_frameworks! :linkage => :static
+# Do not use use_frameworks! here — it wraps React-Core-prebuilt and floods
+# xcodebuild with errors. Firebase Auth only needs modular headers on its pods.
 $RNFirebaseAsStaticFramework = true
 
 target 'PlusOne' do
@@ -43,7 +42,6 @@ target 'PlusOne' do
       # :ccache_enabled => true
     )
 
-    # App Store / gym fails fast if Firebase (Swift) resource bundles try to sign.
     installer.pods_project.targets.each do |target|
       target.build_configurations.each do |config|
         config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.5'
