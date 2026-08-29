@@ -58,6 +58,7 @@ platform :ios do
     )
 
     ensure_push_notifications_capability
+    delete_app_store_profiles!(app_identifier: APP_IDENTIFIER)
 
     get_provisioning_profile(
       api_key: api_key,
@@ -198,28 +199,57 @@ platform :ios do
 
     bundle = Spaceship::ConnectAPI::BundleId.find(APP_IDENTIFIER)
     UI.user_error!(
-      "Bundle ID #{APP_IDENTIFIER} not found. Enable Push Notifications for this App ID in https://developer.apple.com/account/resources/identifiers/list"
+      "Bundle ID #{APP_IDENTIFIER} not found in App Store Connect."
     ) unless bundle
 
     caps = bundle.get_capabilities || []
-    already = caps.any? do |cap|
-      type = cap.respond_to?(:capability_type) ? cap.capability_type.to_s : cap.to_s
-      type.include?("PUSH")
+    types = caps.map do |cap|
+      cap.respond_to?(:capability_type) ? cap.capability_type.to_s : cap.to_s
     end
+    UI.message("Bundle capabilities: #{types.join(', ')}")
 
-    if already
-      UI.success("Push Notifications already enabled on #{APP_IDENTIFIER}")
-    else
-      UI.message("Enabling Push Notifications on #{APP_IDENTIFIER}")
+    unless types.include?("PUSH_NOTIFICATIONS")
+      UI.message("Adding PUSH_NOTIFICATIONS on #{APP_IDENTIFIER} via App Store Connect API")
       begin
         bundle.create_capability(
           Spaceship::ConnectAPI::BundleIdCapability::Type::PUSH_NOTIFICATIONS
         )
       rescue => e
         UI.user_error!(
-          "Could not enable Push via API (#{e.message}). " \
-          "In Apple Developer → Identifiers → #{APP_IDENTIFIER}, enable Push Notifications, Save, then re-run this workflow."
+          "Push is checked in the Developer portal but the App Store profile still has no aps-environment. " \
+          "Delete the App Store provisioning profile for #{APP_IDENTIFIER} in " \
+          "https://developer.apple.com/account/resources/profiles/list then re-run. " \
+          "API error: #{e.message}"
         )
+      end
+    end
+  end
+
+  # sigh --force often reuses a profile created before Push was on the bundle.
+  # Delete App Store profiles for this id so the next sigh run is a clean create.
+  private_lane :delete_app_store_profiles! do |options|
+    identifier = options[:app_identifier]
+    require "spaceship"
+
+    token = Spaceship::ConnectAPI::Token.create(
+      key_id: ENV["APP_STORE_CONNECT_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
+      key: Base64.decode64(ENV["APP_STORE_CONNECT_API_KEY"])
+    )
+    Spaceship::ConnectAPI.token = token
+
+    profiles = Spaceship::ConnectAPI::Profile.all || []
+    profiles.each do |profile|
+      type = profile.respond_to?(:profile_type) ? profile.profile_type.to_s : ""
+      name = profile.respond_to?(:name) ? profile.name.to_s : ""
+      next unless type.include?("APP_STORE")
+      next unless name.include?(identifier)
+
+      UI.important("Deleting stale App Store profile '#{name}'")
+      begin
+        profile.delete!
+      rescue => e
+        UI.important("Could not delete #{name}: #{e.message}")
       end
     end
   end
