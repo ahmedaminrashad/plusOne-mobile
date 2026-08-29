@@ -27,6 +27,7 @@ import { useInputTextAlign } from '../../utils/rtl';
 import { useKeyboardInsetHeight } from '../../services/keyboardInsets';
 import i18n from '../../i18n';
 import { LockIcon, PlusIcon, CheckIcon } from '../../components/icons';
+import { isGhostMember } from '../../utils/ghost';
 
 type Props = AppScreenProps<'EditBillItems'>;
 
@@ -88,7 +89,7 @@ function MemberChip({
       style={[styles.chip, selected && styles.chipSelected]}
       onPress={onToggle}
       activeOpacity={0.7}>
-      <Avatar name={name} seed={id} size={26} />
+      <Avatar name={name} seed={id} size={26} ghost={isGhostMember(member)} uri={resolveAssetUrl(member.user?.photoUrl)} />
       <Text style={[typography.labelSmall, styles.chipName, selected && styles.chipNameSelected]} numberOfLines={1}>
         {name.split(' ')[0]}
       </Text>
@@ -488,7 +489,13 @@ function EditBillItemsScreen({ route, navigation }: Props) {
               const name = getMemberName(m);
               return (
                 <View key={m.id} style={styles.summaryRow}>
-                  <Avatar uri={resolveAssetUrl(m.user?.photoUrl)} name={name} seed={id} size={24} />
+                  <Avatar
+                    uri={resolveAssetUrl(m.user?.photoUrl)}
+                    name={name}
+                    seed={id}
+                    size={24}
+                    ghost={isGhostMember(m)}
+                  />
                   <Text style={[typography.bodyMedium, styles.summaryName]}>{name}</Text>
                   <Text style={[typography.labelLarge, styles.summaryAmount]}>{formatCurrency(memberTotals[id]!)}</Text>
                 </View>

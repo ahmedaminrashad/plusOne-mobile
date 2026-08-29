@@ -135,7 +135,13 @@ function SettleUpScreen({ navigation }: Props) {
               const { row, action } = item;
               return (
                 <View style={styles.row}>
-                  <Avatar name={row.counterpartName} seed={row.counterpartId ?? row.counterpartPhone} size={28} style={styles.avatarBorder} />
+                  <Avatar
+                    name={row.counterpartName}
+                    seed={row.counterpartId ?? row.counterpartPhone}
+                    size={28}
+                    style={styles.avatarBorder}
+                    ghost={!row.counterpartId}
+                  />
                   <View style={styles.rowInfo}>
                     <Text style={[typography.labelLarge, styles.rowName]}>{row.counterpartName}</Text>
                     <Text style={[typography.bodySmall, styles.rowGroup]}>{row.groupName}</Text>

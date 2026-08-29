@@ -10,6 +10,8 @@ interface Props {
   size?: number;
   style?: StyleProp<ViewStyle>;
   imageStyle?: ImageStyle;
+  /** Saffron +one mark for a ghost / +1 (not on the app yet). */
+  ghost?: boolean;
 }
 
 const HONORIFICS = new Set(['mr', 'mrs', 'ms', 'miss', 'dr', 'prof', 'sir', 'md']);
@@ -22,16 +24,36 @@ function initialFromName(name?: string | null): string {
   return letter ? letter.toUpperCase() : '?';
 }
 
-function Avatar({ uri, name, seed, size = 44, style, imageStyle }: Props) {
+function Avatar({ uri, name, seed, size = 44, style, imageStyle, ghost }: Props) {
   const initials = initialFromName(name);
 
   const typography = useTypography();
   const fontSize = size * 0.38;
   const containerStyle = [
     styles.placeholder,
-    { width: size, height: size, borderRadius: size / 2, backgroundColor: getAvatarColor(seed ?? name) },
+    {
+      width: size,
+      height: size,
+      borderRadius: size / 2,
+      backgroundColor: ghost ? Colors.surface : getAvatarColor(seed ?? name),
+    },
+    ghost && styles.ghost,
     style,
   ];
+
+  if (ghost) {
+    const mark = Math.max(12, size * 0.55);
+    return (
+      <View style={containerStyle}>
+        <Image
+          source={require('../../../assets/PlusOne.png')}
+          tintColor={Colors.accent}
+          resizeMode="contain"
+          style={{ width: mark, height: mark }}
+        />
+      </View>
+    );
+  }
 
   return (
     <View style={containerStyle}>
@@ -69,4 +91,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   initials: { color: Colors.textOnPrimary, textAlign: 'center' },
+  ghost: {
+    backgroundColor: Colors.surface,
+    borderWidth: 1.5,
+    borderColor: Colors.accent,
+  },
 });

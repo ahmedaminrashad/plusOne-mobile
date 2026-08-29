@@ -34,7 +34,7 @@ function ChatScreen({ route, navigation }: Props) {
   const visibleMembers = activeMembers.slice(0, VISIBLE_AVATARS);
   const overflowCount = activeMembers.length - visibleMembers.length;
   const memberNames = visibleMembers
-    .map((m) => m.user?.displayName?.split(' ')[0])
+    .map((m) => m.user?.displayName?.split(' ')[0] ?? m.pendingPhone)
     .filter(Boolean)
     .join(', ');
   const subtitle = overflowCount > 0 ? `${memberNames} +${overflowCount}` : memberNames;
@@ -56,9 +56,10 @@ function ChatScreen({ route, navigation }: Props) {
             <Avatar
               key={m.id}
               uri={resolveAssetUrl(m.user?.photoUrl)}
-              name={m.user?.displayName}
+              name={m.user?.displayName ?? m.pendingPhone}
               seed={m.userId ?? m.id}
               size={28}
+              ghost={!m.userId}
               style={[styles.headerAvatar, i > 0 && { marginLeft: -8 }]}
             />
           ))}

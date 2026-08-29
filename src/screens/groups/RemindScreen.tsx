@@ -114,7 +114,13 @@ function RemindScreen({ navigation }: Props) {
               const isSelected = selected.has(item.key);
               return (
                 <TouchableOpacity style={styles.row} onPress={() => toggleRow(item.key)}>
-                  <Avatar name={item.counterpartName} seed={item.counterpartId ?? item.counterpartPhone} size={28} style={styles.avatarBorder} />
+                  <Avatar
+                    name={item.counterpartName}
+                    seed={item.counterpartId ?? item.counterpartPhone}
+                    size={28}
+                    style={styles.avatarBorder}
+                    ghost={!item.counterpartId}
+                  />
                   <View style={styles.rowInfo}>
                     <Text style={[typography.labelLarge, styles.rowName]}>{item.counterpartName}</Text>
                     <Text style={[typography.bodySmall, styles.rowGroup]}>{item.groupName}</Text>

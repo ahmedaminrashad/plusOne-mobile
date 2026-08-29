@@ -76,7 +76,15 @@ export interface Bill {
   updatedAt: string;
 }
 
-export type ShareStatus = 'pending' | 'initiated' | 'settled' | 'cancelled' | 'failed';
+export type ShareStatus =
+  | 'pending'
+  | 'initiated'
+  | 'settled'
+  | 'cancelled'
+  | 'failed'
+  | 'link_sent'
+  | 'link_opened'
+  | 'pending_confirmation';
 export type ShareMethod = 'instapay' | 'cash';
 
 export interface Share {

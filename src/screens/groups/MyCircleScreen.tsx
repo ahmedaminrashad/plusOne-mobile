@@ -21,9 +21,12 @@ import Avatar from '../../components/common/Avatar';
 import Button from '../../components/common/Button';
 import ContactPickerModal from '../../components/common/ContactPickerModal';
 import { PeopleIcon, ChevronLeftIcon, SearchIcon, CloseIcon, AddPersonIcon } from '../../components/icons';
-import { useGetMyCircleQuery, useAddFriendMutation, useRemoveFriendMutation, Friend } from '../../store/api/friendsApi';
+import { useGetMyCircleQuery, useAddFriendMutation, useRemoveFriendMutation, useShareFriendInviteMutation, Friend } from '../../store/api/friendsApi';
 import { DeviceContact, requestContactsPermission } from '../../utils/contacts';
 import { formatPhone } from '../../utils/validation';
+import { sharePlainText } from '../../utils/shareSheet';
+import { isGhostFriend } from '../../utils/ghost';
+import { resolveAssetUrl } from '../../utils/format';
 
 type Props = AppScreenProps<'MyCircle'>;
 
@@ -34,6 +37,7 @@ function MyCircleScreen({ navigation }: Props) {
   const { data: circle, isLoading } = useGetMyCircleQuery();
   const [addFriend, { isLoading: isAdding }] = useAddFriendMutation();
   const [removeFriend] = useRemoveFriendMutation();
+  const [shareInvite] = useShareFriendInviteMutation();
 
   const [query, setQuery] = useState('');
   const [addModalVisible, setAddModalVisible] = useState(false);
@@ -53,13 +57,23 @@ function MyCircleScreen({ navigation }: Props) {
   const pending = filtered.filter((f) => f.status === 'pending');
   const members = [...active, ...pending];
 
+  const circlePhones = useMemo(() => {
+    const set = new Set<string>();
+    for (const f of circle ?? []) {
+      const raw = f.friend?.phone ?? f.pendingPhone;
+      if (raw) set.add(formatPhone(raw));
+    }
+    return [...set];
+  }, [circle]);
+
   const handleAdd = useCallback(async () => {
     const phone = newPhone.trim();
     if (!phone) return;
     try {
-      await addFriend({ phone: formatPhone(phone) }).unwrap();
+      const result = await addFriend({ phone: formatPhone(phone) }).unwrap();
       setNewPhone('');
       setAddModalVisible(false);
+      if (result.shareText) await sharePlainText(result.shareText);
     } catch {
       Alert.alert(t('common:error'), t('myCircle.addFailed'));
     }
@@ -70,10 +84,11 @@ function MyCircleScreen({ navigation }: Props) {
     let failed = 0;
     for (const contact of contacts) {
       try {
-        await addFriend({
+        const result = await addFriend({
           phone: contact.phone,
           displayName: contact.name,
         }).unwrap();
+        if (result.shareText) await sharePlainText(result.shareText);
       } catch {
         failed += 1;
       }
@@ -82,6 +97,38 @@ function MyCircleScreen({ navigation }: Props) {
       Alert.alert(t('common:error'), t('myCircle.addFailed'));
     }
   }, [addFriend, t]);
+
+  const handleInviteContact = useCallback(async (contact: DeviceContact) => {
+    try {
+      const result = await addFriend({
+        phone: contact.phone,
+        displayName: contact.name,
+      }).unwrap();
+      if (result.shareText) await sharePlainText(result.shareText);
+    } catch {
+      Alert.alert(t('common:error'), t('myCircle.addFailed'));
+    }
+  }, [addFriend, t]);
+
+  const handleAddRegisteredContact = useCallback(async (contact: DeviceContact) => {
+    try {
+      await addFriend({
+        phone: contact.phone,
+        displayName: contact.name,
+      }).unwrap();
+    } catch {
+      Alert.alert(t('common:error'), t('myCircle.addFailed'));
+    }
+  }, [addFriend, t]);
+
+  const handleResend = useCallback(async (friend: Friend) => {
+    try {
+      const result = await shareInvite(friend.id).unwrap();
+      if (result.shareText) await sharePlainText(result.shareText);
+    } catch {
+      Alert.alert(t('common:error'), t('myCircle.resendFailed'));
+    }
+  }, [shareInvite, t]);
 
   const handleRemove = useCallback((friend: Friend) => {
     Alert.alert(
@@ -107,13 +154,25 @@ function MyCircleScreen({ navigation }: Props) {
 
   const renderRow = (item: Friend) => (
     <View style={styles.row} key={item.id}>
-      <Avatar name={friendName(item)} seed={item.friendUserId ?? item.id} size={28} style={styles.avatarBorder} />
+      <Avatar
+        name={friendName(item)}
+        seed={item.friendUserId ?? item.id}
+        size={28}
+        style={styles.avatarBorder}
+        ghost={isGhostFriend(item)}
+        uri={resolveAssetUrl(item.friend?.photoUrl)}
+      />
       <View style={styles.rowInfo}>
         <Text style={[typography.labelLarge, styles.rowName]}>{friendName(item)}</Text>
         {item.status === 'pending' && (
           <Text style={[typography.bodySmall, styles.pendingSubtitle]}>{t('myCircle.pendingBadge')}</Text>
         )}
       </View>
+      {item.status === 'pending' && (
+        <TouchableOpacity onPress={() => handleResend(item)} hitSlop={8} style={styles.resendBtn}>
+          <Text style={[typography.labelSmall, styles.resendBtnText]}>{t('myCircle.resendInvite')}</Text>
+        </TouchableOpacity>
+      )}
       <View style={[styles.statusPill, item.status === 'active' ? styles.statusPillActive : styles.statusPillPending]}>
         <Text style={[typography.labelSmall, item.status === 'active' ? styles.statusPillActiveText : styles.statusPillPendingText]}>
           {item.status === 'active' ? t('myCircle.onPlusOne') : t('myCircle.pendingPill')}
@@ -237,6 +296,10 @@ function MyCircleScreen({ navigation }: Props) {
         onClose={() => setContactPickerOpen(false)}
         onConfirm={handleContactsPicked}
         title={t('myCircle.fromContactsTitle', { defaultValue: 'Add from contacts' })}
+        inviteMode
+        alreadyInCircle={circlePhones}
+        onInvite={handleInviteContact}
+        onAddRegistered={handleAddRegisteredContact}
       />
     </SafeScreen>
   );
@@ -312,6 +375,14 @@ const styles = StyleSheet.create({
   rowInfo: { flex: 1 },
   rowName: { color: Colors.text },
   pendingSubtitle: { color: Colors.textSecondary, marginTop: 2 },
+  resendBtn: {
+    borderRadius: Radius.pill,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: Colors.accent,
+  },
+  resendBtnText: { color: Colors.accent },
   statusPill: { borderRadius: Radius.pill, paddingHorizontal: 10, paddingVertical: 4 },
   statusPillActive: { backgroundColor: Colors.successTint },
   statusPillActiveText: { color: Colors.secondaryDark },

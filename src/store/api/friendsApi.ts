@@ -12,6 +12,10 @@ export interface Friend {
   displayName: string | null;
   status: FriendStatus;
   createdAt: string;
+  onPlusOne?: boolean;
+  created?: boolean;
+  shareText?: string;
+  shareUrl?: string;
 }
 
 export const friendsApi = baseApi.injectEndpoints({
@@ -20,9 +24,15 @@ export const friendsApi = baseApi.injectEndpoints({
       query: () => '/friends',
       providesTags: ['Friend'],
     }),
+    lookupPhones: builder.mutation<{ registered: string[] }, string[]>({
+      query: (phones) => ({ url: '/friends/lookup', method: 'POST', body: { phones } }),
+    }),
     addFriend: builder.mutation<Friend, { phone: string; displayName?: string }>({
       query: (body) => ({ url: '/friends', method: 'POST', body }),
       invalidatesTags: ['Friend'],
+    }),
+    shareFriendInvite: builder.mutation<Friend, string>({
+      query: (friendId) => ({ url: `/friends/${friendId}/share`, method: 'POST' }),
     }),
     removeFriend: builder.mutation<void, string>({
       query: (friendId) => ({ url: `/friends/${friendId}`, method: 'DELETE' }),
@@ -31,4 +41,10 @@ export const friendsApi = baseApi.injectEndpoints({
   }),
 });
 
-export const { useGetMyCircleQuery, useAddFriendMutation, useRemoveFriendMutation } = friendsApi;
+export const {
+  useGetMyCircleQuery,
+  useLookupPhonesMutation,
+  useAddFriendMutation,
+  useShareFriendInviteMutation,
+  useRemoveFriendMutation,
+} = friendsApi;

@@ -16,6 +16,7 @@ import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
 import { CloseIcon, SearchIcon, CheckIcon, PeopleIcon } from '../icons';
 import { DeviceContact, loadDeviceContacts } from '../../utils/contacts';
+import { useLookupPhonesMutation } from '../../store/api/friendsApi';
 
 interface Props {
   visible: boolean;
@@ -25,6 +26,11 @@ interface Props {
   title?: string;
   confirmLabel?: string;
   multiSelect?: boolean;
+  /** Circle add: show On +one vs Invite, and act immediately per row. */
+  inviteMode?: boolean;
+  alreadyInCircle?: string[];
+  onInvite?: (contact: DeviceContact) => Promise<void>;
+  onAddRegistered?: (contact: DeviceContact) => Promise<void>;
 }
 
 function ContactPickerModal({
@@ -35,6 +41,10 @@ function ContactPickerModal({
   title,
   confirmLabel,
   multiSelect = true,
+  inviteMode = false,
+  alreadyInCircle = [],
+  onInvite,
+  onAddRegistered,
 }: Props) {
   const { t } = useTranslation('groups');
   const typography = useTypography();
@@ -42,16 +52,37 @@ function ContactPickerModal({
   const [contacts, setContacts] = useState<DeviceContact[]>([]);
   const [query, setQuery] = useState('');
   const [picked, setPicked] = useState<Record<string, DeviceContact>>({});
+  const [registered, setRegistered] = useState<Set<string>>(new Set());
+  const [busyPhone, setBusyPhone] = useState<string | null>(null);
+  const [lookupPhones] = useLookupPhonesMutation();
 
   useEffect(() => {
     if (!visible) return;
     setQuery('');
     setPicked({});
+    setRegistered(new Set());
+    setBusyPhone(null);
     setLoading(true);
     loadDeviceContacts()
-      .then(setContacts)
+      .then(async (list) => {
+        setContacts(list);
+        if (inviteMode && list.length > 0) {
+          try {
+            const phones = list.map((c) => c.phone);
+            const found: string[] = [];
+            for (let i = 0; i < phones.length; i += 100) {
+              const chunk = phones.slice(i, i + 100);
+              const result = await lookupPhones(chunk).unwrap();
+              found.push(...result.registered);
+            }
+            setRegistered(new Set(found));
+          } catch {
+            setRegistered(new Set());
+          }
+        }
+      })
       .finally(() => setLoading(false));
-  }, [visible]);
+  }, [visible, inviteMode, lookupPhones]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -120,6 +151,59 @@ function ContactPickerModal({
             renderItem={({ item }) => {
               const isAlready = alreadySelected.includes(item.phone);
               const isPicked = !!picked[item.phone];
+              const inCircle = alreadyInCircle.includes(item.phone);
+              const onApp = registered.has(item.phone);
+              if (inviteMode) {
+                return (
+                  <View style={[styles.row, inCircle && styles.rowSelected]}>
+                    <View style={styles.rowInfo}>
+                      <Text style={[typography.labelLarge, styles.rowName]}>{item.name}</Text>
+                      <Text style={[typography.bodySmall, styles.rowPhone]}>{item.phone}</Text>
+                    </View>
+                    {inCircle ? (
+                      <View style={styles.statusPill}>
+                        <Text style={[typography.labelSmall, styles.statusPillText]}>
+                          {t('contacts.inCircle', { defaultValue: 'In Circle' })}
+                        </Text>
+                      </View>
+                    ) : onApp ? (
+                      <TouchableOpacity
+                        style={styles.onAppBtn}
+                        disabled={busyPhone === item.phone}
+                        onPress={async () => {
+                          setBusyPhone(item.phone);
+                          try {
+                            await onAddRegistered?.(item);
+                          } finally {
+                            setBusyPhone(null);
+                          }
+                        }}>
+                        <Text style={[typography.labelSmall, styles.onAppBtnText]}>
+                          {t('myCircle.onPlusOne')}
+                        </Text>
+                      </TouchableOpacity>
+                    ) : (
+                      <TouchableOpacity
+                        style={styles.inviteBtn}
+                        disabled={busyPhone === item.phone}
+                        onPress={async () => {
+                          setBusyPhone(item.phone);
+                          try {
+                            await onInvite?.(item);
+                          } finally {
+                            setBusyPhone(null);
+                          }
+                        }}>
+                        <Text style={[typography.labelSmall, styles.inviteBtnText]}>
+                          {busyPhone === item.phone
+                            ? '…'
+                            : t('contacts.inviteAction', { defaultValue: 'Invite' })}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                );
+              }
               return (
                 <TouchableOpacity
                   style={[styles.row, (isAlready || isPicked) && styles.rowSelected]}
@@ -137,6 +221,7 @@ function ContactPickerModal({
           />
         )}
 
+        {!inviteMode && (
         <View style={styles.footer}>
           <TouchableOpacity
             style={[styles.confirmBtn, selectedList.length === 0 && styles.confirmBtnDisabled]}
@@ -152,6 +237,7 @@ function ContactPickerModal({
             </Text>
           </TouchableOpacity>
         </View>
+        )}
       </SafeScreen>
     </Modal>
   );
@@ -220,4 +306,25 @@ const styles = StyleSheet.create({
   },
   confirmBtnDisabled: { opacity: 0.4 },
   confirmText: { color: '#fff' },
+  inviteBtn: {
+    backgroundColor: Colors.accent,
+    borderRadius: Radius.pill,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  inviteBtnText: { color: Colors.textOnPrimary },
+  onAppBtn: {
+    backgroundColor: Colors.successTint,
+    borderRadius: Radius.pill,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  onAppBtnText: { color: Colors.secondaryDark },
+  statusPill: {
+    backgroundColor: Colors.tint,
+    borderRadius: Radius.pill,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  statusPillText: { color: Colors.primary },
 });

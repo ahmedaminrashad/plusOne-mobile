@@ -24,6 +24,7 @@ import { GroupMember, ParsedReceiptData } from '../../types/models';
 import { formatCurrency, resolveAssetUrl, roundMoney } from '../../utils/format';
 import i18n from '../../i18n';
 import { ChevronLeftIcon, CheckIcon, ChevronDownIcon } from '../../components/icons';
+import { isGhostMember } from '../../utils/ghost';
 
 type Props = AppScreenProps<'AssignItems'>;
 type SplitMode = 'byItem' | 'equally';
@@ -46,7 +47,7 @@ function MemberChip({ member, selected, onToggle }: { member: GroupMember; selec
   const id = getMemberId(member);
   return (
     <TouchableOpacity style={[styles.chip, selected && styles.chipSelected]} onPress={onToggle} activeOpacity={0.7}>
-      <Avatar name={name} seed={id} size={26} />
+      <Avatar name={name} seed={id} size={26} ghost={isGhostMember(member)} uri={resolveAssetUrl(member.user?.photoUrl)} />
       <Text style={[typography.labelSmall, styles.chipName, selected && styles.chipNameSelected]} numberOfLines={1}>
         {name.split(' ')[0]}
       </Text>
@@ -393,6 +394,10 @@ function AssignItemsScreen({ route, navigation }: Props) {
     [receipt, grandTotal, payerName, mode, t, typography, navigation],
   );
 
+  const registeredPayers = useMemo(
+    () => activeMembers.filter((m) => !!m.userId),
+    [activeMembers],
+  );
   const summaryRows = activeMembers.filter((m) => memberTotals[getMemberId(m)] !== undefined);
 
   return (
@@ -416,7 +421,13 @@ function AssignItemsScreen({ route, navigation }: Props) {
               const isPayer = id === paidByUserId;
               return (
                 <View key={m.id} style={styles.summaryRow}>
-                  <Avatar uri={resolveAssetUrl(m.user?.photoUrl)} name={name} seed={id} size={24} />
+                  <Avatar
+                    uri={resolveAssetUrl(m.user?.photoUrl)}
+                    name={name}
+                    seed={id}
+                    size={24}
+                    ghost={isGhostMember(m)}
+                  />
                   <View style={styles.summaryMember}>
                     <Text style={[typography.bodyMedium, styles.summaryName]}>{name}</Text>
                     {isPayer && (
@@ -452,7 +463,7 @@ function AssignItemsScreen({ route, navigation }: Props) {
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setPayerModalVisible(false)}>
           <View style={styles.modalSheet}>
             <Text style={[typography.headingSmall, styles.modalTitle]}>{t('receiptSplit.payerQuestionLabel')}</Text>
-            {activeMembers.map((m) => {
+            {registeredPayers.map((m) => {
               const id = getMemberId(m);
               const selected = id === paidByUserId;
               return (
@@ -460,7 +471,12 @@ function AssignItemsScreen({ route, navigation }: Props) {
                   key={m.id}
                   style={[styles.payerOption, selected && styles.payerOptionSelected]}
                   onPress={() => { setPaidByUserId(id); setPayerModalVisible(false); }}>
-                  <Avatar uri={resolveAssetUrl(m.user?.photoUrl)} name={getMemberName(m)} size={36} />
+                  <Avatar
+                    uri={resolveAssetUrl(m.user?.photoUrl)}
+                    name={getMemberName(m)}
+                    size={36}
+                    ghost={isGhostMember(m)}
+                  />
                   <Text style={[typography.bodyLarge, styles.payerOptionName, selected && styles.payerOptionNameSelected]}>
                     {getMemberName(m)}
                   </Text>

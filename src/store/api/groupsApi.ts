@@ -37,11 +37,19 @@ export const groupsApi = baseApi.injectEndpoints({
       providesTags: (_r, _e, id) => [{ type: 'GroupMember', id }],
     }),
 
-    inviteMembers: builder.mutation<{ sent: number; failed: number; alreadyMembers: number }, { groupId: string; phones: string[] }>({
-      query: ({ groupId, phones }) => ({
+    inviteMembers: builder.mutation<
+      {
+        sent: number;
+        failed: number;
+        alreadyMembers: number;
+        sharePayloads?: { phone: string; shareText: string; shareUrl: string }[];
+      },
+      { groupId: string; phones: string[]; names?: string[] }
+    >({
+      query: ({ groupId, phones, names }) => ({
         url: `/groups/${groupId}/members`,
         method: 'POST',
-        body: { phones },
+        body: { phones, names },
       }),
       invalidatesTags: (_r, _e, { groupId }) => [
         { type: 'GroupMember', id: groupId },

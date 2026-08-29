@@ -33,6 +33,7 @@ import { formatDate, formatCurrency, resolveAssetUrl } from '../../utils/format'
 import GroupChatPane from './GroupChatPane';
 import GroupLedgerScreen from './GroupLedgerScreen';
 import { ChevronLeftIcon, TrashIcon, ReceiptIcon } from '../../components/icons';
+import { isGhostMember } from '../../utils/ghost';
 
 type Props = AppScreenProps<'GroupDetail'>;
 type Tab = 'chat' | 'bills' | 'ledger' | 'members';
@@ -58,16 +59,26 @@ function MemberRow({
   const typography = useTypography();
   const name = member.user?.displayName ?? member.pendingPhone ?? t('groupDetail.defaultUserName');
   const isPending = member.status === 'pending';
+  const isGhost = isGhostMember(member);
   return (
     <View style={styles.memberRow}>
-      <Avatar uri={resolveAssetUrl(member.user?.photoUrl)} name={name} seed={member.userId ?? member.id} size={42} />
+      <Avatar
+        uri={resolveAssetUrl(member.user?.photoUrl)}
+        name={name}
+        seed={member.userId ?? member.id}
+        size={42}
+        ghost={isGhost}
+      />
       <View style={styles.memberInfo}>
         <View style={styles.memberNameRow}>
           <Text style={[typography.labelLarge, styles.memberName]}>{name}</Text>
           {member.role === 'admin' && (
             <View style={styles.adminBadge}><Text style={[typography.labelSmall, styles.adminText]}>{t('groupDetail.roleAdmin')}</Text></View>
           )}
-          {isPending && (
+          {isGhost && (
+            <View style={styles.pendingBadge}><Text style={[typography.labelSmall, styles.pendingText]}>{t('groupDetail.statusInvited')}</Text></View>
+          )}
+          {isPending && !isGhost && (
             <View style={styles.pendingBadge}><Text style={[typography.labelSmall, styles.pendingText]}>{t('groupDetail.statusPending')}</Text></View>
           )}
         </View>
@@ -210,6 +221,10 @@ function GroupDetailScreen({ route, navigation }: Props) {
   const { data: me } = useGetMeQuery();
 
   const activeMembers = useMemo(() => members?.filter((m) => m.status === 'active') ?? [], [members]);
+  const invitedCount = useMemo(
+    () => (members ?? []).filter((m) => m.status !== 'removed' && isGhostMember(m)).length,
+    [members],
+  );
   const myMembership = members?.find((m) => m.userId === me?.id);
   const isAdmin = myMembership?.role === 'admin';
 
@@ -382,7 +397,12 @@ function GroupDetailScreen({ route, navigation }: Props) {
             activeOpacity={isAdmin ? 0.7 : 1}>
             <Text style={[typography.headingSmall, styles.headerTitle]} numberOfLines={1}>{displayName}</Text>
             <Text style={[typography.bodySmall, styles.headerSubtitle]}>
-              {t('home.activeMembersCount', { count: activeMembers.length })}
+              {invitedCount > 0
+                ? t('groupDetail.headerMembersMetaWithInvited', {
+                    count: activeMembers.length,
+                    invited: invitedCount,
+                  })
+                : t('home.activeMembersCount', { count: activeMembers.length })}
               {isAdmin ? ` · ${t('groupDetail.renameAction')}` : ''}
             </Text>
           </TouchableOpacity>
@@ -391,9 +411,10 @@ function GroupDetailScreen({ route, navigation }: Props) {
               <Avatar
                 key={m.id}
                 uri={resolveAssetUrl(m.user?.photoUrl)}
-                name={m.user?.displayName ?? t('groupDetail.defaultUserName')}
+                name={m.user?.displayName ?? m.pendingPhone ?? t('groupDetail.defaultUserName')}
                 seed={m.userId ?? m.id}
                 size={28}
+                ghost={isGhostMember(m)}
                 style={[styles.headerAvatarItem, i > 0 && { marginLeft: -8 }]}
               />
             ))}

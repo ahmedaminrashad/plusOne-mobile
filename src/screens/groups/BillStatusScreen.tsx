@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, memo } from 'react';
+import React, { useCallback, useMemo, memo, useState } from 'react';
 import {
   View,
   Text,
@@ -22,29 +22,41 @@ import { useGetBillDetailQuery, useCloseBillMutation } from '../../store/api/bil
 import {
   useConfirmShareMutation,
   useRemindAllPendingMutation,
+  useIssuePayLinkMutation,
 } from '../../store/api/sharesApi';
 import { useGetMeQuery } from '../../store/api/usersApi';
 import { Share } from '../../types/models';
 import { formatCurrency, formatTime, resolveAssetUrl } from '../../utils/format';
 import { ChevronLeftIcon } from '../../components/icons';
+import { sharePlainText } from '../../utils/shareSheet';
+import { isGhostShare } from '../../utils/ghost';
 
 type Props = AppScreenProps<'BillStatus'>;
 
 function ShareRow({
   share,
   payerName,
+  isPayer,
   showMarkReceived,
   onMarkReceived,
+  onSendPayLink,
+  sendingPayLink,
 }: {
   share: Share;
   payerName: string;
+  isPayer: boolean;
   showMarkReceived?: boolean;
   onMarkReceived?: () => void;
+  onSendPayLink?: () => void;
+  sendingPayLink?: boolean;
 }) {
   const { t } = useTranslation('billing');
   const typography = useTypography();
   const name = share.owner?.displayName ?? share.ownerPendingPhone ?? t('viewReceipt.defaultUserName');
-  const isNonApp = !share.ownerUserId;
+  const isNonApp = isGhostShare(share);
+  const unsettled = share.status !== 'settled' && share.status !== 'cancelled';
+  const showPayLink = isPayer && isNonApp && unsettled;
+  const payLinkSent = share.status === 'link_sent' || share.status === 'link_opened' || share.status === 'pending_confirmation';
 
   let subtitle = '';
   let badgeStyle: ViewStyle = styles.badgePending;
@@ -58,33 +70,64 @@ function ShareRow({
     badgeStyle = styles.badgePaid;
     badgeTextStyle = styles.badgeTextPaid;
     badgeLabel = t('billStatus.paidBadge');
+  } else if (share.status === 'pending_confirmation') {
+    subtitle = t('billStatus.awaitingYouSubtitle');
+    badgeStyle = styles.badgeLinkOpened;
+    badgeTextStyle = styles.badgeTextLinkOpened;
+    badgeLabel = t('billStatus.awaitingYouBadge');
+  } else if (share.status === 'link_opened') {
+    subtitle = t('billStatus.linkOpenedSubtitle');
+    badgeStyle = styles.badgeLinkOpened;
+    badgeTextStyle = styles.badgeTextLinkOpened;
+    badgeLabel = t('billStatus.linkOpenedBadge');
+  } else if (share.status === 'link_sent') {
+    subtitle = t('billStatus.linkSentSubtitle');
+    badgeStyle = styles.badgePending;
+    badgeTextStyle = styles.badgeTextPending;
+    badgeLabel = t('billStatus.linkSentBadge');
   } else if (share.status === 'initiated') {
-    subtitle = isNonApp ? t('billStatus.payLinkSentBySms') : '';
-    badgeStyle = isNonApp ? styles.badgeLinkOpened : styles.badgePending;
-    badgeTextStyle = isNonApp ? styles.badgeTextLinkOpened : styles.badgeTextPending;
-    badgeLabel = isNonApp ? t('billStatus.linkOpenedBadge') : t('billStatus.pendingBadge');
-  } else if (isNonApp) {
-    subtitle = t('billStatus.payLinkSentBySms');
+    badgeStyle = styles.badgePending;
+    badgeTextStyle = styles.badgeTextPending;
+    badgeLabel = t('billStatus.pendingBadge');
   }
 
   return (
     <View style={styles.shareRow}>
-      <Avatar uri={resolveAssetUrl(share.owner?.photoUrl)} name={name} size={28} />
+      <Avatar
+        uri={resolveAssetUrl(share.owner?.photoUrl)}
+        name={name}
+        size={28}
+        ghost={isNonApp}
+      />
       <View style={styles.shareInfo}>
         <View style={styles.shareNameRow}>
-          {isNonApp && (
-            <View style={styles.plusOneBadge}>
-              <Text style={[typography.labelSmall, styles.plusOneBadgeText]}>+one</Text>
-            </View>
-          )}
           <Text style={[typography.labelLarge, styles.shareName]} numberOfLines={1}>{name}</Text>
         </View>
         {!!subtitle && <Text style={[typography.bodySmall, styles.shareSubtitle]}>{subtitle}</Text>}
+        {showPayLink && (
+          <TouchableOpacity
+            style={styles.payLinkBtn}
+            onPress={onSendPayLink}
+            disabled={sendingPayLink}
+            activeOpacity={0.8}>
+            <Text style={[typography.labelSmall, styles.payLinkBtnText]}>
+              {sendingPayLink
+                ? '…'
+                : payLinkSent
+                  ? t('billStatus.resendPayLink')
+                  : t('billStatus.sendPayLink')}
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
       {showMarkReceived ? (
         <TouchableOpacity style={styles.rowMarkBtn} onPress={onMarkReceived} activeOpacity={0.8}>
           <Text style={[typography.labelSmall, styles.rowMarkBtnText]}>{t('billStatus.markReceivedButton')}</Text>
         </TouchableOpacity>
+      ) : !showPayLink ? (
+        <View style={[styles.badge, badgeStyle]}>
+          <Text style={[typography.labelSmall, badgeTextStyle]}>{badgeLabel}</Text>
+        </View>
       ) : (
         <View style={[styles.badge, badgeStyle]}>
           <Text style={[typography.labelSmall, badgeTextStyle]}>{badgeLabel}</Text>
@@ -103,6 +146,8 @@ function BillStatusScreen({ route, navigation }: Props) {
   const [confirmShare] = useConfirmShareMutation();
   const [remindAll, { isLoading: isReminding }] = useRemindAllPendingMutation();
   const [closeBill, { isLoading: isClosing }] = useCloseBillMutation();
+  const [issuePayLink, { isLoading: isIssuingPayLink }] = useIssuePayLinkMutation();
+  const [sendingPayLinkId, setSendingPayLinkId] = useState<string | null>(null);
 
   const handleEditItems = useCallback(() => {
     navigation.navigate('EditBillItems', { groupId, groupName, billId });
@@ -145,7 +190,9 @@ function BillStatusScreen({ route, navigation }: Props) {
     [bill?.shares],
   );
   const paidCount = activeShares.filter((s) => s.status === 'settled').length;
-  const pendingShares = activeShares.filter((s) => s.status === 'pending' || s.status === 'failed');
+  const pendingShares = activeShares.filter(
+    (s) => !!s.ownerUserId && (s.status === 'pending' || s.status === 'failed'),
+  );
   const collected = activeShares.filter((s) => s.status === 'settled').reduce((sum, s) => sum + s.amountPiastres, 0);
   const owed = activeShares.reduce((sum, s) => sum + s.amountPiastres, 0);
   const progress = owed > 0 ? collected / owed : 0;
@@ -169,6 +216,18 @@ function BillStatusScreen({ route, navigation }: Props) {
       Alert.alert(t('common:error'), t('billStatus.confirmFailed'));
     }
   }, [confirmShare, t]);
+
+  const handleSendPayLink = useCallback(async (shareId: string) => {
+    setSendingPayLinkId(shareId);
+    try {
+      const result = await issuePayLink(shareId).unwrap();
+      if (result.message) await sharePlainText(result.message);
+    } catch {
+      Alert.alert(t('common:error'), t('billStatus.payLinkFailed'));
+    } finally {
+      setSendingPayLinkId(null);
+    }
+  }, [issuePayLink, t]);
 
   if (isLoading || !bill) {
     return (
@@ -222,8 +281,11 @@ function BillStatusScreen({ route, navigation }: Props) {
           <ShareRow
             share={item}
             payerName={payerName}
-            showMarkReceived={isPayer && item.status === 'initiated'}
+            isPayer={isPayer}
+            showMarkReceived={isPayer && (item.status === 'initiated' || item.status === 'pending_confirmation')}
             onMarkReceived={() => handleMarkReceivedOne(item.id)}
+            onSendPayLink={() => handleSendPayLink(item.id)}
+            sendingPayLink={sendingPayLinkId === item.id || isIssuingPayLink}
           />
         )}
         contentContainerStyle={styles.list}
@@ -354,14 +416,15 @@ const styles = StyleSheet.create({
   shareNameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   shareName: { color: Colors.text, flexShrink: 1 },
   shareSubtitle: { color: Colors.textMuted, marginTop: 2 },
-  plusOneBadge: {
-    backgroundColor: Colors.warning,
+  payLinkBtn: {
+    alignSelf: 'flex-start',
+    marginTop: 6,
     borderRadius: Radius.pill,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    backgroundColor: Colors.accent,
   },
-  plusOneBadgeText: { color: '#fff', fontWeight: '700' },
-
+  payLinkBtnText: { color: Colors.textOnPrimary },
   rowMarkBtn: {
     backgroundColor: Colors.primary,
     borderRadius: Radius.pill,

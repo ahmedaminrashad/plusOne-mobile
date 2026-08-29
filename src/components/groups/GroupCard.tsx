@@ -50,6 +50,7 @@ function GroupCard({ group, onPress }: Props) {
                   name={m.user?.displayName ?? m.pendingPhone ?? t('groupDetail.defaultUserName')}
                   seed={m.userId ?? m.id}
                   size={24}
+                  ghost={!m.userId}
                   style={[styles.avatarStackItem, i > 0 && { marginLeft: -6 }]}
                 />
               ))}

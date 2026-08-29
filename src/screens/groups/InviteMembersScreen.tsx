@@ -24,6 +24,8 @@ import { useGetGroupMembersQuery, useInviteMembersMutation } from '../../store/a
 import { useGetMyCircleQuery, Friend } from '../../store/api/friendsApi';
 import { DeviceContact, requestContactsPermission } from '../../utils/contacts';
 import { resolveAssetUrl } from '../../utils/format';
+import { sharePlainText } from '../../utils/shareSheet';
+import { isGhostFriend } from '../../utils/ghost';
 
 type Props = AppScreenProps<'InviteMembers'>;
 
@@ -117,7 +119,11 @@ function InviteMembersScreen({ route, navigation }: Props) {
   const handleSendInvites = useCallback(async () => {
     if (selected.length === 0) return;
     try {
-      const result = await inviteMembers({ groupId, phones: selected }).unwrap();
+      const names = selected.map((p) => contactNames[p] ?? '');
+      const result = await inviteMembers({ groupId, phones: selected, names }).unwrap();
+      for (const payload of result.sharePayloads ?? []) {
+        if (payload.shareText) await sharePlainText(payload.shareText);
+      }
       let message = t('inviteMembers.sentBase', { count: result.sent });
       if (result.failed > 0) {
         message += t('inviteMembers.sentFailedFragment', { count: result.failed });
@@ -134,7 +140,7 @@ function InviteMembersScreen({ route, navigation }: Props) {
     } catch {
       Alert.alert(t('common:error'), t('inviteMembers.sendError'));
     }
-  }, [selected, groupId, inviteMembers, navigation, t]);
+  }, [selected, contactNames, groupId, inviteMembers, navigation, t]);
 
   return (
     <SafeScreen style={styles.container}>
@@ -252,12 +258,17 @@ function InviteMembersScreen({ route, navigation }: Props) {
                       name={friendName(item)}
                       seed={item.friendUserId ?? item.id}
                       size={40}
+                      ghost={isGhostFriend(item)}
                     />
                     <View style={styles.circleRowText}>
                       <Text style={[typography.labelLarge, styles.circleRowName]} numberOfLines={1}>
                         {friendName(item)}
                       </Text>
-                      <Text style={[typography.bodySmall, styles.circleRowPhone]}>{phoneNumber}</Text>
+                      <Text style={[typography.bodySmall, styles.circleRowPhone]}>
+                        {isGhostFriend(item)
+                          ? `${t('groupDetail.statusInvited')} · ${phoneNumber}`
+                          : phoneNumber}
+                      </Text>
                     </View>
                   </TouchableOpacity>
                 );

@@ -67,6 +67,10 @@ export const sharesApi = baseApi.injectEndpoints({
       query: (billId) => ({ url: `/shares/bill/${billId}/remind-all`, method: 'POST' }),
       invalidatesTags: ['Share'],
     }),
+    issuePayLink: builder.mutation<{ url: string; message: string; token: string }, string>({
+      query: (shareId) => ({ url: `/shares/${shareId}/pay-link`, method: 'POST' }),
+      invalidatesTags: ['Share', 'Bill'],
+    }),
   }),
 });
 
@@ -78,4 +82,5 @@ export const {
   useConfirmShareMutation,
   useSendShareReminderMutation,
   useRemindAllPendingMutation,
+  useIssuePayLinkMutation,
 } = sharesApi;
