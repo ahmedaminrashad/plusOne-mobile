@@ -34,5 +34,10 @@
   "DISPLAY_NAME_CHARS_INVALID": "The name contains characters that aren't allowed.",
   "INSTAPAY_ALIAS_INVALID": "Invalid InstaPay name.",
   "GROUP_NAME_TOO_LONG": "Group name is too long (max 50 characters).",
-  "FAIL_REASON_REQUIRED": "You must select a reason to mark the payment as failed."
+  "FAIL_REASON_REQUIRED": "You must select a reason to mark the payment as failed.",
+  "FIREBASE_SHA_MISSING": "This Android build isn't registered in Firebase. Add the debug SHA-1 in Project settings.",
+  "FIREBASE_PHONE_DISABLED": "Phone sign-in is not enabled on this Firebase project.",
+  "FIREBASE_TOKEN_INVALID": "Couldn't verify the SMS sign-in. Request a new code.",
+  "FIREBASE_PHONE_REQUIRED": "Firebase sign-in did not return a phone number.",
+  "FIREBASE_NOT_CONFIGURED": "Firebase is not configured on the server."
 }

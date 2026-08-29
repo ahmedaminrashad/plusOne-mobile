@@ -16,7 +16,7 @@ import Input from '../../components/common/Input';
 import { Colors } from '../../constants/colors';
 import { useTypography } from '../../hooks/useTypography';
 import { isValidPhone, formatPhone } from '../../utils/validation';
-import { useSendOtpMutation } from '../../store/api/authApi';
+import { sendFirebaseSms, mapFirebaseAuthError } from '../../services/firebasePhoneAuth';
 import { resolveErrorMessage } from '../../utils/errors';
 
 type Props = AuthScreenProps<'PhoneEntry'>;
@@ -30,7 +30,7 @@ function PhoneEntryScreen({ navigation }: Props) {
   const [countryCode] = useState(COUNTRY_CODE);
   const [error, setError] = useState('');
 
-  const [sendOtp, { isLoading }] = useSendOtpMutation();
+  const [isLoading, setIsLoading] = useState(false);
 
   const fullPhone = formatPhone(phone, countryCode);
 
@@ -42,13 +42,16 @@ function PhoneEntryScreen({ navigation }: Props) {
       return;
     }
 
+    setIsLoading(true);
     try {
-      await sendOtp({ phone: fullPhone }).unwrap();
+      await sendFirebaseSms(fullPhone);
       navigation.navigate('OTPVerification', { phone: fullPhone });
-    } catch (err: any) {
-      setError(resolveErrorMessage(err));
+    } catch (err: unknown) {
+      setError(resolveErrorMessage({ data: { message: mapFirebaseAuthError(err) } }));
+    } finally {
+      setIsLoading(false);
     }
-  }, [fullPhone, sendOtp, navigation, t]);
+  }, [fullPhone, navigation, t]);
 
   const handlePhoneChange = useCallback((v: string) => {
     // Keep only digits in the editable field — country code lives in the prefix chip.

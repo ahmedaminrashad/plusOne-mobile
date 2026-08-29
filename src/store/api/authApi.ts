@@ -11,6 +11,10 @@ export const authApi = baseApi.injectEndpoints({
       query: (body) => ({ url: '/auth/otp/verify', method: 'POST', body }),
     }),
 
+    loginWithFirebase: builder.mutation<AuthTokens, { idToken: string }>({
+      query: (body) => ({ url: '/auth/firebase', method: 'POST', body }),
+    }),
+
     refreshToken: builder.mutation<{ accessToken: string; refreshToken: string }, { refreshToken: string }>({
       query: (body) => ({ url: '/auth/refresh', method: 'POST', body }),
     }),
@@ -21,4 +25,10 @@ export const authApi = baseApi.injectEndpoints({
   }),
 });
 
-export const { useSendOtpMutation, useVerifyOtpMutation, useRefreshTokenMutation, useLogoutMutation } = authApi;
+export const {
+  useSendOtpMutation,
+  useVerifyOtpMutation,
+  useLoginWithFirebaseMutation,
+  useRefreshTokenMutation,
+  useLogoutMutation,
+} = authApi;

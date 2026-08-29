@@ -15,7 +15,8 @@ import Button from '../../components/common/Button';
 import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
-import { useVerifyOtpMutation, useSendOtpMutation } from '../../store/api/authApi';
+import { useLoginWithFirebaseMutation } from '../../store/api/authApi';
+import { sendFirebaseSms, confirmFirebaseSms, mapFirebaseAuthError } from '../../services/firebasePhoneAuth';
 import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { setTokens, setProfileComplete } from '../../store/slices/authSlice';
 import { SecureStorage } from '../../utils/storage';
@@ -38,8 +39,8 @@ function OTPVerificationScreen({ route, navigation }: Props) {
   const inputRef = useRef<TextInput>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const [verifyOtp, { isLoading }] = useVerifyOtpMutation();
-  const [sendOtp, { isLoading: isSending }] = useSendOtpMutation();
+  const [loginWithFirebase, { isLoading }] = useLoginWithFirebaseMutation();
+  const [isSending, setIsSending] = useState(false);
 
   useEffect(() => {
     timerRef.current = setInterval(() => {
@@ -54,7 +55,8 @@ function OTPVerificationScreen({ route, navigation }: Props) {
   const handleVerify = useCallback(async () => {
     setError('');
     try {
-      const result = await verifyOtp({ phone, code: otp }).unwrap();
+      const idToken = await confirmFirebaseSms(otp);
+      const result = await loginWithFirebase({ idToken }).unwrap();
       await SecureStorage.saveTokens(result.accessToken, result.refreshToken, result.isProfileComplete);
       dispatch(setTokens({ accessToken: result.accessToken, refreshToken: result.refreshToken }));
       dispatch(setProfileComplete(result.isProfileComplete));
@@ -62,16 +64,20 @@ function OTPVerificationScreen({ route, navigation }: Props) {
       if (!result.isProfileComplete) {
         navigation.navigate('ProfileSetup');
       }
-    } catch (err: any) {
-      setError(resolveErrorMessage(err));
+    } catch (err: unknown) {
+      const mapped = mapFirebaseAuthError(err);
+      setError(
+        mapped === 'GENERIC' ? resolveErrorMessage(err) : resolveErrorMessage({ data: { message: mapped } }),
+      );
       setOtp('');
     }
-  }, [otp, phone, verifyOtp, dispatch, navigation]);
+  }, [otp, loginWithFirebase, dispatch, navigation]);
 
   const handleResend = useCallback(async () => {
     if (cooldown > 0) return;
+    setIsSending(true);
     try {
-      await sendOtp({ phone }).unwrap();
+      await sendFirebaseSms(phone);
       setCooldown(RESEND_COOLDOWN);
       setOtp('');
       setError('');
@@ -81,10 +87,12 @@ function OTPVerificationScreen({ route, navigation }: Props) {
           return c - 1;
         });
       }, 1000);
-    } catch {
-      setError(t('otpVerification.resendFailed'));
+    } catch (err: unknown) {
+      setError(resolveErrorMessage({ data: { message: mapFirebaseAuthError(err) } }));
+    } finally {
+      setIsSending(false);
     }
-  }, [cooldown, phone, sendOtp]);
+  }, [cooldown, phone]);
 
   const handleOtpChange = (value: string) => {
     const digits = value.replace(/\D/g, '').slice(0, OTP_LENGTH);
