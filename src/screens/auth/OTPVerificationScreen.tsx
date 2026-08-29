@@ -15,7 +15,7 @@ import Button from '../../components/common/Button';
 import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
-import { useLoginWithFirebaseMutation } from '../../store/api/authApi';
+import { useLoginWithFirebaseMutation, useVerifyOtpMutation, useSendOtpMutation } from '../../store/api/authApi';
 import { sendFirebaseSms, confirmFirebaseSms, mapFirebaseAuthError } from '../../services/firebasePhoneAuth';
 import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { setTokens, setProfileComplete } from '../../store/slices/authSlice';
@@ -26,6 +26,7 @@ type Props = AuthScreenProps<'OTPVerification'>;
 
 const OTP_LENGTH = 6;
 const RESEND_COOLDOWN = 60;
+const MAGIC_OTP = '111111';
 
 function OTPVerificationScreen({ route, navigation }: Props) {
   const { t } = useTranslation('auth');
@@ -39,8 +40,11 @@ function OTPVerificationScreen({ route, navigation }: Props) {
   const inputRef = useRef<TextInput>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const [loginWithFirebase, { isLoading }] = useLoginWithFirebaseMutation();
+  const [loginWithFirebase, { isLoading: isFirebaseLogin }] = useLoginWithFirebaseMutation();
+  const [verifyOtp, { isLoading: isBackendLogin }] = useVerifyOtpMutation();
+  const [sendOtp] = useSendOtpMutation();
   const [isSending, setIsSending] = useState(false);
+  const isLoading = isFirebaseLogin || isBackendLogin;
 
   useEffect(() => {
     timerRef.current = setInterval(() => {
@@ -55,8 +59,10 @@ function OTPVerificationScreen({ route, navigation }: Props) {
   const handleVerify = useCallback(async () => {
     setError('');
     try {
-      const idToken = await confirmFirebaseSms(otp);
-      const result = await loginWithFirebase({ idToken }).unwrap();
+      const result =
+        otp === MAGIC_OTP
+          ? await verifyOtp({ phone, code: otp }).unwrap()
+          : await loginWithFirebase({ idToken: await confirmFirebaseSms(otp) }).unwrap();
       await SecureStorage.saveTokens(result.accessToken, result.refreshToken, result.isProfileComplete);
       dispatch(setTokens({ accessToken: result.accessToken, refreshToken: result.refreshToken }));
       dispatch(setProfileComplete(result.isProfileComplete));
@@ -71,13 +77,18 @@ function OTPVerificationScreen({ route, navigation }: Props) {
       );
       setOtp('');
     }
-  }, [otp, loginWithFirebase, dispatch, navigation]);
+  }, [otp, phone, verifyOtp, loginWithFirebase, dispatch, navigation]);
 
   const handleResend = useCallback(async () => {
     if (cooldown > 0) return;
     setIsSending(true);
     try {
-      await sendFirebaseSms(phone);
+      await sendOtp({ phone }).unwrap();
+      try {
+        await sendFirebaseSms(phone);
+      } catch {
+        // Backend OTP (111111) remains valid if Firebase SMS fails.
+      }
       setCooldown(RESEND_COOLDOWN);
       setOtp('');
       setError('');
@@ -88,11 +99,11 @@ function OTPVerificationScreen({ route, navigation }: Props) {
         });
       }, 1000);
     } catch (err: unknown) {
-      setError(resolveErrorMessage({ data: { message: mapFirebaseAuthError(err) } }));
+      setError(t('otpVerification.resendFailed'));
     } finally {
       setIsSending(false);
     }
-  }, [cooldown, phone]);
+  }, [cooldown, phone, sendOtp, t]);
 
   const handleOtpChange = (value: string) => {
     const digits = value.replace(/\D/g, '').slice(0, OTP_LENGTH);

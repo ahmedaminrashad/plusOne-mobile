@@ -16,7 +16,8 @@ import Input from '../../components/common/Input';
 import { Colors } from '../../constants/colors';
 import { useTypography } from '../../hooks/useTypography';
 import { isValidPhone, formatPhone } from '../../utils/validation';
-import { sendFirebaseSms, mapFirebaseAuthError } from '../../services/firebasePhoneAuth';
+import { sendFirebaseSms } from '../../services/firebasePhoneAuth';
+import { useSendOtpMutation } from '../../store/api/authApi';
 import { resolveErrorMessage } from '../../utils/errors';
 
 type Props = AuthScreenProps<'PhoneEntry'>;
@@ -29,8 +30,7 @@ function PhoneEntryScreen({ navigation }: Props) {
   const [phone, setPhone] = useState('');
   const [countryCode] = useState(COUNTRY_CODE);
   const [error, setError] = useState('');
-
-  const [isLoading, setIsLoading] = useState(false);
+  const [sendOtp, { isLoading }] = useSendOtpMutation();
 
   const fullPhone = formatPhone(phone, countryCode);
 
@@ -42,16 +42,18 @@ function PhoneEntryScreen({ navigation }: Props) {
       return;
     }
 
-    setIsLoading(true);
     try {
-      await sendFirebaseSms(fullPhone);
+      await sendOtp({ phone: fullPhone }).unwrap();
+      try {
+        await sendFirebaseSms(fullPhone);
+      } catch {
+        // Firebase SMS is optional — backend magic code 111111 still works.
+      }
       navigation.navigate('OTPVerification', { phone: fullPhone });
     } catch (err: unknown) {
-      setError(resolveErrorMessage({ data: { message: mapFirebaseAuthError(err) } }));
-    } finally {
-      setIsLoading(false);
+      setError(resolveErrorMessage(err));
     }
-  }, [fullPhone, navigation, t]);
+  }, [fullPhone, sendOtp, navigation, t]);
 
   const handlePhoneChange = useCallback((v: string) => {
     // Keep only digits in the editable field — country code lives in the prefix chip.

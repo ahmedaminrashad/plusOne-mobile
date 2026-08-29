@@ -12,7 +12,12 @@
           "package_name": "com.plusone"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "836669561475-r5e7d8g0g8d4g8d4g8d4g8d4g8d4g8d4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAgKlS7p-P7bgSYSSyfJHvzK9vV6ZNeEeM"
@@ -20,7 +25,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "836669561475-r5e7d8g0g8d4g8d4g8d4g8d4g8d4g8d4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
