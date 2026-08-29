@@ -143,7 +143,7 @@ function InviteMembersScreen({ route, navigation }: Props) {
   }, [selected, contactNames, groupId, inviteMembers, navigation, t]);
 
   return (
-    <SafeScreen style={styles.container}>
+    <SafeScreen style={styles.container} edges={[]}>
       <View style={styles.content}>
         <Text style={[typography.headingLarge, styles.title]}>{t('inviteMembers.title')}</Text>
         <Text style={[typography.bodyLarge, styles.subtitle]}>
@@ -285,7 +285,7 @@ export default memo(InviteMembersScreen);
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-  content: { flex: 1, padding: 24 },
+  content: { flex: 1, paddingHorizontal: 24, paddingTop: 8, paddingBottom: 24 },
   title: { color: Colors.text, marginBottom: 8 },
   subtitle: { color: Colors.textSecondary, marginBottom: 20 },
   contactsBtn: {

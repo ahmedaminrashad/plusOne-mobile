@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Keyboard, NativeEventEmitter, NativeModules, Platform } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { KeyboardInsetsModule } = NativeModules as { KeyboardInsetsModule?: object };
 
 // Android: native-stack Fragments don't receive window resize, so RN's
 // KeyboardAvoidingView is a no-op. KeyboardInsetsModule reads IME insets
-// off the decor view. iOS: Keyboard events are reliable; we still pad the
-// composer ourselves so we don't also wrap screens in KeyboardAvoidingView
-// (that double-counts and leaves a large gap above the keyboard).
+// off the decor view (distance from window bottom to the top of the keys).
+// iOS: Keyboard.endCoordinates.height is that same distance — do not subtract
+// the home-indicator inset. Screens sit on the window bottom (SafeScreen only
+// pads the top; the tab bar is collapsed while the keyboard is open), so
+// subtracting insets.bottom leaves the composer overlapping the keys.
 const androidEmitter =
   Platform.OS === 'android' && KeyboardInsetsModule
     ? new NativeEventEmitter(KeyboardInsetsModule as any)
@@ -17,7 +18,6 @@ const androidEmitter =
 /** Current on-screen keyboard height in dp (0 when hidden). Use as bottom padding. */
 export function useKeyboardInsetHeight(): number {
   const [height, setHeight] = useState(0);
-  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     if (androidEmitter) {
@@ -27,20 +27,29 @@ export function useKeyboardInsetHeight(): number {
       return () => subscription.remove();
     }
 
-    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-    const show = Keyboard.addListener(showEvent, (e) => {
+    const apply = (e: { endCoordinates: { height: number } }) => {
       setHeight(e.endCoordinates.height);
-    });
-    const hide = Keyboard.addListener(hideEvent, () => setHeight(0));
+    };
+    const hide = () => setHeight(0);
+
+    if (Platform.OS === 'ios') {
+      const show = Keyboard.addListener('keyboardWillShow', apply);
+      const change = Keyboard.addListener('keyboardWillChangeFrame', apply);
+      const hideSub = Keyboard.addListener('keyboardWillHide', hide);
+      return () => {
+        show.remove();
+        change.remove();
+        hideSub.remove();
+      };
+    }
+
+    const show = Keyboard.addListener('keyboardDidShow', apply);
+    const hideSub = Keyboard.addListener('keyboardDidHide', hide);
     return () => {
       show.remove();
-      hide.remove();
+      hideSub.remove();
     };
   }, []);
 
-  if (height <= 0) return 0;
-  // iOS keyboard height includes the home-indicator region. Android IME inset
-  // is already the distance from the window bottom to the top of the keys.
-  return Math.max(0, height - (Platform.OS === 'ios' ? insets.bottom : 0));
+  return height > 0 ? height : 0;
 }

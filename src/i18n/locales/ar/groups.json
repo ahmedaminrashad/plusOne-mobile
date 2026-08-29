@@ -30,7 +30,9 @@
     "empty": "لا توجد جهات اتصال بأرقام هواتف",
     "confirm": "إضافة {{count}}",
     "inviteAction": "دعوة",
-    "inCircle": "في الدائرة"
+    "inCircle": "في الدائرة",
+    "limitedAccess": "جهات اتصال محدودة متاحة لبلس ون.",
+    "selectMore": "اختيار جهات اتصال تانية"
   },
   "notifications": {
     "title": "الإشعارات",

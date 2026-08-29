@@ -1,4 +1,4 @@
-import { Platform, PermissionsAndroid, Alert, Linking } from 'react-native';
+import { Platform, PermissionsAndroid, Alert, Linking, NativeModules } from 'react-native';
 import Contacts from 'react-native-contacts';
 import { formatPhone, isValidPhone } from './validation';
 
@@ -8,9 +8,20 @@ export interface DeviceContact {
   phone: string;
 }
 
+export type ContactsPermission = 'authorized' | 'limited' | 'denied' | 'undefined';
+
 let contactsCache: DeviceContact[] | null = null;
 let contactsCacheAt = 0;
 const CACHE_TTL_MS = 5 * 60 * 1000;
+
+const { ContactsAccessModule } = NativeModules as {
+  ContactsAccessModule?: { presentLimitedAccessPicker: () => Promise<string[] | null> };
+};
+
+export function invalidateContactsCache(): void {
+  contactsCache = null;
+  contactsCacheAt = 0;
+}
 
 export function showContactsPermissionDeniedAlert(): void {
   Alert.alert(
@@ -21,6 +32,15 @@ export function showContactsPermissionDeniedAlert(): void {
       { text: 'Open Settings', onPress: () => { void Linking.openSettings(); } },
     ],
   );
+}
+
+export async function getContactsPermissionStatus(): Promise<ContactsPermission> {
+  if (Platform.OS !== 'ios') return 'authorized';
+  const status = await Contacts.checkPermission();
+  if (status === 'authorized' || status === 'limited' || status === 'denied' || status === 'undefined') {
+    return status;
+  }
+  return 'undefined';
 }
 
 export async function requestContactsPermission(options?: { showDeniedAlert?: boolean }): Promise<boolean> {
@@ -46,6 +66,22 @@ export async function requestContactsPermission(options?: { showDeniedAlert?: bo
   const granted = requested === 'authorized' || requested === 'limited';
   if (!granted && options?.showDeniedAlert !== false) showContactsPermissionDeniedAlert();
   return granted;
+}
+
+/** iOS 18 limited access: re-open the system sheet so the user can grant more contacts. */
+export async function presentLimitedContactsPicker(): Promise<boolean> {
+  if (Platform.OS !== 'ios' || !ContactsAccessModule?.presentLimitedAccessPicker) {
+    await Linking.openSettings();
+    return false;
+  }
+  try {
+    await ContactsAccessModule.presentLimitedAccessPicker();
+    invalidateContactsCache();
+    return true;
+  } catch {
+    await Linking.openSettings();
+    return false;
+  }
 }
 
 function firstValidPhone(rawNumbers: Array<{ number?: string } | string> | undefined): string | null {

@@ -398,7 +398,7 @@ function GroupChatPane({ groupId, groupName, navigation, sharedImageUri, onShare
         style={[
           styles.inputRow,
           keyboardInset > 0 && {
-            marginBottom: Math.max(0, keyboardInset - 8),
+            marginBottom: keyboardInset,
             paddingBottom: 8,
             paddingTop: 6,
           },

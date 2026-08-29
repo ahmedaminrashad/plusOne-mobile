@@ -30,7 +30,9 @@
     "empty": "No contacts with phone numbers found",
     "confirm": "Add {{count}}",
     "inviteAction": "Invite",
-    "inCircle": "In Circle"
+    "inCircle": "In Circle",
+    "limitedAccess": "Only some contacts are shared with +one.",
+    "selectMore": "Select more contacts"
   },
   "notifications": {
     "title": "Notifications",

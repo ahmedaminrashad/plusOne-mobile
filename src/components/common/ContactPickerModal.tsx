@@ -15,7 +15,7 @@ import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
 import { CloseIcon, SearchIcon, CheckIcon, PeopleIcon } from '../icons';
-import { DeviceContact, loadDeviceContacts } from '../../utils/contacts';
+import { DeviceContact, loadDeviceContacts, getContactsPermissionStatus, presentLimitedContactsPicker } from '../../utils/contacts';
 import { useLookupPhonesMutation } from '../../store/api/friendsApi';
 
 interface Props {
@@ -54,7 +54,34 @@ function ContactPickerModal({
   const [picked, setPicked] = useState<Record<string, DeviceContact>>({});
   const [registered, setRegistered] = useState<Set<string>>(new Set());
   const [busyPhone, setBusyPhone] = useState<string | null>(null);
+  const [limitedAccess, setLimitedAccess] = useState(false);
   const [lookupPhones] = useLookupPhonesMutation();
+
+  const loadList = useCallback(async () => {
+    setLoading(true);
+    try {
+      const list = await loadDeviceContacts({ force: true });
+      setContacts(list);
+      const status = await getContactsPermissionStatus();
+      setLimitedAccess(status === 'limited');
+      if (inviteMode && list.length > 0) {
+        try {
+          const phones = list.map((c) => c.phone);
+          const found: string[] = [];
+          for (let i = 0; i < phones.length; i += 100) {
+            const chunk = phones.slice(i, i + 100);
+            const result = await lookupPhones(chunk).unwrap();
+            found.push(...result.registered);
+          }
+          setRegistered(new Set(found));
+        } catch {
+          setRegistered(new Set());
+        }
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [inviteMode, lookupPhones]);
 
   useEffect(() => {
     if (!visible) return;
@@ -62,27 +89,13 @@ function ContactPickerModal({
     setPicked({});
     setRegistered(new Set());
     setBusyPhone(null);
-    setLoading(true);
-    loadDeviceContacts()
-      .then(async (list) => {
-        setContacts(list);
-        if (inviteMode && list.length > 0) {
-          try {
-            const phones = list.map((c) => c.phone);
-            const found: string[] = [];
-            for (let i = 0; i < phones.length; i += 100) {
-              const chunk = phones.slice(i, i + 100);
-              const result = await lookupPhones(chunk).unwrap();
-              found.push(...result.registered);
-            }
-            setRegistered(new Set(found));
-          } catch {
-            setRegistered(new Set());
-          }
-        }
-      })
-      .finally(() => setLoading(false));
-  }, [visible, inviteMode, lookupPhones]);
+    void loadList();
+  }, [visible, loadList]);
+
+  const handleSelectMore = useCallback(async () => {
+    await presentLimitedContactsPicker();
+    await loadList();
+  }, [loadList]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -121,6 +134,19 @@ function ContactPickerModal({
             <CloseIcon size={18} color={Colors.text} />
           </TouchableOpacity>
         </View>
+
+        {limitedAccess && (
+          <TouchableOpacity style={styles.limitedBanner} onPress={handleSelectMore} activeOpacity={0.8}>
+            <Text style={[typography.bodySmall, styles.limitedText]}>
+              {t('contacts.limitedAccess', {
+                defaultValue: 'Only some contacts are shared with +one.',
+              })}
+            </Text>
+            <Text style={[typography.labelMedium, styles.limitedAction]}>
+              {t('contacts.selectMore', { defaultValue: 'Select more contacts' })}
+            </Text>
+          </TouchableOpacity>
+        )}
 
         <View style={styles.searchBar}>
           <SearchIcon size={16} color={Colors.textMuted} />
@@ -264,6 +290,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  limitedBanner: {
+    marginHorizontal: 16,
+    marginBottom: 10,
+    backgroundColor: Colors.tint,
+    borderRadius: Radius.lg,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    gap: 4,
+  },
+  limitedText: { color: Colors.textSecondary },
+  limitedAction: { color: Colors.primary },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
