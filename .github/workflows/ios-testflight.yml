@@ -55,6 +55,17 @@ jobs:
       - name: Build and upload to TestFlight
         run: bundle exec fastlane ios beta
 
+      - name: Upload xcodebuild logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gym-logs
+          path: |
+            fastlane/logs
+            ~/Library/Logs/gym
+          if-no-files-found: ignore
+          retention-days: 7
+
       - name: Upload distribution certificate
         if: always()
         uses: actions/upload-artifact@v4

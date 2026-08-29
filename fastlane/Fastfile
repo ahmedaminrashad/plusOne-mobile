@@ -111,9 +111,13 @@ platform :ios do
       configuration: "Release",
       clean: true,
       export_method: "app-store",
+      destination: "generic/platform=iOS",
+      skip_profile_detection: true,
       xcodebuild_formatter: "",
+      buildlog_path: "fastlane/logs",
       export_options: {
         signingStyle: "manual",
+        teamID: ENV["APPLE_TEAM_ID"],
         provisioningProfiles: {
           APP_IDENTIFIER => main_profile_name,
           EXTENSION_IDENTIFIER => extension_profile_name
