@@ -11,7 +11,7 @@ jobs:
   testflight:
     name: Build & upload to TestFlight
     runs-on: macos-15
-    timeout-minutes: 90
+    timeout-minutes: 120
 
     env:
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
@@ -50,6 +50,9 @@ jobs:
 
       - name: Install CocoaPods
         working-directory: ios
+        env:
+          RCT_USE_PREBUILT_RNCORE: "0"
+          RCT_USE_RN_DEP: "0"
         run: bundle exec pod install
 
       - name: Build and upload to TestFlight

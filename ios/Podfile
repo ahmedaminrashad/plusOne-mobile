@@ -7,10 +7,16 @@ require Pod::Executable.execute_command('node', ['-p',
 
 # GoogleMLKit / RNMLKitTextRecognition require iOS 15.5+
 platform :ios, '15.5'
+
+# Firebase Auth is Swift and needs static frameworks. RN's prebuilt
+# React-Core binary cannot be wrapped that way (xcodebuild floods errors).
+# Build RN from source instead: https://rnfirebase.io/#altering-cocoapods-to-use-frameworks
+ENV['RCT_USE_PREBUILT_RNCORE'] = '0'
+ENV['RCT_USE_RN_DEP'] = '0'
+
 prepare_react_native_project!
 
-# Do not use use_frameworks! here — it wraps React-Core-prebuilt and floods
-# xcodebuild with errors. Firebase Auth only needs modular headers on its pods.
+use_frameworks! :linkage => :static
 $RNFirebaseAsStaticFramework = true
 
 target 'PlusOne' do
