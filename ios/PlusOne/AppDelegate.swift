@@ -80,6 +80,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     return false
   }
 
+  // Older Safari / reCAPTCHA redirects still hit this signature on some iOS versions.
+  func application(
+    _ application: UIApplication,
+    open url: URL,
+    sourceApplication: String?,
+    annotation: Any
+  ) -> Bool {
+    return Auth.auth().canHandle(url)
+  }
+
   func application(
     _ application: UIApplication,
     continue userActivity: NSUserActivity,

@@ -1,36 +1,58 @@
 import { Platform } from 'react-native';
-import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
+import auth, { FirebaseAuthTypes, PhoneAuthProvider } from '@react-native-firebase/auth';
 
 let confirmation: FirebaseAuthTypes.ConfirmationResult | null = null;
+let verificationId: string | null = null;
 
 export async function sendFirebaseSms(phone: string): Promise<void> {
-  // Never set appVerificationDisabledForTesting on real numbers — Firebase
-  // then refuses to send SMS (that is the "SMS wasn't sent" screen).
-  // Android: do not force the reCAPTCHA Chrome tab; Play Integrity is enough
-  // when SHA-1/SHA-256 are registered in Firebase.
+  confirmation = null;
+  verificationId = null;
+
   if (Platform.OS === 'android') {
     try {
       auth().settings.forceRecaptchaFlowForTesting = false;
     } catch {
       // ignore
     }
+    confirmation = await auth().signInWithPhoneNumber(phone);
+    return;
   }
-  confirmation = await auth().signInWithPhoneNumber(phone);
+
+  // iOS: signInWithPhoneNumber is a single JS promise and often rejects when
+  // Safari reCAPTCHA backgrounds the app — even after the user finishes it.
+  // verifyPhoneNumber waits on native CODE_SENT, which is the event that means
+  // SMS was actually dispatched.
+  const snapshot = await auth().verifyPhoneNumber(phone);
+  if (snapshot.state === 'error' || !snapshot.verificationId) {
+    throw snapshot.error ?? Object.assign(new Error('FIREBASE_APP_VERIFY_FAILED'), {
+      code: 'auth/missing-app-credential',
+    });
+  }
+  verificationId = snapshot.verificationId;
 }
 
 export async function confirmFirebaseSms(code: string): Promise<string> {
-  if (!confirmation) {
+  let user: FirebaseAuthTypes.User | null = null;
+
+  if (verificationId) {
+    const credential = PhoneAuthProvider.credential(verificationId, code);
+    const cred = await auth().signInWithCredential(credential);
+    user = cred.user;
+  } else if (confirmation) {
+    const cred = await confirmation.confirm(code);
+    user = cred?.user ?? null;
+  } else {
     const err = new Error('OTP_EXPIRED');
     (err as { code?: string }).code = 'OTP_EXPIRED';
     throw err;
   }
-  const cred = await confirmation.confirm(code);
-  if (!cred?.user) {
+
+  if (!user) {
     const err = new Error('OTP_INVALID');
     (err as { code?: string }).code = 'OTP_INVALID';
     throw err;
   }
-  return cred.user.getIdToken();
+  return user.getIdToken();
 }
 
 export function mapFirebaseAuthError(err: unknown): string {
