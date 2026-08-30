@@ -21,7 +21,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
   ) -> Bool {
     FirebaseApp.configure()
     // Silent APNs is how Firebase Phone Auth verifies the app on iOS without
-    // opening Safari. The new RN Swift AppDelegate is not reliably swizzled.
+    // opening Safari. Do not implement didReceiveRemoteNotification here —
+    // RNFirebase's AppDelegate interceptor owns FCM + Auth probe handling.
     application.registerForRemoteNotifications()
 
     let delegate = ReactNativeDelegate()
@@ -46,8 +47,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     _ application: UIApplication,
     didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
   ) {
-    // .unknown lets Firebase pick sandbox vs production. A mismatched type is a
-    // common reason iOS Phone Auth never sends SMS.
+    // RNFirebase also sets the Messaging APNs token via swizzling. Setting Auth
+    // here is required for Phone Auth silent verification.
     Auth.auth().setAPNSToken(deviceToken, type: .unknown)
     #if canImport(FirebaseMessaging)
     Messaging.messaging().apnsToken = deviceToken
@@ -59,28 +60,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     didFailToRegisterForRemoteNotificationsWithError error: Error
   ) {
     NSLog("[PlusOne] APNs registration failed: \(error.localizedDescription)")
-  }
-
-  func application(
-    _ application: UIApplication,
-    didReceiveRemoteNotification userInfo: [AnyHashable: Any]
-  ) -> Bool {
-    return Auth.auth().canHandleNotification(userInfo)
-  }
-
-  func application(
-    _ application: UIApplication,
-    didReceiveRemoteNotification userInfo: [AnyHashable: Any],
-    fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void
-  ) {
-    if Auth.auth().canHandleNotification(userInfo) {
-      completionHandler(.noData)
-      return
-    }
-    #if canImport(FirebaseMessaging)
-    Messaging.messaging().appDidReceiveMessage(userInfo)
-    #endif
-    completionHandler(.noData)
   }
 
   func application(
