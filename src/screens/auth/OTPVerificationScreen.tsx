@@ -36,7 +36,7 @@ function OTPVerificationScreen({ route, navigation }: Props) {
 
   const [otp, setOtp] = useState('');
   const [error, setError] = useState(
-    firebaseSmsSent ? '' : t('otpVerification.smsNotSent'),
+    !firebaseSmsSent && Platform.OS === 'ios' ? t('otpVerification.smsNotSent') : '',
   );
   const [cooldown, setCooldown] = useState(RESEND_COOLDOWN);
   const inputRef = useRef<TextInput>(null);

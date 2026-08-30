@@ -4,13 +4,13 @@ import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
 let confirmation: FirebaseAuthTypes.ConfirmationResult | null = null;
 
 export async function sendFirebaseSms(phone: string): Promise<void> {
-  // iOS must not skip verification — that blocks real SMS. Android uses
-  // Play Integrity; disabling the reCAPTCHA fallback keeps the Chrome tab closed.
+  // Never set appVerificationDisabledForTesting on real numbers — Firebase
+  // then refuses to send SMS (that is the "SMS wasn't sent" screen).
+  // Android: do not force the reCAPTCHA Chrome tab; Play Integrity is enough
+  // when SHA-1/SHA-256 are registered in Firebase.
   if (Platform.OS === 'android') {
     try {
-      const settings = auth().settings;
-      settings.appVerificationDisabledForTesting = true;
-      settings.forceRecaptchaFlowForTesting = false;
+      auth().settings.forceRecaptchaFlowForTesting = false;
     } catch {
       // ignore
     }
