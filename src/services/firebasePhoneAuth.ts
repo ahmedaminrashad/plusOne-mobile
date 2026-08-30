@@ -3,20 +3,47 @@ import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
 
 let confirmation: FirebaseAuthTypes.ConfirmationResult | null = null;
 
-function skipRecaptcha(): void {
+/**
+ * iOS Phone Auth needs an APNs token before SMS is sent. registerForRemoteNotifications
+ * is async, so a fast tap on Continue can race it and Firebase never dispatches SMS.
+ */
+async function waitForIosApnsToken(): Promise<void> {
+  if (Platform.OS !== 'ios') return;
   try {
-    const settings = auth().settings;
-    settings.appVerificationDisabledForTesting = true;
-    if (Platform.OS === 'android') {
-      settings.forceRecaptchaFlowForTesting = false;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const messaging = require('@react-native-firebase/messaging').default as {
+      (): {
+        isDeviceRegisteredForRemoteMessages: boolean;
+        registerDeviceForRemoteMessages: () => Promise<void>;
+        getAPNSToken: () => Promise<string | null>;
+      };
+    };
+    const msg = messaging();
+    if (!msg.isDeviceRegisteredForRemoteMessages) {
+      await msg.registerDeviceForRemoteMessages();
+    }
+    let token = await msg.getAPNSToken();
+    if (!token) {
+      await new Promise<void>((resolve) => setTimeout(resolve, 2000));
+      token = await msg.getAPNSToken();
     }
   } catch {
-    // Settings are optional; sending SMS still proceeds.
+    // Recaptcha fallback can still complete verification if APNs is unavailable.
   }
 }
 
 export async function sendFirebaseSms(phone: string): Promise<void> {
-  skipRecaptcha();
+  // Do not set appVerificationDisabledForTesting — that flag only sends SMS
+  // to Firebase *test* numbers. Real iOS numbers get nothing.
+  if (Platform.OS === 'android') {
+    try {
+      auth().settings.forceRecaptchaFlowForTesting = false;
+    } catch {
+      // ignore
+    }
+  } else {
+    await waitForIosApnsToken();
+  }
   confirmation = await auth().signInWithPhoneNumber(phone);
 }
 

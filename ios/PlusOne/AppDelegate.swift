@@ -46,11 +46,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     _ application: UIApplication,
     didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
   ) {
-    #if DEBUG
-    Auth.auth().setAPNSToken(deviceToken, type: .sandbox)
-    #else
-    Auth.auth().setAPNSToken(deviceToken, type: .prod)
-    #endif
+    // .unknown lets Firebase pick sandbox vs production. A mismatched type is a
+    // common reason iOS Phone Auth never sends SMS.
+    Auth.auth().setAPNSToken(deviceToken, type: .unknown)
     #if canImport(FirebaseMessaging)
     Messaging.messaging().apnsToken = deviceToken
     #endif
