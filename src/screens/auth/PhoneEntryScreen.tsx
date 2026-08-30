@@ -5,6 +5,7 @@ import {
   Image,
   StyleSheet,
   KeyboardAvoidingView,
+  Keyboard,
   Platform,
   ScrollView,
 } from 'react-native';
@@ -16,7 +17,7 @@ import Input from '../../components/common/Input';
 import { Colors } from '../../constants/colors';
 import { useTypography } from '../../hooks/useTypography';
 import { isValidPhone, formatPhone } from '../../utils/validation';
-import { sendFirebaseSms } from '../../services/firebasePhoneAuth';
+import { sendFirebaseSms, mapFirebaseAuthError } from '../../services/firebasePhoneAuth';
 import { useSendOtpMutation } from '../../store/api/authApi';
 import { resolveErrorMessage } from '../../utils/errors';
 
@@ -45,17 +46,28 @@ function PhoneEntryScreen({ navigation }: Props) {
     }
 
     try {
+      Keyboard.dismiss();
       await sendOtp({ phone: fullPhone }).unwrap();
-      let firebaseSmsSent = true;
       setIsSendingFirebase(true);
       try {
+        // Stay on this screen until Firebase finishes. Navigating away while
+        // Safari reCAPTCHA is open cancels the session and no SMS is sent.
         await sendFirebaseSms(fullPhone);
-      } catch {
-        firebaseSmsSent = false;
+      } catch (err: unknown) {
+        setIsSendingFirebase(false);
+        if (Platform.OS === 'ios') {
+          const mapped = mapFirebaseAuthError(err);
+          setError(
+            mapped === 'GENERIC'
+              ? t('phoneEntry.firebaseSmsFailed')
+              : resolveErrorMessage({ data: { message: mapped } }),
+          );
+          return;
+        }
       } finally {
         setIsSendingFirebase(false);
       }
-      navigation.navigate('OTPVerification', { phone: fullPhone, firebaseSmsSent });
+      navigation.navigate('OTPVerification', { phone: fullPhone, firebaseSmsSent: true });
     } catch (err: unknown) {
       setIsSendingFirebase(false);
       setError(resolveErrorMessage(err));

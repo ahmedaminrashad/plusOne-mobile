@@ -24,24 +24,42 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
-	<!-- Firebase Phone Auth reCAPTCHA: encoded App ID from GOOGLE_APP_ID. Without this scheme, iOS crashes on send OTP. -->
+	<!-- Firebase Phone Auth reCAPTCHA callback schemes. Each scheme is its own URL type. -->
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.googleusercontent.apps.836669561475-2osdsldtm2gordldfrahlhra039gmnia</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.836669561475-2osdsldtm2gordldfrahlhra039gmnia</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>app-1-836669561475-ios-5971763855a1d52d5859b6</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>app-1-836669561475-ios-5971763855a1d52d5859b6</string>
-				<string>com.googleusercontent.apps.836669561475-2osdsldtm2gordldfrahlhra039gmnia</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
 				<string>com.refaat.plusone</string>
 			</array>
 		</dict>
 	</array>
+	<key>GIDClientID</key>
+	<string>836669561475-2osdsldtm2gordldfrahlhra039gmnia.apps.googleusercontent.com</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>FirebaseAppDelegateProxyEnabled</key>
-	<false/>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>NSCameraUsageDescription</key>
