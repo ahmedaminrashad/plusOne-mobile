@@ -3,46 +3,17 @@ import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
 
 let confirmation: FirebaseAuthTypes.ConfirmationResult | null = null;
 
-/**
- * iOS Phone Auth needs an APNs token before SMS is sent. registerForRemoteNotifications
- * is async, so a fast tap on Continue can race it and Firebase never dispatches SMS.
- */
-async function waitForIosApnsToken(): Promise<void> {
-  if (Platform.OS !== 'ios') return;
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const messaging = require('@react-native-firebase/messaging').default as {
-      (): {
-        isDeviceRegisteredForRemoteMessages: boolean;
-        registerDeviceForRemoteMessages: () => Promise<void>;
-        getAPNSToken: () => Promise<string | null>;
-      };
-    };
-    const msg = messaging();
-    if (!msg.isDeviceRegisteredForRemoteMessages) {
-      await msg.registerDeviceForRemoteMessages();
-    }
-    let token = await msg.getAPNSToken();
-    if (!token) {
-      await new Promise<void>((resolve) => setTimeout(resolve, 2000));
-      token = await msg.getAPNSToken();
-    }
-  } catch {
-    // Recaptcha fallback can still complete verification if APNs is unavailable.
-  }
-}
-
 export async function sendFirebaseSms(phone: string): Promise<void> {
-  // Do not set appVerificationDisabledForTesting — that flag only sends SMS
-  // to Firebase *test* numbers. Real iOS numbers get nothing.
+  // Do not set appVerificationDisabledForTesting — that only works with
+  // Firebase test numbers. Do not register FCM before this call on iOS:
+  // the notification permission prompt steals focus from reCAPTCHA and
+  // the SMS is never dispatched.
   if (Platform.OS === 'android') {
     try {
       auth().settings.forceRecaptchaFlowForTesting = false;
     } catch {
       // ignore
     }
-  } else {
-    await waitForIosApnsToken();
   }
   confirmation = await auth().signInWithPhoneNumber(phone);
 }
@@ -86,6 +57,13 @@ export function mapFirebaseAuthError(err: unknown): string {
     case 'auth/app-not-authorized':
     case 'auth/operation-not-allowed':
       return 'FIREBASE_PHONE_DISABLED';
+    case 'auth/web-context-cancelled':
+    case 'auth/cancelled-popup-request':
+      return 'FIREBASE_RECAPTCHA_CANCELLED';
+    case 'auth/invalid-app-credential':
+    case 'auth/missing-app-credential':
+    case 'auth/captcha-check-failed':
+      return 'FIREBASE_APP_VERIFY_FAILED';
     default:
       return 'GENERIC';
   }

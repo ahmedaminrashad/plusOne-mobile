@@ -31,11 +31,13 @@ const MAGIC_OTP = '111111';
 function OTPVerificationScreen({ route, navigation }: Props) {
   const { t } = useTranslation('auth');
   const typography = useTypography();
-  const { phone } = route.params;
+  const { phone, firebaseSmsSent = true } = route.params;
   const dispatch = useAppDispatch();
 
   const [otp, setOtp] = useState('');
-  const [error, setError] = useState('');
+  const [error, setError] = useState(
+    firebaseSmsSent ? '' : t('otpVerification.smsNotSent'),
+  );
   const [cooldown, setCooldown] = useState(RESEND_COOLDOWN);
   const inputRef = useRef<TextInput>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);

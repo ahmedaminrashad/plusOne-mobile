@@ -39,5 +39,7 @@
   "FIREBASE_PHONE_DISABLED": "تسجيل الدخول بالهاتف غير مفعّل في مشروع Firebase.",
   "FIREBASE_TOKEN_INVALID": "تعذر التحقق من رمز الدخول. اطلب كوداً جديداً.",
   "FIREBASE_PHONE_REQUIRED": "تسجيل الدخول عبر Firebase لم يُرجع رقم هاتف.",
-  "FIREBASE_NOT_CONFIGURED": "Firebase غير مضبوط على الخادم."
+  "FIREBASE_NOT_CONFIGURED": "Firebase غير مضبوط على الخادم.",
+  "FIREBASE_RECAPTCHA_CANCELLED": "أُغلقت صفحة التحقق قبل إرسال الرسالة. حاول مرة أخرى وابقَ فيها حتى تنتهي.",
+  "FIREBASE_APP_VERIFY_FAILED": "تعذر التحقق من هذا الآيفون. أكمل صفحة التحقق، أو أضف مفتاح APNs في Firebase Cloud Messaging."
 }

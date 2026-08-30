@@ -33,11 +33,14 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>app-1-836669561475-ios-5971763855a1d52d5859b6</string>
+				<string>com.refaat.plusone</string>
 			</array>
 		</dict>
 	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>FirebaseAppDelegateProxyEnabled</key>
+	<false/>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>NSCameraUsageDescription</key>

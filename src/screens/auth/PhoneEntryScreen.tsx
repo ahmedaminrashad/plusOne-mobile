@@ -30,7 +30,9 @@ function PhoneEntryScreen({ navigation }: Props) {
   const [phone, setPhone] = useState('');
   const [countryCode] = useState(COUNTRY_CODE);
   const [error, setError] = useState('');
-  const [sendOtp, { isLoading }] = useSendOtpMutation();
+  const [sendOtp, { isLoading: isSendingBackend }] = useSendOtpMutation();
+  const [isSendingFirebase, setIsSendingFirebase] = useState(false);
+  const isLoading = isSendingBackend || isSendingFirebase;
 
   const fullPhone = formatPhone(phone, countryCode);
 
@@ -44,13 +46,18 @@ function PhoneEntryScreen({ navigation }: Props) {
 
     try {
       await sendOtp({ phone: fullPhone }).unwrap();
+      let firebaseSmsSent = true;
+      setIsSendingFirebase(true);
       try {
         await sendFirebaseSms(fullPhone);
       } catch {
-        // Firebase SMS is optional — backend magic code 111111 still works.
+        firebaseSmsSent = false;
+      } finally {
+        setIsSendingFirebase(false);
       }
-      navigation.navigate('OTPVerification', { phone: fullPhone });
+      navigation.navigate('OTPVerification', { phone: fullPhone, firebaseSmsSent });
     } catch (err: unknown) {
+      setIsSendingFirebase(false);
       setError(resolveErrorMessage(err));
     }
   }, [fullPhone, sendOtp, navigation, t]);

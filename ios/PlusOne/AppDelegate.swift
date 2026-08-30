@@ -79,6 +79,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
     return false
   }
+
+  func application(
+    _ application: UIApplication,
+    continue userActivity: NSUserActivity,
+    restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void
+  ) -> Bool {
+    if let url = userActivity.webpageURL, Auth.auth().canHandle(url) {
+      return true
+    }
+    return false
+  }
 }
 
 class ReactNativeDelegate: RCTDefaultReactNativeFactoryDelegate {

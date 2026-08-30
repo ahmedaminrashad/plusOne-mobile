@@ -39,5 +39,7 @@
   "FIREBASE_PHONE_DISABLED": "Phone sign-in is not enabled on this Firebase project.",
   "FIREBASE_TOKEN_INVALID": "Couldn't verify the SMS sign-in. Request a new code.",
   "FIREBASE_PHONE_REQUIRED": "Firebase sign-in did not return a phone number.",
-  "FIREBASE_NOT_CONFIGURED": "Firebase is not configured on the server."
+  "FIREBASE_NOT_CONFIGURED": "Firebase is not configured on the server.",
+  "FIREBASE_RECAPTCHA_CANCELLED": "Verification was closed before the SMS could be sent. Try again and stay on the page until it finishes.",
+  "FIREBASE_APP_VERIFY_FAILED": "This iPhone couldn't be verified. Finish the verification page, or add an APNs key in Firebase Cloud Messaging."
 }

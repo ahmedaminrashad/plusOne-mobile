@@ -5,7 +5,7 @@ import { PrefilledBillData } from './models';
 export type AuthStackParamList = {
   Onboarding: undefined;
   PhoneEntry: undefined;
-  OTPVerification: { phone: string };
+  OTPVerification: { phone: string; firebaseSmsSent?: boolean };
   ProfileSetup: undefined;
 };
 
