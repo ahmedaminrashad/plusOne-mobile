@@ -220,16 +220,23 @@ function GroupDetailScreen({ route, navigation }: Props) {
   const [deleteGroup, { isLoading: isDeletingGroup }] = useDeleteGroupMutation();
   const { data: me } = useGetMeQuery();
 
-  const activeMembers = useMemo(() => members?.filter((m) => m.status === 'active') ?? [], [members]);
-  const invitedCount = useMemo(
-    () => (members ?? []).filter((m) => m.status !== 'removed' && isGhostMember(m)).length,
+  const listedMembers = useMemo(
+    () => (members ?? []).filter((m) => m.status !== 'removed'),
     [members],
+  );
+  const invitedMembers = useMemo(
+    () => listedMembers.filter((m) => m.status === 'pending' || isGhostMember(m)),
+    [listedMembers],
+  );
+  const joinedMembers = useMemo(
+    () => listedMembers.filter((m) => m.status === 'active' && !isGhostMember(m)),
+    [listedMembers],
   );
   const myMembership = members?.find((m) => m.userId === me?.id);
   const isAdmin = myMembership?.role === 'admin';
 
-  const headerAvatars = activeMembers.slice(0, HEADER_AVATAR_COUNT);
-  const headerOverflow = activeMembers.length - headerAvatars.length;
+  const headerAvatars = joinedMembers.slice(0, HEADER_AVATAR_COUNT);
+  const headerOverflow = joinedMembers.length - headerAvatars.length;
 
   // ── Bills actions ───────────────────────────────────────────
 
@@ -397,12 +404,12 @@ function GroupDetailScreen({ route, navigation }: Props) {
             activeOpacity={isAdmin ? 0.7 : 1}>
             <Text style={[typography.headingSmall, styles.headerTitle]} numberOfLines={1}>{displayName}</Text>
             <Text style={[typography.bodySmall, styles.headerSubtitle]}>
-              {invitedCount > 0
+              {invitedMembers.length > 0
                 ? t('groupDetail.headerMembersMetaWithInvited', {
-                    count: activeMembers.length,
-                    invited: invitedCount,
+                    joined: joinedMembers.length,
+                    invited: invitedMembers.length,
                   })
-                : t('home.activeMembersCount', { count: activeMembers.length })}
+                : t('groupDetail.headerMembersMeta', { joined: joinedMembers.length })}
               {isAdmin ? ` · ${t('groupDetail.renameAction')}` : ''}
             </Text>
           </TouchableOpacity>
@@ -516,7 +523,7 @@ function GroupDetailScreen({ route, navigation }: Props) {
               <ActivityIndicator color={Colors.primary} style={styles.loader} />
             ) : (
               <FlatList
-                data={members?.filter((m) => m.status !== 'removed') ?? []}
+                data={listedMembers}
                 keyExtractor={(m) => m.id}
                 renderItem={renderMember}
                 contentContainerStyle={styles.list}

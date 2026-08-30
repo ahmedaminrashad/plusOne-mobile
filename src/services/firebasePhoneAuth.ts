@@ -1,8 +1,22 @@
+import { Platform } from 'react-native';
 import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
 
 let confirmation: FirebaseAuthTypes.ConfirmationResult | null = null;
 
+function skipRecaptcha(): void {
+  try {
+    const settings = auth().settings;
+    settings.appVerificationDisabledForTesting = true;
+    if (Platform.OS === 'android') {
+      settings.forceRecaptchaFlowForTesting = false;
+    }
+  } catch {
+    // Settings are optional; sending SMS still proceeds.
+  }
+}
+
 export async function sendFirebaseSms(phone: string): Promise<void> {
+  skipRecaptcha();
   confirmation = await auth().signInWithPhoneNumber(phone);
 }
 

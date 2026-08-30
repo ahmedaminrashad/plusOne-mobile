@@ -154,6 +154,9 @@ function OTPVerificationScreen({ route, navigation }: Props) {
           maxLength={OTP_LENGTH}
           style={styles.hiddenInput}
           autoFocus
+          autoComplete="sms-otp"
+          textContentType="oneTimeCode"
+          caretHidden
         />
 
         {error ? <Text style={[typography.bodyMedium, styles.error]}>{error}</Text> : null}
@@ -202,7 +205,14 @@ const styles = StyleSheet.create({
   otpBoxActive: { borderColor: Colors.primary },
   otpBoxError: { borderColor: Colors.danger },
   otpDigit: { color: Colors.text },
-  hiddenInput: { position: 'absolute', opacity: 0, height: 0 },
+  hiddenInput: {
+    position: 'absolute',
+    width: 1,
+    height: 1,
+    opacity: 0.02,
+    left: 0,
+    top: 0,
+  },
   error: { color: Colors.danger, textAlign: 'center', marginTop: -8 },
   resendBtn: { alignSelf: 'center', padding: 8 },
   resendText: { color: Colors.primary },
