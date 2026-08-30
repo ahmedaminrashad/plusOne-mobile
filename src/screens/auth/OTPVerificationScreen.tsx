@@ -86,20 +86,30 @@ function OTPVerificationScreen({ route, navigation }: Props) {
     setIsSending(true);
     try {
       await sendOtp({ phone }).unwrap();
+      let smsSent = false;
       try {
         await sendFirebaseSms(phone);
-      } catch {
-        // Backend OTP (111111) remains valid if Firebase SMS fails.
+        setError('');
+        smsSent = true;
+      } catch (err: unknown) {
+        const mapped = mapFirebaseAuthError(err);
+        setError(
+          mapped === 'GENERIC'
+            ? t('otpVerification.smsNotSent')
+            : resolveErrorMessage({ data: { message: mapped } }),
+        );
       }
-      setCooldown(RESEND_COOLDOWN);
       setOtp('');
-      setError('');
-      timerRef.current = setInterval(() => {
-        setCooldown((c) => {
-          if (c <= 1) { clearInterval(timerRef.current!); return 0; }
-          return c - 1;
-        });
-      }, 1000);
+      if (smsSent) {
+        setCooldown(RESEND_COOLDOWN);
+        if (timerRef.current) clearInterval(timerRef.current);
+        timerRef.current = setInterval(() => {
+          setCooldown((c) => {
+            if (c <= 1) { clearInterval(timerRef.current!); return 0; }
+            return c - 1;
+          });
+        }, 1000);
+      }
     } catch (err: unknown) {
       setError(t('otpVerification.resendFailed'));
     } finally {

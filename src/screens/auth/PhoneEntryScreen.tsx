@@ -17,7 +17,7 @@ import Input from '../../components/common/Input';
 import { Colors } from '../../constants/colors';
 import { useTypography } from '../../hooks/useTypography';
 import { isValidPhone, formatPhone } from '../../utils/validation';
-import { sendFirebaseSms, mapFirebaseAuthError } from '../../services/firebasePhoneAuth';
+import { sendFirebaseSms } from '../../services/firebasePhoneAuth';
 import { useSendOtpMutation } from '../../store/api/authApi';
 import { resolveErrorMessage } from '../../utils/errors';
 
@@ -49,25 +49,18 @@ function PhoneEntryScreen({ navigation }: Props) {
       Keyboard.dismiss();
       await sendOtp({ phone: fullPhone }).unwrap();
       setIsSendingFirebase(true);
+      let firebaseSmsSent = false;
       try {
         // Stay on this screen until Firebase finishes. Navigating away while
         // Safari reCAPTCHA is open cancels the session and no SMS is sent.
         await sendFirebaseSms(fullPhone);
-      } catch (err: unknown) {
-        setIsSendingFirebase(false);
-        if (Platform.OS === 'ios') {
-          const mapped = mapFirebaseAuthError(err);
-          setError(
-            mapped === 'GENERIC'
-              ? t('phoneEntry.firebaseSmsFailed')
-              : resolveErrorMessage({ data: { message: mapped } }),
-          );
-          return;
-        }
+        firebaseSmsSent = true;
+      } catch {
+        // Continue to OTP so 111111 still works if Firebase SMS fails.
       } finally {
         setIsSendingFirebase(false);
       }
-      navigation.navigate('OTPVerification', { phone: fullPhone, firebaseSmsSent: true });
+      navigation.navigate('OTPVerification', { phone: fullPhone, firebaseSmsSent });
     } catch (err: unknown) {
       setIsSendingFirebase(false);
       setError(resolveErrorMessage(err));
