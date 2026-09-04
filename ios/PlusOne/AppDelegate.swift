@@ -11,6 +11,7 @@ import FirebaseMessaging
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
   var window: UIWindow?
+  var launchOptions: [UIApplication.LaunchOptionsKey: Any]?
 
   var reactNativeDelegate: ReactNativeDelegate?
   var reactNativeFactory: RCTReactNativeFactory?
@@ -20,10 +21,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
   ) -> Bool {
     FirebaseApp.configure()
-    // Do not call registerForRemoteNotifications here. Doing it during launch and
-    // then immediately opening the app switcher talks to SpringBoard/apsd on the
-    // main thread and watchdog-locks the iPhone (black spinner, then lock screen).
-    // JS registers after a stable foreground; Phone Auth also registers on send.
 
     let delegate = ReactNativeDelegate()
     let factory = RCTReactNativeFactory(delegate: delegate)
@@ -31,17 +28,25 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     reactNativeDelegate = delegate
     reactNativeFactory = factory
+    self.launchOptions = launchOptions
 
-    window = UIWindow(frame: UIScreen.main.bounds)
-    window?.backgroundColor = UIColor(red: 244 / 255, green: 243 / 255, blue: 239 / 255, alpha: 1)
-
-    factory.startReactNative(
-      withModuleName: "PlusOne",
-      in: window,
-      launchOptions: launchOptions
-    )
-
+    // Window + RN root are created in SceneDelegate when the UIWindowScene
+    // connects. Creating UIWindow(frame:) here leaves Home / recents
+    // snapshotting an empty scene on iOS 26 (black spinner, then lock).
     return true
+  }
+
+  func application(
+    _ application: UIApplication,
+    configurationForConnecting connectingSceneSession: UISceneSession,
+    options: UIScene.ConnectionOptions
+  ) -> UISceneConfiguration {
+    let config = UISceneConfiguration(
+      name: "Default Configuration",
+      sessionRole: connectingSceneSession.role
+    )
+    config.delegateClass = SceneDelegate.self
+    return config
   }
 
   func application(
@@ -65,18 +70,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     _ app: UIApplication,
     open url: URL,
     options: [UIApplication.OpenURLOptionsKey: Any] = [:]
-  ) -> Bool {
-    if Auth.auth().canHandle(url) {
-      return true
-    }
-    return false
-  }
-
-  func application(
-    _ application: UIApplication,
-    open url: URL,
-    sourceApplication: String?,
-    annotation: Any
   ) -> Bool {
     return Auth.auth().canHandle(url)
   }
