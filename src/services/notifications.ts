@@ -17,7 +17,9 @@ function dataFromRemoteMessage(
 
 export async function requestNotificationPermission(): Promise<boolean> {
   if (Platform.OS === 'ios') {
+    if (AppState.currentState !== 'active') return false;
     const current = await messaging().hasPermission();
+    if (AppState.currentState !== 'active') return false;
     if (
       current === messaging.AuthorizationStatus.AUTHORIZED ||
       current === messaging.AuthorizationStatus.PROVISIONAL
@@ -25,7 +27,7 @@ export async function requestNotificationPermission(): Promise<boolean> {
       return true;
     }
     if (current === messaging.AuthorizationStatus.DENIED) return false;
-    // Prompting while backgrounded (Home button / silent push) can freeze the phone.
+    // Prompting while the app switcher / Home is animating freezes SpringBoard.
     if (AppState.currentState !== 'active') return false;
     const status = await messaging().requestPermission({
       alert: true,
@@ -56,9 +58,11 @@ export async function requestNotificationPermission(): Promise<boolean> {
 
 export async function getFcmToken(): Promise<string | null> {
   try {
+    if (AppState.currentState !== 'active') return null;
     if (!messaging().isDeviceRegisteredForRemoteMessages) {
       await messaging().registerDeviceForRemoteMessages();
     }
+    if (AppState.currentState !== 'active') return null;
     // iOS: APNs token often arrives a beat after registration. getToken()
     // throws until Messaging.APNSToken is set.
     for (let i = 0; i < 8; i++) {
@@ -118,6 +122,7 @@ export async function getInitialNotificationWithRetry(
 }
 
 export function clearAppBadge(): void {
+  if (AppState.currentState !== 'active') return;
   const badge = NativeModules.AppBadgeModule as { clear?: () => Promise<boolean> } | undefined;
   if (!badge?.clear) return;
   badge.clear().catch(() => {});

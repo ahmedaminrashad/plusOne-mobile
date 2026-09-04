@@ -25,7 +25,7 @@ import { extractInstaPayIdentifierFromSharedText } from '../utils/instapay';
 import { TabParamList } from '../types/navigation';
 import { baseApi } from '../store/api/baseApi';
 import i18n, { AppLanguage } from '../i18n';
-import { whenForeground } from '../utils/whenForeground';
+import { whenStableForeground } from '../utils/whenForeground';
 
 function asDataRecord(data: Record<string, unknown> | undefined | null): Record<string, string> {
   if (!data) return {};
@@ -52,14 +52,31 @@ export default function RootNavigator() {
   const showAppRef = useRef(false);
 
   useEffect(() => {
-    (async () => {
+    let cancelled = false;
+    let loaded = false;
+
+    const load = async () => {
+      if (cancelled || loaded || AppState.currentState !== 'active') return;
       const tokens = await SecureStorage.getTokens();
+      if (cancelled) return;
+      if (AppState.currentState !== 'active' && !tokens) return;
+      loaded = true;
       if (tokens) {
         dispatch(setTokens(tokens));
         dispatch(setProfileComplete(tokens.isProfileComplete));
       }
       setTokensRestored(true);
-    })();
+    };
+
+    const timer = setTimeout(load, 350);
+    const sub = AppState.addEventListener('change', (state: AppStateStatus) => {
+      if (state === 'active') load();
+    });
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+      sub.remove();
+    };
   }, [dispatch]);
 
   // Session restore only — waiting on getMe remounts Auth after OTP and looks like a reload.
@@ -75,7 +92,7 @@ export default function RootNavigator() {
   useEffect(() => {
     if (!isAuthenticated) return;
     let unsub: (() => void) | undefined;
-    const stopWait = whenForeground(() => {
+    const stopWait = whenStableForeground(() => {
       (async () => {
         const granted = await requestNotificationPermission();
         if (!granted) return;
@@ -85,7 +102,7 @@ export default function RootNavigator() {
           saveFcmToken(next);
         });
       })();
-    });
+    }, 1800);
     return () => {
       stopWait();
       unsub?.();
@@ -205,13 +222,17 @@ export default function RootNavigator() {
 
   useEffect(() => {
     const unsub = onNotificationOpenedApp(navigateFromNotification);
-    if (!handledInitialRef.current) {
+    const stopWait = whenStableForeground(() => {
+      if (handledInitialRef.current) return;
       handledInitialRef.current = true;
       getInitialNotificationWithRetry().then((data) => {
         if (data) navigateFromNotification(asDataRecord(data));
       });
-    }
-    return unsub;
+    }, 1800);
+    return () => {
+      unsub();
+      stopWait();
+    };
   }, [navigateFromNotification]);
 
   // FCM doesn't auto-show a tray notification while the app is in the foreground —
@@ -313,14 +334,20 @@ export default function RootNavigator() {
   useEffect(() => {
     if (!isAuthenticated) return;
     let lastInvalidate = 0;
-    let timer: ReturnType<typeof setTimeout> | null = null;
+    let badgeTimer: ReturnType<typeof setTimeout> | null = null;
+    let refetchTimer: ReturnType<typeof setTimeout> | null = null;
     const subscription = AppState.addEventListener('change', (state: AppStateStatus) => {
-      if (state !== 'active') return;
-      clearAppBadge();
-      if (timer) clearTimeout(timer);
-      // Let iOS finish the Home-button / lock transition before refetching.
-      // Immediate invalidation on resume is what shows the spinner, then hangs.
-      timer = setTimeout(() => {
+      if (state !== 'active') {
+        if (badgeTimer) clearTimeout(badgeTimer);
+        if (refetchTimer) clearTimeout(refetchTimer);
+        return;
+      }
+      if (badgeTimer) clearTimeout(badgeTimer);
+      badgeTimer = setTimeout(() => {
+        if (AppState.currentState === 'active') clearAppBadge();
+      }, 800);
+      if (refetchTimer) clearTimeout(refetchTimer);
+      refetchTimer = setTimeout(() => {
         if (AppState.currentState !== 'active') return;
         const now = Date.now();
         if (now - lastInvalidate < 30_000) return;
@@ -340,7 +367,8 @@ export default function RootNavigator() {
     });
     return () => {
       subscription.remove();
-      if (timer) clearTimeout(timer);
+      if (badgeTimer) clearTimeout(badgeTimer);
+      if (refetchTimer) clearTimeout(refetchTimer);
     };
   }, [dispatch, isAuthenticated]);
 

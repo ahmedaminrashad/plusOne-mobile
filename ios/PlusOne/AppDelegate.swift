@@ -11,10 +11,6 @@ import FirebaseMessaging
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
   var window: UIWindow?
-  /// Only un-hide if we hid the window for a background launch. Calling
-  /// makeKeyAndVisible on every become-active steals the key window while the
-  /// user is swiping to another app and can lock the iPhone (no crash report).
-  private var hiddenForBackgroundLaunch = false
 
   var reactNativeDelegate: ReactNativeDelegate?
   var reactNativeFactory: RCTReactNativeFactory?
@@ -24,12 +20,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
   ) -> Bool {
     FirebaseApp.configure()
-    // Silent APNs is how Firebase Phone Auth verifies the app on iOS without
-    // opening Safari. Do not implement didReceiveRemoteNotification or become
-    // UNUserNotificationCenterDelegate here — RNFirebase's AppDelegate
-    // interceptor owns FCM + Auth probe handling, and stealing those
-    // callbacks leaves the RN surface paused after lock/unlock (black screen).
-    application.registerForRemoteNotifications()
+    // Do not call registerForRemoteNotifications here. Doing it during launch and
+    // then immediately opening the app switcher talks to SpringBoard/apsd on the
+    // main thread and watchdog-locks the iPhone (black spinner, then lock screen).
+    // JS registers after a stable foreground; Phone Auth also registers on send.
 
     let delegate = ReactNativeDelegate()
     let factory = RCTReactNativeFactory(delegate: delegate)
@@ -39,7 +33,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     reactNativeFactory = factory
 
     window = UIWindow(frame: UIScreen.main.bounds)
-    // Match the JS canvas so a GPU pause during lock does not flash black.
     window?.backgroundColor = UIColor(red: 244 / 255, green: 243 / 255, blue: 239 / 255, alpha: 1)
 
     factory.startReactNative(
@@ -48,29 +41,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
       launchOptions: launchOptions
     )
 
-    // Silent push / background fetch relaunches the process while the user is
-    // on SpringBoard. Showing the RN window then (black + spinner) and prompting
-    // for permissions is what locks the iPhone — and it is not an App Store crash.
-    if application.applicationState == .background {
-      window?.isHidden = true
-      hiddenForBackgroundLaunch = true
-    }
-
     return true
-  }
-
-  func applicationDidBecomeActive(_ application: UIApplication) {
-    guard hiddenForBackgroundLaunch else { return }
-    hiddenForBackgroundLaunch = false
-    window?.isHidden = false
   }
 
   func application(
     _ application: UIApplication,
     didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
   ) {
-    // RNFirebase also sets the Messaging APNs token via swizzling. Setting Auth
-    // here is required for Phone Auth silent verification.
     Auth.auth().setAPNSToken(deviceToken, type: .unknown)
     #if canImport(FirebaseMessaging)
     Messaging.messaging().apnsToken = deviceToken
@@ -95,7 +72,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     return false
   }
 
-  // Older Safari / reCAPTCHA redirects still hit this signature on some iOS versions.
   func application(
     _ application: UIApplication,
     open url: URL,

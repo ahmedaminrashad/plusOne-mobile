@@ -39,9 +39,9 @@ export const SecureStorage = {
   },
 
   async getTokens(): Promise<{ accessToken: string; refreshToken: string; isProfileComplete: boolean } | null> {
-    // A locked-device / background keychain read can block the JS thread long
-    // enough for iOS to watchdog the whole phone (black screen, no crash report).
-    const result = await withTimeout(Keychain.getGenericPassword(), 2000);
+    // A locked-device / app-switcher keychain read can block the main thread
+    // long enough for iOS to watchdog the whole phone (black spinner, then lock).
+    const result = await withTimeout(Keychain.getGenericPassword(KEYCHAIN_OPTS), 800);
     if (!result) return null;
     try {
       const parsed = JSON.parse(result.password);
