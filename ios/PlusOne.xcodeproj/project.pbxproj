@@ -21,6 +21,8 @@
 		AA00000000000000000000C4 /* ContactsAccessModule.m in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000C3 /* ContactsAccessModule.m */; };
 		AA00000000000000000000E2 /* FirebasePhoneAuthModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000E1 /* FirebasePhoneAuthModule.swift */; };
 		AA00000000000000000000E4 /* FirebasePhoneAuthModule.m in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000E3 /* FirebasePhoneAuthModule.m */; };
+		AA00000000000000000000F2 /* AppBadgeModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000F1 /* AppBadgeModule.swift */; };
+		AA00000000000000000000F4 /* AppBadgeModule.m in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000F3 /* AppBadgeModule.m */; };
 		3D7C039861E94766B4712282 /* FigtreeLight-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 944AF53C82634278BE39AD78 /* FigtreeLight-Medium.ttf */; };
 		383039575A1A497FAC08BFD2 /* FigtreeLight-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 944AF53C82634278BE39AD78 /* FigtreeLight-Medium.ttf */; };
 		B75CC4E930424EA9BB1F0648 /* FigtreeLight-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2F85DC8A8182412FAA985992 /* FigtreeLight-Regular.ttf */; };
@@ -71,6 +73,8 @@
 		AA00000000000000000000C3 /* ContactsAccessModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = ContactsAccessModule.m; path = PlusOne/ContactsAccessModule.m; sourceTree = "<group>"; };
 		AA00000000000000000000E1 /* FirebasePhoneAuthModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = FirebasePhoneAuthModule.swift; path = PlusOne/FirebasePhoneAuthModule.swift; sourceTree = "<group>"; };
 		AA00000000000000000000E3 /* FirebasePhoneAuthModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = FirebasePhoneAuthModule.m; path = PlusOne/FirebasePhoneAuthModule.m; sourceTree = "<group>"; };
+		AA00000000000000000000F1 /* AppBadgeModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppBadgeModule.swift; path = PlusOne/AppBadgeModule.swift; sourceTree = "<group>"; };
+		AA00000000000000000000F3 /* AppBadgeModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = AppBadgeModule.m; path = PlusOne/AppBadgeModule.m; sourceTree = "<group>"; };
 		944AF53C82634278BE39AD78 /* FigtreeLight-Medium.ttf */ = {isa = PBXFileReference; name = "FigtreeLight-Medium.ttf"; path = "../assets/fonts/FigtreeLight-Medium.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 		2F85DC8A8182412FAA985992 /* FigtreeLight-Regular.ttf */ = {isa = PBXFileReference; name = "FigtreeLight-Regular.ttf"; path = "../assets/fonts/FigtreeLight-Regular.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 		DBD144A95AC64F5AAF2FD0A0 /* FigtreeLight-SemiBold.ttf */ = {isa = PBXFileReference; name = "FigtreeLight-SemiBold.ttf"; path = "../assets/fonts/FigtreeLight-SemiBold.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
@@ -144,6 +148,8 @@
 				AA00000000000000000000C3 /* ContactsAccessModule.m */,
 				AA00000000000000000000E1 /* FirebasePhoneAuthModule.swift */,
 				AA00000000000000000000E3 /* FirebasePhoneAuthModule.m */,
+				AA00000000000000000000F1 /* AppBadgeModule.swift */,
+				AA00000000000000000000F3 /* AppBadgeModule.m */,
 			);
 			name = PlusOne;
 			sourceTree = "<group>";
@@ -447,6 +453,8 @@
 				AA00000000000000000000C4 /* ContactsAccessModule.m in Sources */,
 				AA00000000000000000000E2 /* FirebasePhoneAuthModule.swift in Sources */,
 				AA00000000000000000000E4 /* FirebasePhoneAuthModule.m in Sources */,
+				AA00000000000000000000F2 /* AppBadgeModule.swift in Sources */,
+				AA00000000000000000000F4 /* AppBadgeModule.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

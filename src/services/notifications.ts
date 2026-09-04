@@ -118,10 +118,7 @@ export async function getInitialNotificationWithRetry(
 }
 
 export function clearAppBadge(): void {
-  if (Platform.OS !== 'ios') return;
-  try {
-    NativeModules.PushNotificationManager?.setApplicationIconBadgeNumber?.(0);
-  } catch {
-    // Native badge API is best-effort.
-  }
+  const badge = NativeModules.AppBadgeModule as { clear?: () => Promise<boolean> } | undefined;
+  if (!badge?.clear) return;
+  badge.clear().catch(() => {});
 }
