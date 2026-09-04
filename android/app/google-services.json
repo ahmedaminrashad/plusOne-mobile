@@ -14,7 +14,7 @@
       },
       "oauth_client": [
         {
-          "client_id": "836669561475-r5e7d8g0g8d4g8d4g8d4g8d4g8d4g8d4.apps.googleusercontent.com",
+          "client_id": "836669561475-9pr0bvvg260h5gm93a3vs52s48eh66mr.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
@@ -27,15 +27,8 @@
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "836669561475-r5e7d8g0g8d4g8d4g8d4g8d4g8d4g8d4.apps.googleusercontent.com",
+              "client_id": "836669561475-9pr0bvvg260h5gm93a3vs52s48eh66mr.apps.googleusercontent.com",
               "client_type": 3
-            },
-            {
-              "client_id": "836669561475-iosxxxxxxxx.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "com.refaat.plusone"
-              }
             }
           ]
         }

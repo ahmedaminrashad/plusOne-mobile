@@ -7,12 +7,13 @@ import { setTokens, setProfileComplete } from '../store/slices/authSlice';
 import { useAppDispatch } from '../hooks/useAppDispatch';
 import AuthStack from './AuthStack';
 import TabNavigator from './TabNavigator';
-import { View, ActivityIndicator, StyleSheet, Alert, AppState, AppStateStatus, InteractionManager } from 'react-native';
+import { View, ActivityIndicator, StyleSheet, Alert, AppState, AppStateStatus, InteractionManager, Platform } from 'react-native';
 import { Colors } from '../constants/colors';
 import { useGetMeQuery, useSaveFcmTokenMutation, useSaveLanguageMutation } from '../store/api/usersApi';
 import {
   requestNotificationPermission,
   getFcmToken,
+  onFcmTokenRefresh,
   onNotificationOpenedApp,
   getInitialNotificationWithRetry,
   onForegroundMessage,
@@ -68,15 +69,21 @@ export default function RootNavigator() {
   const showApp = isAuthenticated && isProfileComplete;
   showAppRef.current = showApp;
 
-  // Register FCM token when authenticated
+  // Register FCM token when authenticated. iOS often vends the token after
+  // APNs arrives, so also persist refreshes.
   useEffect(() => {
     if (!isAuthenticated) return;
+    let unsub: (() => void) | undefined;
     (async () => {
       const granted = await requestNotificationPermission();
       if (!granted) return;
       const token = await getFcmToken();
       if (token) await saveFcmToken(token);
+      unsub = onFcmTokenRefresh((next) => {
+        saveFcmToken(next);
+      });
     })();
+    return () => unsub?.();
   }, [isAuthenticated, saveFcmToken]);
 
   // Reset the Home stack onto the target screen so cold-start taps can't land
@@ -235,6 +242,9 @@ export default function RootNavigator() {
       // The chat itself already reflects new messages via polling — don't also
       // pop an alert over the same conversation the user is currently looking at.
       if (payload.type === 'chat_message' && payload.groupId && isChatGroupActive(payload.groupId)) return;
+
+      // iOS shows a system banner via firebase.json. Don't also pop an Alert.
+      if (Platform.OS === 'ios') return;
 
       Alert.alert(
         notification.title ?? t('rootNavigator.newNotificationTitle'),

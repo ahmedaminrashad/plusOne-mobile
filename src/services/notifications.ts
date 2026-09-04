@@ -17,7 +17,11 @@ function dataFromRemoteMessage(
 
 export async function requestNotificationPermission(): Promise<boolean> {
   if (Platform.OS === 'ios') {
-    const status = await messaging().requestPermission();
+    const status = await messaging().requestPermission({
+      alert: true,
+      badge: true,
+      sound: true,
+    });
     return (
       status === messaging.AuthorizationStatus.AUTHORIZED ||
       status === messaging.AuthorizationStatus.PROVISIONAL
@@ -45,10 +49,25 @@ export async function getFcmToken(): Promise<string | null> {
     if (!messaging().isDeviceRegisteredForRemoteMessages) {
       await messaging().registerDeviceForRemoteMessages();
     }
-    return await messaging().getToken();
+    // iOS: APNs token often arrives a beat after registration. getToken()
+    // throws until Messaging.APNSToken is set.
+    for (let i = 0; i < 8; i++) {
+      try {
+        const token = await messaging().getToken();
+        if (token) return token;
+      } catch {
+        // keep retrying
+      }
+      await new Promise((r) => setTimeout(r, 400));
+    }
+    return null;
   } catch {
     return null;
   }
+}
+
+export function onFcmTokenRefresh(handler: (token: string) => void) {
+  return messaging().onTokenRefresh(handler);
 }
 
 export function onNotificationOpenedApp(handler: (data: Record<string, string>) => void) {

@@ -23,6 +23,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     FirebaseApp.configure()
     // Silent APNs is how Firebase Phone Auth verifies the app on iOS without
     // opening Safari. The new RN Swift AppDelegate is not reliably swizzled.
+    // Do not implement didReceiveRemoteNotification here —
+    // RNFirebase's AppDelegate interceptor owns FCM + Auth probe handling.
     UNUserNotificationCenter.current().delegate = self
     application.registerForRemoteNotifications()
 
@@ -48,8 +50,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     _ application: UIApplication,
     didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
   ) {
-    // .unknown lets Firebase pick sandbox vs production. A mismatched type is a
-    // common reason iOS Phone Auth never sends SMS.
+    // RNFirebase also sets the Messaging APNs token via swizzling. Setting Auth
+    // here is required for Phone Auth silent verification.
     Auth.auth().setAPNSToken(deviceToken, type: .unknown)
     #if canImport(FirebaseMessaging)
     Messaging.messaging().apnsToken = deviceToken
@@ -58,17 +60,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 
   func application(
     _ application: UIApplication,
-    didReceiveRemoteNotification userInfo: [AnyHashable: Any],
-    fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void
+    didFailToRegisterForRemoteNotificationsWithError error: Error
   ) {
-    if Auth.auth().canHandleNotification(userInfo) {
-      completionHandler(.noData)
-      return
-    }
-    #if canImport(FirebaseMessaging)
-    Messaging.messaging().appDidReceiveMessage(userInfo)
-    #endif
-    completionHandler(.noData)
+    NSLog("[PlusOne] APNs registration failed: \(error.localizedDescription)")
   }
 
   func application(

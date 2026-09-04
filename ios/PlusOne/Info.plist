@@ -31,10 +31,10 @@
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>CFBundleURLName</key>
-			<string>com.googleusercontent.apps.836669561475-2osdsldtm2gordldfrahlhra039gmnia</string>
+			<string>com.googleusercontent.apps.836669561475-9pr0bvvg260h5gm93a3vs52s48eh66mr</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.googleusercontent.apps.836669561475-2osdsldtm2gordldfrahlhra039gmnia</string>
+				<string>com.googleusercontent.apps.836669561475-9pr0bvvg260h5gm93a3vs52s48eh66mr</string>
 			</array>
 		</dict>
 		<dict>
@@ -57,7 +57,7 @@
 		</dict>
 	</array>
 	<key>GIDClientID</key>
-	<string>836669561475-2osdsldtm2gordldfrahlhra039gmnia.apps.googleusercontent.com</string>
+	<string>836669561475-9pr0bvvg260h5gm93a3vs52s48eh66mr.apps.googleusercontent.com</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>ITSAppUsesNonExemptEncryption</key>
