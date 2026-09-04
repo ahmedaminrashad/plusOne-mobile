@@ -26,6 +26,7 @@ import { useGetGroupMessagesQuery, useSendGroupMessageMutation, useUploadChatIma
 import { ChatMessage } from '../../types/models';
 import { AppStackParamList } from '../../types/navigation';
 import { formatDate, formatCurrency, formatBillDisplayName } from '../../utils/format';
+import { downsampledSource } from '../../utils/remoteImage';
 import { useKeyboardInsetHeight } from '../../services/keyboardInsets';
 import { ReceiptIcon, ChatBubbleIcon, PaperclipIcon, SendIcon, WarningIcon } from '../../components/icons';
 
@@ -104,7 +105,7 @@ function MessageBubble({
               pending.failed && styles.bubbleFailed,
             ]}>
               {pending.imageUri && (
-                <Image source={{ uri: pending.imageUri }} style={styles.bubbleImage} resizeMode="cover" />
+                <Image source={downsampledSource(pending.imageUri, 200)} resizeMethod="resize" style={styles.bubbleImage} resizeMode="cover" />
               )}
               {!!pending.text && (
                 <Text style={[typography.bodyMedium, styles.bubbleText, styles.bubbleTextMine]}>{pending.text}</Text>
@@ -167,7 +168,7 @@ function MessageBubble({
             isMine ? styles.bubbleMine : styles.bubbleTheirs,
           ]}>
             {msg.imageUrl && (
-              <Image source={{ uri: msg.imageUrl }} style={styles.bubbleImage} resizeMode="cover" />
+              <Image source={downsampledSource(msg.imageUrl, 200)} resizeMethod="resize" style={styles.bubbleImage} resizeMode="cover" />
             )}
             {!!msg.text && (
               <Text style={[typography.bodyMedium, styles.bubbleText, isMine && styles.bubbleTextMine]}>{msg.text}</Text>

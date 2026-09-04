@@ -14,9 +14,17 @@ function trimCaches(): void {
   }
 }
 
-/** Jetsam on iPhone 11 killed backboardd because PlusOne sat at ~650MB. */
+/**
+ * JetsamEvent-2026-09-04-185318: PlusOne was ~650MB and still frontmost
+ * when iOS killed backboardd (per-process-limit, ~2.1GB). The snapshot
+ * happens on inactive (app switcher) — do not run heavy JS there.
+ */
 export function installMemoryGuard(): () => void {
   const onChange = (state: AppStateStatus) => {
+    if (state === 'inactive') {
+      enableFreeze(true);
+      return;
+    }
     if (state === 'background') {
       enableFreeze(true);
       trimCaches();

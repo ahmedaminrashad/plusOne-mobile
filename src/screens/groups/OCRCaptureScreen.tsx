@@ -6,7 +6,9 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Image,
+  Dimensions,
 } from 'react-native';
+import { downsampledSource } from '../../utils/remoteImage';
 import SafeScreen from '../../components/common/SafeScreen';
 import { useTranslation } from 'react-i18next';
 import { launchCamera, launchImageLibrary, Asset } from 'react-native-image-picker';
@@ -144,7 +146,12 @@ function OCRCaptureScreen({ route, navigation }: Props) {
     <SafeScreen style={styles.container}>
       {captured ? (
         <View style={styles.previewContainer}>
-          <Image source={{ uri: captured.uri }} style={styles.previewImage} resizeMode="contain" />
+          <Image
+            source={downsampledSource(captured.uri, Dimensions.get('window').width, Dimensions.get('window').height)}
+            resizeMethod="resize"
+            style={styles.previewImage}
+            resizeMode="contain"
+          />
           <View style={styles.previewActions}>
             {processing ? (
               <View style={styles.processingRow}>

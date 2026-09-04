@@ -17,6 +17,7 @@ import Avatar from '../../components/common/Avatar';
 import { PeopleIcon, ChevronRightIcon } from '../../components/icons';
 import { Colors } from '../../constants/colors';
 import { resolveAssetUrl } from '../../utils/format';
+import { downsampledSource } from '../../utils/remoteImage';
 
 type Props = AppScreenProps<'SelectGroupToShare'>;
 
@@ -43,7 +44,7 @@ function SelectGroupToShareScreen({ route, navigation }: Props) {
   return (
     <SafeScreen style={styles.container}>
       <View style={styles.previewRow}>
-        <Image source={{ uri: imageUri }} style={styles.preview} resizeMode="cover" />
+        <Image source={downsampledSource(imageUri, 56)} resizeMethod="resize" style={styles.preview} resizeMode="cover" />
         <Text style={styles.subtitle}>{t('shareToGroup.subtitle')}</Text>
       </View>
 

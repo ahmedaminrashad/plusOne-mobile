@@ -8,6 +8,7 @@ import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
 import { resolveAssetUrl } from '../../utils/format';
+import { downsampledSource } from '../../utils/remoteImage';
 
 const VISIBLE_AVATARS = 4;
 
@@ -31,7 +32,7 @@ function GroupCard({ group, onPress }: Props) {
       <View style={styles.row}>
         <View style={styles.groupIconWrap}>
           {avatarUrl ? (
-            <Image source={{ uri: avatarUrl }} style={styles.groupIconImage} />
+            <Image source={downsampledSource(avatarUrl, 48)} resizeMethod="resize" style={styles.groupIconImage} />
           ) : (
             <PeopleIcon size={22} color={Colors.primary} />
           )}

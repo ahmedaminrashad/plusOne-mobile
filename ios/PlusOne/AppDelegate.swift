@@ -20,6 +20,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
   ) -> Bool {
+    // Default URLCache can keep tens of MB of decoded HTTP bodies. On a 4GB
+    // iPhone 11 that plus full-res avatars is what jetsam-killed backboardd.
+    URLCache.shared = URLCache(memoryCapacity: 8 * 1024 * 1024, diskCapacity: 32 * 1024 * 1024)
+
     FirebaseApp.configure()
 
     let delegate = ReactNativeDelegate()

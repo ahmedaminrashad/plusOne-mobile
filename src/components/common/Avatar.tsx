@@ -2,6 +2,7 @@ import React, { memo } from 'react';
 import { View, Image, Text, StyleSheet, StyleProp, ViewStyle, ImageStyle, Platform } from 'react-native';
 import { Colors, getAvatarColor } from '../../constants/colors';
 import { useTypography } from '../../hooks/useTypography';
+import { downsampledSource } from '../../utils/remoteImage';
 
 interface Props {
   uri?: string | null;
@@ -59,7 +60,8 @@ function Avatar({ uri, name, seed, size = 44, style, imageStyle, ghost }: Props)
     <View style={containerStyle}>
       {uri ? (
         <Image
-          source={{ uri }}
+          source={downsampledSource(uri, size)}
+          resizeMethod="resize"
           style={[styles.image, { width: size, height: size, borderRadius: size / 2 } as ImageStyle, imageStyle]}
         />
       ) : (
