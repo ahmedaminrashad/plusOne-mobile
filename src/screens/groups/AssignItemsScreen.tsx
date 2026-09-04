@@ -76,7 +76,7 @@ function ItemRow({
       <View style={styles.itemHeader}>
         <View style={styles.itemNameBlock}>
           <Text style={[typography.labelLarge, styles.itemName]}>{item.name}</Text>
-          {item.qty > 1 && (
+          {item.qty !== 1 && (
             <Text style={[typography.bodySmall, styles.itemQty]}>{item.qty} × {roundMoney(item.price).toFixed(2)}</Text>
           )}
         </View>

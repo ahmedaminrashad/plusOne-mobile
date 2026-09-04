@@ -23,7 +23,7 @@ import { useCreateBillMutation } from '../../store/api/billsApi';
 import { useGetGroupMembersQuery } from '../../store/api/groupsApi';
 import { useGetMeQuery } from '../../store/api/usersApi';
 import { GroupMember, TaxServiceType, ParsedReceiptData } from '../../types/models';
-import { formatCurrency, formatMoneyDigits, roundMoney } from '../../utils/format';
+import { formatCurrency, formatMoneyDigits, roundMoney, parseQty, sanitizeQtyInput } from '../../utils/format';
 import { useInputTextAlign } from '../../utils/rtl';
 import { CheckIcon, CloseIcon, ChevronDownIcon } from '../../components/icons';
 
@@ -94,7 +94,9 @@ function CreateBillScreen({ route, navigation }: Props) {
   const [deliveryType, setDeliveryType] = useState<TaxServiceType>(prefilledData?.deliveryType ?? 'percent');
   const [vatValue, setVatValue] = useState(prefilledData?.vat != null ? formatMoneyDigits(prefilledData.vat) : '');
   const [vatType, setVatType] = useState<TaxServiceType>(prefilledData?.vatType ?? 'percent');
-  const [grandTotalOverride, setGrandTotalOverride] = useState('');
+  const [grandTotalOverride, setGrandTotalOverride] = useState(
+    prefilledData?.grandTotal != null ? formatMoneyDigits(prefilledData.grandTotal) : '',
+  );
   const [paidByUserId, setPaidByUserId] = useState('');
   const [payerPickerVisible, setPayerPickerVisible] = useState(false);
   const [isLumpSum, setIsLumpSum] = useState(false);
@@ -203,7 +205,7 @@ function CreateBillScreen({ route, navigation }: Props) {
         id: it.id,
         name: it.name.trim(),
         price: roundMoney(parseNum(it.unitPrice)),
-        qty: Math.max(1, Math.floor(parseNum(it.qty))),
+        qty: Math.max(0.001, parseQty(it.qty) || 1),
       })),
       tax: taxValue ? roundMoney(parseNum(taxValue)) : undefined,
       taxType: taxValue ? taxType : undefined,
@@ -297,7 +299,7 @@ function CreateBillScreen({ route, navigation }: Props) {
             {/* Items */}
             {items.map((item, index) => (
               <View key={item.id} style={styles.itemRow}>
-                <Text style={[typography.labelMedium, styles.itemIndex]}>{index + 1}</Text>
+                <Text style={[typography.bodyMedium, styles.itemIndex]}>{index + 1}</Text>
                 <TextInput
                   style={[typography.bodyLarge, styles.itemNameInput]}
                   value={item.name}
@@ -321,10 +323,10 @@ function CreateBillScreen({ route, navigation }: Props) {
                   <TextInput
                     style={[typography.labelMedium, styles.itemQtyInput]}
                     value={item.qty}
-                    onChangeText={(v) => updateItem(item.id, 'qty', v.replace(/[^0-9]/g, ''))}
+                    onChangeText={(v) => updateItem(item.id, 'qty', sanitizeQtyInput(v))}
                     placeholder={t('createBill.qtyPlaceholder')}
                     placeholderTextColor={Colors.textMuted}
-                    keyboardType="number-pad"
+                    keyboardType="decimal-pad"
                     textAlign="center"
                   />
                 </View>
@@ -475,7 +477,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.primary + '40',
   },
-  previewBannerText: { color: Colors.primary, textAlign: 'right' },
+  previewBannerText: { color: Colors.primary, textAlign: 'center' },
 
   sectionLabel: { color: Colors.textSecondary, marginBottom: 6, textAlign: 'right' },
   input: {
@@ -549,14 +551,15 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     marginBottom: 8,
   },
-  itemIndex: { color: Colors.textMuted, minWidth: 22, textAlign: 'center' },
-  itemNameInput: { flex: 1, color: Colors.text, padding: 0 },
+  itemIndex: { color: Colors.textMuted, minWidth: 28, textAlign: 'center' },
+  itemNameInput: { flex: 1, color: Colors.text, padding: 0, minHeight: 36 },
   itemPriceInput: {
-    minWidth: 72,
+    minWidth: 80,
+    height: 36,
     color: Colors.text,
     paddingHorizontal: 8,
-    paddingVertical: 4,
-    textAlign: 'right',
+    paddingVertical: 0,
+    textAlign: 'center',
     borderWidth: 1,
     borderColor: Colors.border,
     borderRadius: Radius.sm,
@@ -564,8 +567,8 @@ const styles = StyleSheet.create({
   },
   multiplySign: { fontSize: 14, color: Colors.textMuted, fontWeight: '700' },
   qtyChip: {
-    minWidth: 36,
-    height: 28,
+    minWidth: 44,
+    height: 36,
     borderRadius: Radius.sm,
     backgroundColor: Colors.neutral100,
     borderWidth: 1,
@@ -573,7 +576,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  itemQtyInput: { color: Colors.text, padding: 0, minWidth: 24, textAlign: 'center' },
+  itemQtyInput: { color: Colors.text, padding: 0, minWidth: 36, textAlign: 'center', fontSize: 16 },
   removeItemBtn: { padding: 4 },
 
   subtotalRow: {

@@ -22,7 +22,7 @@ import Button from '../../components/common/Button';
 import { useGetBillDetailQuery } from '../../store/api/billsApi';
 import { usePayShareMutation, useCancelShareInitiationMutation } from '../../store/api/sharesApi';
 import { useGetMeQuery } from '../../store/api/usersApi';
-import { formatCurrency, resolveAssetUrl } from '../../utils/format';
+import { formatCurrency, resolveAssetUrl, formatBillDisplayName } from '../../utils/format';
 import { normalizeInstaPayIdentifier, buildInstaPayLink } from '../../utils/instapay';
 import { ChevronLeftIcon } from '../../components/icons';
 
@@ -42,7 +42,7 @@ function PayShareScreen({ route, navigation }: Props) {
   const typography = useTypography();
   const { groupId, groupName, billId } = route.params;
   const { data: bill, isLoading, refetch } = useGetBillDetailQuery(billId);
-  const { data: me } = useGetMeQuery();
+  const { data: me, isLoading: loadingMe } = useGetMeQuery();
   const [payShare, { isLoading: isPaying }] = usePayShareMutation();
   const [cancelInitiation] = useCancelShareInitiationMutation();
 
@@ -173,7 +173,7 @@ function PayShareScreen({ route, navigation }: Props) {
     );
   }, [myShare, payerName, payShare, t]);
 
-  if (isLoading || !bill) {
+  if (isLoading || loadingMe || !bill || !me) {
     return (
       <SafeScreen style={styles.container}>
         <ActivityIndicator color={Colors.primary} style={styles.loader} />
@@ -181,7 +181,7 @@ function PayShareScreen({ route, navigation }: Props) {
     );
   }
 
-  const displayName = bill.venueName ?? bill.title ?? t('viewReceipt.defaultBillName');
+  const displayName = formatBillDisplayName(bill, t('viewReceipt.defaultBillName'));
 
   return (
     <SafeScreen style={styles.container}>
@@ -249,7 +249,7 @@ function PayShareScreen({ route, navigation }: Props) {
                 {bill.lineItems!.map((it, idx) => (
                   <View key={`${it.name}-${idx}`} style={styles.lineItemRow}>
                     <Text style={[typography.bodyMedium, styles.lineItemName]} numberOfLines={2}>
-                      {it.qty > 1 ? `${it.qty}× ` : ''}{it.name}
+                      {it.qty !== 1 ? `${it.qty}× ` : ''}{it.name}
                     </Text>
                     <Text style={[typography.bodyMedium, styles.lineItemAmt]}>
                       {formatCurrency(it.qty * it.unitPrice)}
@@ -265,7 +265,11 @@ function PayShareScreen({ route, navigation }: Props) {
             <Text style={[typography.caption, styles.footerNote]}>{t('payShare.cashNote', { payer: payerName })}</Text>
             <Text style={[typography.caption, styles.footerNote]}>{t('payShare.instaPayNote', { payer: payerName })}</Text>
           </>
-        ) : null}
+        ) : (
+          <View style={styles.statusCard}>
+            <Text style={[typography.bodyLarge, styles.pendingText]}>{t('payShare.noShareFound')}</Text>
+          </View>
+        )}
       </View>
     </SafeScreen>
   );

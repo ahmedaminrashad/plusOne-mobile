@@ -30,6 +30,8 @@ import { useTypography } from '../../hooks/useTypography';
 import { useGetMeQuery } from '../../store/api/usersApi';
 import { useGetMySharesQuery } from '../../store/api/sharesApi';
 import { formatCurrency, resolveAssetUrl } from '../../utils/format';
+import { useAppDispatch } from '../../hooks/useAppDispatch';
+import { baseApi } from '../../store/api/baseApi';
 
 type Props = AppScreenProps<'Home'>;
 
@@ -39,13 +41,10 @@ function HomeScreen({ navigation }: Props) {
   const { t } = useTranslation('groups');
   const typography = useTypography();
   const { data: me } = useGetMeQuery();
-  const { data: groups, isLoading, isFetching, refetch, isError } = useGetGroupsQuery(undefined, {
-    pollingInterval: 15_000,
-  });
-  const { data: invitations } = useGetMyInvitationsQuery(undefined, {
-    pollingInterval: 15_000,
-  });
-  const { data: myShares } = useGetMySharesQuery(undefined, { pollingInterval: 15_000 });
+  const dispatch = useAppDispatch();
+  const { data: groups, isLoading, refetch, isError } = useGetGroupsQuery();
+  const { data: invitations, refetch: refetchInvites } = useGetMyInvitationsQuery();
+  const { data: myShares, refetch: refetchShares } = useGetMySharesQuery();
   const [accept] = useAcceptInvitationMutation();
   const [decline] = useDeclineInvitationMutation();
 
@@ -63,6 +62,21 @@ function HomeScreen({ navigation }: Props) {
   const pendingCount = (invitations?.length ?? 0) + approvalCount + toPayCount;
   const [showModal, setShowModal] = useState(false);
   const shownRef = useRef(false);
+  const [manualRefreshing, setManualRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    setManualRefreshing(true);
+    try {
+      await Promise.all([
+        refetch(),
+        refetchShares(),
+        refetchInvites(),
+      ]);
+      dispatch(baseApi.util.invalidateTags(['Ledger']));
+    } finally {
+      setManualRefreshing(false);
+    }
+  }, [refetch, refetchShares, refetchInvites, dispatch]);
 
   const [balances, setBalances] = useState<Record<string, number>>({});
   const handleBalance = useCallback((groupId: string, net: number) => {
@@ -217,7 +231,7 @@ function HomeScreen({ navigation }: Props) {
           (!groups || groups.length === 0) && !isLoading ? styles.listEmpty : styles.list
         }
         refreshControl={
-          <RefreshControl refreshing={isFetching} onRefresh={refetch} tintColor={Colors.secondary} />
+          <RefreshControl refreshing={manualRefreshing} onRefresh={handleRefresh} tintColor={Colors.secondary} />
         }
         ListFooterComponent={
           isLoading ? <ActivityIndicator color={Colors.secondary} style={styles.loader} /> : null

@@ -7,7 +7,7 @@
     "scanQrSubtitle": "الإيصال الإلكتروني بيتحمل بالتفصيل، فورًا",
     "scanQrBadge": "الأسرع",
     "scanReceiptTitle": "صوّر الإيصال",
-    "scanReceiptSubtitle": "بنقراه (OCR) — وانت تأكد كل سطر",
+    "scanReceiptSubtitle": "بنقراه — وانت تأكد كل سطر",
     "manualTitle": "إدخال يدوي",
     "manualSubtitle": "بالتفصيل، أو الإجمالي بس",
     "footer": "أي طريقة تدخل بيها — التقسيم بيشتغل نفس الطريقة بعد كده.",
@@ -45,8 +45,8 @@
     "payerModalTitle": "من دفع؟",
     "selectPayerFallback": "اختر من دفع",
     "defaultMemberName": "مستخدم",
-    "qrPreviewBanner": "📷 تم مسح QR — راجع التفاصيل وعدّل إن لزم",
-    "ocrPreviewBanner": "🖨 نتيجة OCR — راجع وعدّل أي حقل",
+    "qrPreviewBanner": "تم مسح QR — راجع التفاصيل وعدّل إن لزم",
+    "ocrPreviewBanner": "نتيجة مسح الكاميرا — راجع وعدّل أي حقل",
     "amountMustBePositive": "يجب أن يكون المبلغ أكبر من صفر.",
     "saveFailed": "تعذر حفظ الإيصال، حاول مرة أخرى لاحقاً."
   },
@@ -119,7 +119,8 @@
     "cashConfirmTitle": "تأكيد الدفع كاش؟",
     "cashConfirmMessage": "هنبلّغ {{payer}} إنك دفعت كاش — هيأكد الاستلام قبل ما تتسجل كمدفوعة.",
     "cashNote": "الدفع كاش بيتأكد من {{payer}} قبل ما يتسجل كمدفوع.",
-    "instaPayNote": "InstaPay بيروح على طول لـ {{payer}} — +one مايمسكش الفلوس أبدًا."
+    "instaPayNote": "InstaPay بيروح على طول لـ {{payer}} — +one مايمسكش الفلوس أبدًا.",
+    "noShareFound": "مفيش حصة ليك على الإيصال ده."
   },
   "viewReceipt": {
     "captureMethodQr": "مسح QR",
@@ -140,6 +141,7 @@
     "notFound": "تعذر العثور على الإيصال",
     "defaultUserName": "مستخدم",
     "defaultBillName": "إيصال",
+    "receiptDateFallback": "إيصال · {{date}}",
     "paidByAndDate": "دفع {{payerName}} • {{date}}",
     "shareSettled": "تم دفع نصيبك ✅",
     "awaitingConfirmation": "بانتظار تأكيد {{payerName}} لاستلام {{amount}}",
@@ -204,7 +206,7 @@
     "chooseAnotherButton": "اختيار صورة أخرى",
     "guideHint": "خلي الإيصال كله في الإطار · ابعد عن الضل",
     "captureTitle": "صوّر الإيصال",
-    "captureSubtitle": "التقط صورة أو اختر من المعرض. هنقراها بـ OCR — وانت تأكد كل سطر قبل الحفظ.",
+    "captureSubtitle": "التقط صورة أو اختر من المعرض. هنقرا نتيجة مسح الكاميرا — وانت تأكد كل سطر قبل الحفظ.",
     "captureButton": "📷  التقاط صورة",
     "galleryButton": "اختيار من المعرض"
   }

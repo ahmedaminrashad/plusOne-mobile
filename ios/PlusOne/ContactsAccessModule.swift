@@ -37,7 +37,9 @@ class ContactsAccessModule: NSObject {
         let finish: ([String]) -> Void = { ids in
           guard !settled else { return }
           settled = true
-          box.controller?.dismiss(animated: false) {
+          if let controller = box.controller, controller.presentingViewController != nil {
+            controller.dismiss(animated: false) { resolve(ids) }
+          } else {
             resolve(ids)
           }
         }
@@ -45,8 +47,13 @@ class ContactsAccessModule: NSObject {
         let host = UIHostingController(rootView: LimitedContactsPickerHost(onComplete: finish))
         host.view.backgroundColor = .clear
         host.modalPresentationStyle = .overFullScreen
+        host.view.isOpaque = false
         box.controller = host
         presenter.present(host, animated: false)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 45) {
+          finish([])
+        }
       } else {
         reject("UNSUPPORTED", "Limited contacts picker requires iOS 18", nil)
       }

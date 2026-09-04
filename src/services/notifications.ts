@@ -1,5 +1,5 @@
 import messaging, { FirebaseMessagingTypes } from '@react-native-firebase/messaging';
-import { Platform, PermissionsAndroid } from 'react-native';
+import { Platform, PermissionsAndroid, NativeModules } from 'react-native';
 
 function dataFromRemoteMessage(
   remoteMessage: FirebaseMessagingTypes.RemoteMessage | null | undefined,
@@ -28,10 +28,10 @@ export async function requestNotificationPermission(): Promise<boolean> {
     const result = await PermissionsAndroid.request(
       PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
       {
-        title: 'إذن الإشعارات',
-        message: 'يحتاج التطبيق إذن الإشعارات لتنبيهك بالفواتير والمدفوعات الجديدة',
-        buttonPositive: 'موافق',
-        buttonNegative: 'إلغاء',
+        title: 'Notifications',
+        message: '+one needs notifications to alert you about receipts and payments.',
+        buttonPositive: 'Allow',
+        buttonNegative: 'Cancel',
       },
     );
     return result === PermissionsAndroid.RESULTS.GRANTED;
@@ -86,4 +86,13 @@ export async function getInitialNotificationWithRetry(
     if (data?.type || data?.groupId) return data;
   }
   return null;
+}
+
+export function clearAppBadge(): void {
+  if (Platform.OS !== 'ios') return;
+  try {
+    NativeModules.PushNotificationManager?.setApplicationIconBadgeNumber?.(0);
+  } catch {
+    // Native badge API is best-effort; AppDelegate also clears on become-active.
+  }
 }

@@ -54,8 +54,6 @@ function RemindScreen({ navigation }: Props) {
   }, [rows.length]);
 
   const selectedRows = rows.filter((r) => selected.has(r.key));
-  const selectedTotal = selectedRows.reduce((sum, r) => sum + r.amountPiastres, 0);
-  const firstRow = selectedRows[0];
 
   const handleSend = useCallback(async () => {
     try {
@@ -133,25 +131,8 @@ function RemindScreen({ navigation }: Props) {
               );
             }}
             ListFooterComponent={
-              firstRow ? (
-                <View style={styles.previewCard}>
-                  <Text style={[typography.labelMedium, styles.previewHeader]}>{t('remind.theyllReceive')}</Text>
-                  <View style={styles.previewBubble}>
-                    <View style={styles.previewSenderRow}>
-                      <View style={styles.previewIcon} />
-                      <Text style={[typography.labelSmall, styles.previewSender]}>{t('remind.previewSender')}</Text>
-                    </View>
-                    <Text style={[typography.bodyMedium, styles.previewMessage]}>
-                      {t('remind.previewMessage', {
-                        name: me?.displayName ?? t('groupDetail.defaultUserName'),
-                        bill: firstRow.billName || t('groupDetail.defaultBillName'),
-                        group: firstRow.groupName,
-                        amount: (firstRow.amountPiastres / 100).toFixed(2),
-                      })}
-                    </Text>
-                  </View>
-                  <Text style={[typography.caption, styles.rateLimitNote]}>{t('remind.rateLimitNote')}</Text>
-                </View>
+              selectedRows.length > 0 ? (
+                <Text style={[typography.caption, styles.rateLimitNote]}>{t('remind.rateLimitNote')}</Text>
               ) : null
             }
           />

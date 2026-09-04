@@ -8,6 +8,7 @@ import {
   Keyboard,
   Platform,
   ScrollView,
+  TouchableOpacity,
 } from 'react-native';
 import SafeScreen from '../../components/common/SafeScreen';
 import { useTranslation } from 'react-i18next';
@@ -19,6 +20,7 @@ import { useTypography } from '../../hooks/useTypography';
 import { isValidPhone, formatPhone } from '../../utils/validation';
 import { sendFirebaseSms, mapFirebaseAuthError } from '../../services/firebasePhoneAuth';
 import { useSendOtpMutation } from '../../store/api/authApi';
+import { changeLanguage, AppLanguage } from '../../i18n';
 import { resolveErrorMessage } from '../../utils/errors';
 
 type Props = AuthScreenProps<'PhoneEntry'>;
@@ -26,7 +28,7 @@ type Props = AuthScreenProps<'PhoneEntry'>;
 const COUNTRY_CODE = '+20';
 
 function PhoneEntryScreen({ navigation }: Props) {
-  const { t } = useTranslation('auth');
+  const { t, i18n } = useTranslation('auth');
   const typography = useTypography();
   const [phone, setPhone] = useState('');
   const [countryCode] = useState(COUNTRY_CODE);
@@ -34,6 +36,11 @@ function PhoneEntryScreen({ navigation }: Props) {
   const [sendOtp, { isLoading: isSendingBackend }] = useSendOtpMutation();
   const [isSendingFirebase, setIsSendingFirebase] = useState(false);
   const isLoading = isSendingBackend || isSendingFirebase;
+  const currentLanguage = (i18n.language === 'ar' ? 'ar' : 'en') as AppLanguage;
+
+  const toggleLanguage = useCallback(() => {
+    changeLanguage(currentLanguage === 'en' ? 'ar' : 'en');
+  }, [currentLanguage]);
 
   const fullPhone = formatPhone(phone, countryCode);
 
@@ -90,6 +97,11 @@ function PhoneEntryScreen({ navigation }: Props) {
           contentContainerStyle={styles.content}
           keyboardShouldPersistTaps="handled"
           bounces={false}>
+          <TouchableOpacity style={styles.langToggle} onPress={toggleLanguage} hitSlop={12}>
+            <Text style={[typography.labelMedium, styles.langToggleText]}>
+              {currentLanguage === 'en' ? 'العربية' : 'English'}
+            </Text>
+          </TouchableOpacity>
           <Image
             source={require('../../../assets/PlusOne.png')}
             style={styles.logo}
@@ -143,6 +155,8 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   logo: { width: 56, height: 56, marginBottom: 20 },
+  langToggle: { alignSelf: 'flex-end', marginBottom: 8, paddingVertical: 4, paddingHorizontal: 8 },
+  langToggleText: { color: Colors.primary },
   headline: { color: Colors.text, textAlign: 'left', marginBottom: 24 },
   form: { marginBottom: 4 },
   hint: { color: Colors.textSecondary, marginTop: 10 },

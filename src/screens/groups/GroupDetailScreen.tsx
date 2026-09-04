@@ -29,7 +29,7 @@ import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
 import { useGetMeQuery } from '../../store/api/usersApi';
-import { formatDate, formatCurrency, resolveAssetUrl } from '../../utils/format';
+import { formatDate, formatCurrency, resolveAssetUrl, formatBillDisplayName } from '../../utils/format';
 import GroupChatPane from './GroupChatPane';
 import GroupLedgerScreen from './GroupLedgerScreen';
 import { ChevronLeftIcon, TrashIcon, ReceiptIcon } from '../../components/icons';
@@ -121,7 +121,7 @@ function BillCard({
 
   const payerName = bill.paidBy?.displayName ?? t('groupDetail.defaultUserName');
   const date = formatDate(new Date(bill.createdAt), { day: 'numeric', month: 'short' });
-  const displayName = bill.venueName ?? bill.title ?? t('groupDetail.defaultBillName');
+  const displayName = formatBillDisplayName(bill, t('groupDetail.defaultBillName'));
 
   const activeShares = (shares ?? []).filter((s) => s.status !== 'cancelled');
   const settledCount = activeShares.filter((s) => s.status === 'settled').length;
@@ -255,7 +255,7 @@ function GroupDetailScreen({ route, navigation }: Props) {
     (bill: Bill) => {
       Alert.alert(
         t('groupDetail.deleteBillTitle'),
-        t('groupDetail.deleteBillMessage', { name: bill.venueName ?? bill.title ?? t('groupDetail.thisBillFallback') }),
+        t('groupDetail.deleteBillMessage', { name: formatBillDisplayName(bill, t('groupDetail.thisBillFallback')) }),
         [
           { text: t('common:cancel'), style: 'cancel' },
           {

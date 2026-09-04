@@ -170,7 +170,9 @@ function MyCircleScreen({ navigation }: Props) {
       </View>
       {item.status === 'pending' && (
         <TouchableOpacity onPress={() => handleResend(item)} hitSlop={8} style={styles.resendBtn}>
-          <Text style={[typography.labelSmall, styles.resendBtnText]}>{t('myCircle.resendInvite')}</Text>
+          <Text style={[typography.labelSmall, styles.resendBtnText]}>
+            {t('myCircle.sendInvite')}
+          </Text>
         </TouchableOpacity>
       )}
       <View style={[styles.statusPill, item.status === 'active' ? styles.statusPillActive : styles.statusPillPending]}>

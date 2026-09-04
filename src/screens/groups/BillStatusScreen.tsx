@@ -26,7 +26,7 @@ import {
 } from '../../store/api/sharesApi';
 import { useGetMeQuery } from '../../store/api/usersApi';
 import { Share } from '../../types/models';
-import { formatCurrency, formatTime, resolveAssetUrl } from '../../utils/format';
+import { formatCurrency, formatTime, resolveAssetUrl, formatBillDisplayName } from '../../utils/format';
 import { ChevronLeftIcon } from '../../components/icons';
 import { sharePlainText } from '../../utils/shareSheet';
 import { isGhostShare } from '../../utils/ghost';
@@ -200,10 +200,16 @@ function BillStatusScreen({ route, navigation }: Props) {
   const handleRemind = useCallback(async () => {
     try {
       const result = await remindAll(billId).unwrap();
-      Alert.alert(
-        t('billStatus.remindSentTitle'),
-        t('billStatus.remindSentMessage', { count: result.sent }),
-      );
+      if (result.sent > 0) {
+        Alert.alert(
+          t('billStatus.remindSentTitle'),
+          t('billStatus.remindSentMessage', { count: result.sent }),
+        );
+      } else if (result.skipped > 0) {
+        Alert.alert(t('settleUp.remindRateLimitedTitle', { ns: 'groups' }), t('settleUp.remindRateLimitedMessage', { ns: 'groups' }));
+      } else {
+        Alert.alert(t('common:error'), t('billStatus.remindFailed'));
+      }
     } catch {
       Alert.alert(t('common:error'), t('billStatus.remindFailed'));
     }
@@ -237,7 +243,7 @@ function BillStatusScreen({ route, navigation }: Props) {
     );
   }
 
-  const displayName = bill.venueName ?? bill.title ?? t('viewReceipt.defaultBillName');
+  const displayName = formatBillDisplayName(bill, t('viewReceipt.defaultBillName'));
   const date = new Date(bill.createdAt).toLocaleString();
 
   return (

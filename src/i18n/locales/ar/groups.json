@@ -64,6 +64,7 @@
     "pendingPill": "مدعو",
     "pendingBadge": "مدعو · بيدفع برابط",
     "resendInvite": "إعادة إرسال الدعوة",
+    "sendInvite": "إرسال الدعوة",
     "resendFailed": "تعذر فتح المشاركة، حاول مرة أخرى",
     "emptyTitle": "دائرتك فاضية",
     "emptySubtitle": "ضيف الناس اللي بتقسم معاهم الإيصالات أكتر.",
@@ -129,6 +130,8 @@
     "previewSender": "+one · تذكير ودّي",
     "previewMessage": "{{name}} يذكرك بدفع EGP {{amount}} لـ {{bill}} في {{group}}.",
     "sendButton": "إرسال {{count}} تذكيرات",
+    "sendButton_one": "إرسال تذكير واحد",
+    "sendButton_other": "إرسال {{count}} تذكيرات",
     "emptyTitle": "مفيش حد يتذكّر",
     "emptySubtitle": "إما الكل دفع أو لسه محدش اتطلب منه.",
     "sendFailed": "تعذر إرسال التذكيرات، حاول مرة أخرى"

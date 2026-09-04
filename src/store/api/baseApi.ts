@@ -23,6 +23,12 @@ const rawBaseQuery = fetchBaseQuery({
 // before giving up and logging the user out — concurrent 401s share the same
 // in-flight refresh instead of each firing their own.
 let refreshPromise: Promise<boolean> | null = null;
+let authGraceUntil = 0;
+
+/** After a successful login, ignore a brief 401 storm instead of bouncing to phone entry. */
+export function markAuthGrace(ms = 12_000): void {
+  authGraceUntil = Date.now() + ms;
+}
 
 const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (
   args,
@@ -57,6 +63,8 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
     const refreshed = await refreshPromise;
     if (refreshed) {
       result = await rawBaseQuery(args, api, extraOptions);
+    } else if (Date.now() < authGraceUntil) {
+      // Keep the just-issued session; the next request will retry.
     } else {
       api.dispatch(clearAuth());
       await SecureStorage.clearTokens();

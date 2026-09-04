@@ -21,6 +21,7 @@ import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { setTokens, setProfileComplete } from '../../store/slices/authSlice';
 import { SecureStorage } from '../../utils/storage';
 import { resolveErrorMessage } from '../../utils/errors';
+import { markAuthGrace } from '../../store/api/baseApi';
 
 type Props = AuthScreenProps<'OTPVerification'>;
 
@@ -66,6 +67,7 @@ function OTPVerificationScreen({ route, navigation }: Props) {
           ? await verifyOtp({ phone, code: otp }).unwrap()
           : await loginWithFirebase({ idToken: await confirmFirebaseSms(otp) }).unwrap();
       await SecureStorage.saveTokens(result.accessToken, result.refreshToken, result.isProfileComplete);
+      markAuthGrace();
       dispatch(setTokens({ accessToken: result.accessToken, refreshToken: result.refreshToken }));
       dispatch(setProfileComplete(result.isProfileComplete));
 

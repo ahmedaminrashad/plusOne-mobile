@@ -144,6 +144,7 @@ export interface PrefilledBillData {
   deliveryType?: TaxServiceType;
   vat?: number;
   vatType?: TaxServiceType;
+  grandTotal?: number;
   captureMethod?: CaptureMethod;
   sourceRef?: string;
 }

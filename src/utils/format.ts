@@ -24,6 +24,37 @@ export function formatMoneyDigits(amount: number | string | null | undefined): s
   return roundMoney(n).toFixed(2);
 }
 
+/** Round a quantity that may be fractional (kg / weight items). Keeps 3 d.p. */
+export function parseQty(raw: string | number | null | undefined): number {
+  if (raw == null || raw === '') return 0;
+  const n = typeof raw === 'number' ? raw : parseFloat(String(raw).replace(',', '.'));
+  if (!Number.isFinite(n) || n <= 0) return 0;
+  return Math.round(n * 1000) / 1000;
+}
+
+/** Allow digits + a single decimal separator while typing quantity. */
+export function sanitizeQtyInput(raw: string): string {
+  const normalized = raw.replace(/,/g, '.').replace(/[^0-9.]/g, '');
+  const firstDot = normalized.indexOf('.');
+  if (firstDot === -1) return normalized;
+  return normalized.slice(0, firstDot + 1) + normalized.slice(firstDot + 1).replace(/\./g, '');
+}
+
+export function formatBillDisplayName(
+  bill: { venueName?: string | null; title?: string | null; createdAt?: string },
+  fallback: string,
+): string {
+  const venue = bill.venueName?.trim();
+  if (venue) return venue;
+  const title = bill.title?.trim();
+  if (title && title !== 'إيصال' && title !== 'Receipt') return title;
+  if (bill.createdAt) {
+    const date = formatDate(bill.createdAt, { day: 'numeric', month: 'short' });
+    return i18n.t('billing:viewReceipt.receiptDateFallback', { date, defaultValue: `Receipt · ${date}` });
+  }
+  return fallback;
+}
+
 function locale(): string {
   return i18n.language === 'en' ? 'en-US' : 'ar-EG';
 }

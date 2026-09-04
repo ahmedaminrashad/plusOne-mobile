@@ -7,6 +7,7 @@ import { store } from './src/store';
 import RootNavigator from './src/navigation/RootNavigator';
 import { changeLanguage, DEFAULT_LANGUAGE } from './src/i18n';
 import { AppStorage } from './src/utils/storage';
+import ErrorBoundary from './src/components/common/ErrorBoundary';
 
 export default function App() {
   useEffect(() => {
@@ -25,9 +26,11 @@ export default function App() {
   return (
     <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>
-        <Provider store={store}>
-          <RootNavigator />
-        </Provider>
+        <ErrorBoundary>
+          <Provider store={store}>
+            <RootNavigator />
+          </Provider>
+        </ErrorBoundary>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

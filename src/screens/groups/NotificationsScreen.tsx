@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useMemo } from 'react';
+import React, { memo, useCallback, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import SafeScreen from '../../components/common/SafeScreen';
 import { useTranslation } from 'react-i18next';
+import { useFocusEffect } from '@react-navigation/native';
 import { AppScreenProps } from '../../types/navigation';
 import {
   useGetMyInvitationsQuery,
@@ -26,7 +27,8 @@ import { BellIcon, MailIcon, CheckIcon, ChevronLeftIcon } from '../../components
 import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
-import { formatCurrency, resolveAssetUrl } from '../../utils/format';
+import { formatCurrency, resolveAssetUrl, formatBillDisplayName } from '../../utils/format';
+import { clearAppBadge } from '../../services/notifications';
 
 type Props = AppScreenProps<'Notifications'>;
 
@@ -42,19 +44,26 @@ function NotificationsScreen({ navigation }: Props) {
   const {
     data: shares,
     isLoading: loadingShares,
-    isFetching: fetchingShares,
     refetch: refetchShares,
-  } = useGetMySharesQuery(undefined, { pollingInterval: 15_000 });
+  } = useGetMySharesQuery();
   const {
     data: invitations,
     isLoading: loadingInvites,
-    isFetching: fetchingInvites,
     refetch: refetchInvites,
-  } = useGetMyInvitationsQuery(undefined, { pollingInterval: 15_000 });
+  } = useGetMyInvitationsQuery();
 
   const [confirmShare, { isLoading: confirming }] = useConfirmShareMutation();
   const [acceptInvite, { isLoading: accepting }] = useAcceptInvitationMutation();
   const [declineInvite, { isLoading: declining }] = useDeclineInvitationMutation();
+  const [manualRefreshing, setManualRefreshing] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      clearAppBadge();
+      refetchShares();
+      refetchInvites();
+    }, [refetchShares, refetchInvites]),
+  );
 
   const approvals = useMemo(
     () =>
@@ -84,12 +93,16 @@ function NotificationsScreen({ navigation }: Props) {
     return items;
   }, [approvals, toPay, invitations]);
 
-  const refreshing = fetchingShares || fetchingInvites;
+  const refreshing = manualRefreshing;
   const loading = loadingShares || loadingInvites;
 
-  const handleRefresh = useCallback(() => {
-    refetchShares();
-    refetchInvites();
+  const handleRefresh = useCallback(async () => {
+    setManualRefreshing(true);
+    try {
+      await Promise.all([refetchShares(), refetchInvites()]);
+    } finally {
+      setManualRefreshing(false);
+    }
   }, [refetchShares, refetchInvites]);
 
   const handleConfirm = useCallback(
@@ -175,7 +188,7 @@ function NotificationsScreen({ navigation }: Props) {
       if (item.kind === 'toPay') {
         const { share } = item;
         const amount = formatCurrency(share.amountPiastres / 100, share.currency);
-        const billTitle = share.bill?.venueName ?? share.bill?.title ?? t('groupDetail.defaultBillName');
+        const billTitle = formatBillDisplayName(share.bill ?? {}, t('groupDetail.defaultBillName'));
         return (
           <View style={styles.card}>
             <View style={[styles.iconWrap, { backgroundColor: Colors.warningTint }]}>

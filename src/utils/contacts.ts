@@ -59,9 +59,11 @@ export async function requestContactsPermission(options?: { showDeniedAlert?: bo
     return granted;
   }
 
-  // Always call requestPermission on iOS. checkPermission() can report
-  // "undetermined" without ever showing the system dialog, so a pre-check
-  // skips the prompt entirely on first launch.
+  // Check first so we don't re-prompt (or hang) when the user already chose
+  // iOS "Allow selected contacts" / limited access.
+  const existing = await Contacts.checkPermission();
+  if (existing === 'authorized' || existing === 'limited') return true;
+
   const requested = await Contacts.requestPermission();
   const granted = requested === 'authorized' || requested === 'limited';
   if (!granted && options?.showDeniedAlert !== false) showContactsPermissionDeniedAlert();
@@ -94,6 +96,22 @@ function firstValidPhone(rawNumbers: Array<{ number?: string } | string> | undef
   return null;
 }
 
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('CONTACTS_TIMEOUT')), ms);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (err) => {
+        clearTimeout(timer);
+        reject(err);
+      },
+    );
+  });
+}
+
 /** Loads device contacts that have a usable phone number. */
 export async function loadDeviceContacts(options?: { force?: boolean }): Promise<DeviceContact[]> {
   const granted = await requestContactsPermission({ showDeniedAlert: true });
@@ -107,7 +125,7 @@ export async function loadDeviceContacts(options?: { force?: boolean }): Promise
     return contactsCache;
   }
 
-  const contacts = await Contacts.getAllWithoutPhotos();
+  const contacts = await withTimeout(Contacts.getAllWithoutPhotos(), 12_000);
   const mapped: DeviceContact[] = [];
 
   for (const contact of contacts) {

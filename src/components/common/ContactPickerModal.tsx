@@ -78,6 +78,8 @@ function ContactPickerModal({
           setRegistered(new Set());
         }
       }
+    } catch {
+      setContacts([]);
     } finally {
       setLoading(false);
     }

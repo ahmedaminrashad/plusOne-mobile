@@ -19,21 +19,25 @@ import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
 import { AppStorage } from '../../utils/storage';
 import { CheckIcon } from '../../components/icons';
+import { changeLanguage, AppLanguage } from '../../i18n';
 
 type Props = AuthScreenProps<'Onboarding'>;
+
+const DEMO_VENUE = 'ZOOBA · KORBA';
+const DEMO_ITEMS: [string, string][] = [
+  ['Taameya wrap ×2', '140'],
+  ['Koshari bowl', '95'],
+  ['Hawawshi', '120'],
+];
 
 function ReceiptIllustration() {
   const typography = useTypography();
   return (
     <View style={styles.illustrationCard}>
-      <Text style={[typography.labelSmall, styles.illustrationVenue]}>ZOOBA · KORBA</Text>
+      <Text style={[typography.labelSmall, styles.illustrationVenue]}>{DEMO_VENUE}</Text>
       <Text style={[typography.labelSmall, styles.illustrationMuted]}>#0412</Text>
       <View style={styles.illustrationDivider} />
-      {[
-        ['Taameya wrap ×2', '140'],
-        ['Koshari bowl', '95'],
-        ['Hawawshi', '120'],
-      ].map(([name, price]) => (
+      {DEMO_ITEMS.map(([name, price]) => (
         <View key={name} style={styles.illustrationRow}>
           <Text style={[typography.bodyMedium, styles.illustrationRowText]}>{name}</Text>
           <Text style={[typography.amountMedium, styles.illustrationRowAmount]}>{price}</Text>
@@ -74,9 +78,10 @@ function AssignIllustration() {
   const typography = useTypography();
   return (
     <View style={styles.illustrationCard}>
+      <Text style={[typography.labelSmall, styles.illustrationVenue]}>{DEMO_VENUE}</Text>
       <View style={styles.illustrationRow}>
-        <Text style={[typography.labelLarge, styles.illustrationRowText]}>Grilled shrimp ¼</Text>
-        <Text style={[typography.amountMedium, styles.illustrationRowAmount]}>270.00</Text>
+        <Text style={[typography.labelLarge, styles.illustrationRowText]}>{DEMO_ITEMS[0][0]}</Text>
+        <Text style={[typography.amountMedium, styles.illustrationRowAmount]}>{DEMO_ITEMS[0][1]}</Text>
       </View>
       <Text style={[typography.labelSmall, styles.illustrationVenue, styles.illustrationSpacedTop]}>
         Who took this one?
@@ -87,7 +92,7 @@ function AssignIllustration() {
         <AssignAvatar name="Salma" selected={false} />
       </View>
       <Text style={[typography.labelSmall, styles.assignSharedCaption, styles.illustrationSpacedTop]}>
-        Shared by 2 · 135.00 each
+        Shared by 2 · 70.00 each
       </Text>
     </View>
   );
@@ -110,11 +115,12 @@ function SettleIllustration() {
 }
 
 function OnboardingScreen({ navigation }: Props) {
-  const { t } = useTranslation('auth');
+  const { t, i18n } = useTranslation('auth');
   const typography = useTypography();
   const { width } = useWindowDimensions();
   const [index, setIndex] = useState(0);
   const listRef = useRef<FlatList>(null);
+  const currentLanguage = (i18n.language === 'ar' ? 'ar' : 'en') as AppLanguage;
 
   const slides = [
     { key: '1', Illustration: ReceiptIllustration, title: t('onboarding.slide1Title'), subtitle: t('onboarding.slide1Subtitle') },
@@ -143,6 +149,14 @@ function OnboardingScreen({ navigation }: Props) {
 
   return (
     <SafeScreen style={styles.container}>
+      <TouchableOpacity
+        style={styles.langButton}
+        onPress={() => changeLanguage(currentLanguage === 'en' ? 'ar' : 'en')}
+        hitSlop={12}>
+        <Text style={[typography.labelMedium, styles.skipText]}>
+          {currentLanguage === 'en' ? 'العربية' : 'English'}
+        </Text>
+      </TouchableOpacity>
       <TouchableOpacity style={styles.skipButton} onPress={finishOnboarding} hitSlop={12}>
         <Text style={[typography.labelMedium, styles.skipText]}>{t('onboarding.skip')}</Text>
       </TouchableOpacity>
@@ -185,6 +199,7 @@ export default memo(OnboardingScreen);
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   skipButton: { position: 'absolute', top: 16, right: 20, zIndex: 1, padding: 8 },
+  langButton: { position: 'absolute', top: 16, left: 20, zIndex: 1, padding: 8 },
   skipText: { color: Colors.textSecondary },
   slide: { flex: 1, paddingHorizontal: 24, alignItems: 'center', justifyContent: 'center', gap: 32 },
   title: { color: Colors.text, textAlign: 'center' },
@@ -203,7 +218,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   // Figma colours these captions textSecondary (#66706B), not the darker ink/muted tones.
-  illustrationVenue: { color: Colors.textSecondary },
+  illustrationVenue: { color: Colors.textSecondary, textAlign: 'center', alignSelf: 'center', width: '100%' },
   illustrationMuted: { color: Colors.textSecondary, textAlign: 'center', alignSelf: 'center' },
   illustrationSpacedTop: { marginTop: 12 },
   illustrationDivider: { borderTopWidth: 1, borderStyle: 'dashed', borderColor: Colors.borderLight, marginVertical: 10 },

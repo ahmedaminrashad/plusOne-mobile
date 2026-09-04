@@ -7,7 +7,7 @@
     "scanQrSubtitle": "E-receipt loads itemized, instantly",
     "scanQrBadge": "Fastest",
     "scanReceiptTitle": "Photo the receipt",
-    "scanReceiptSubtitle": "We read it (OCR) — you confirm every line",
+    "scanReceiptSubtitle": "We read it — you confirm every line",
     "manualTitle": "Enter manually",
     "manualSubtitle": "Itemized, or just the total",
     "footer": "Whichever way in — splitting works the same after.",
@@ -45,8 +45,8 @@
     "payerModalTitle": "Who paid?",
     "selectPayerFallback": "Choose who paid",
     "defaultMemberName": "User",
-    "qrPreviewBanner": "📷 QR scanned — review the details and edit if needed",
-    "ocrPreviewBanner": "🖨 OCR result — review and edit any field",
+    "qrPreviewBanner": "QR scanned — review the details and edit if needed",
+    "ocrPreviewBanner": "Camera scan result — review and edit any field",
     "amountMustBePositive": "The amount must be greater than zero.",
     "saveFailed": "Couldn't save the receipt, please try again later."
   },
@@ -107,6 +107,8 @@
     "markReceivedButton": "Mark received",
     "remindSentTitle": "Reminder sent",
     "remindSentMessage": "Sent {{count}} reminder(s). They’ll also appear in Notifications.",
+    "remindSentMessage_one": "Sent {{count}} reminder. They’ll also appear in Notifications.",
+    "remindSentMessage_other": "Sent {{count}} reminders. They’ll also appear in Notifications.",
     "remindFailed": "Couldn't send the reminder, please try again",
     "confirmFailed": "Couldn't confirm the payment, please try again"
   },
@@ -119,7 +121,8 @@
     "cashConfirmTitle": "Mark as paid in cash?",
     "cashConfirmMessage": "This lets {{payer}} know you paid in cash — they'll confirm before it counts as settled.",
     "cashNote": "Cash payments are confirmed by {{payer}} before they count as settled.",
-    "instaPayNote": "InstaPay goes directly to {{payer}} — +one never holds funds."
+    "instaPayNote": "InstaPay goes directly to {{payer}} — +one never holds funds.",
+    "noShareFound": "No share found for you on this receipt."
   },
   "viewReceipt": {
     "captureMethodQr": "QR scan",
@@ -140,6 +143,7 @@
     "notFound": "Couldn't find the receipt",
     "defaultUserName": "User",
     "defaultBillName": "Receipt",
+    "receiptDateFallback": "Receipt · {{date}}",
     "paidByAndDate": "Paid by {{payerName}} • {{date}}",
     "shareSettled": "Your share has been paid ✅",
     "awaitingConfirmation": "Awaiting {{payerName}}'s confirmation of receiving {{amount}}",
@@ -204,7 +208,7 @@
     "chooseAnotherButton": "Choose another",
     "guideHint": "Fit the whole receipt · avoid shadows",
     "captureTitle": "Photo the receipt",
-    "captureSubtitle": "Take a photo or choose one from your library. We’ll read it with OCR — you confirm every line before saving.",
+    "captureSubtitle": "Take a photo or choose one from your library. We’ll read the camera scan result — you confirm every line before saving.",
     "captureButton": "📷  Take photo",
     "galleryButton": "Choose from gallery"
   }

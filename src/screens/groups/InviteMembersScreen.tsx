@@ -231,8 +231,8 @@ function InviteMembersScreen({ route, navigation }: Props) {
         <SafeScreen style={styles.circleModal}>
           <View style={styles.circleHeader}>
             <Text style={[typography.headingMedium, styles.circleTitle]}>{t('inviteMembers.fromCircleTitle')}</Text>
-            <TouchableOpacity onPress={() => setCircleOpen(false)} hitSlop={12}>
-              <CloseIcon size={16} color={Colors.text} />
+            <TouchableOpacity onPress={() => setCircleOpen(false)} hitSlop={12} style={styles.closeBtn}>
+              <CloseIcon size={18} color={Colors.text} />
             </TouchableOpacity>
           </View>
           {circleCandidates.length === 0 ? (
@@ -329,7 +329,15 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 8,
   },
-  circleTitle: { color: Colors.text },
+  circleTitle: { color: Colors.text, flex: 1 },
+  closeBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: Colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   circleEmpty: { flex: 1, justifyContent: 'center', paddingHorizontal: 32 },
   circleEmptyText: { color: Colors.textSecondary, textAlign: 'center' },
   circleList: { paddingHorizontal: 16, paddingBottom: 24 },

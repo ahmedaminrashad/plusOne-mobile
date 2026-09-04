@@ -1,4 +1,5 @@
 import UIKit
+import UserNotifications
 import React
 import React_RCTAppDelegate
 import ReactAppDependencyProvider
@@ -9,7 +10,7 @@ import FirebaseMessaging
 #endif
 
 @main
-class AppDelegate: UIResponder, UIApplicationDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterDelegate {
   var window: UIWindow?
 
   var reactNativeDelegate: ReactNativeDelegate?
@@ -22,6 +23,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     FirebaseApp.configure()
     // Silent APNs is how Firebase Phone Auth verifies the app on iOS without
     // opening Safari. The new RN Swift AppDelegate is not reliably swizzled.
+    UNUserNotificationCenter.current().delegate = self
     application.registerForRemoteNotifications()
 
     let delegate = ReactNativeDelegate()
@@ -99,6 +101,32 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
       return true
     }
     return false
+  }
+
+  func applicationDidBecomeActive(_ application: UIApplication) {
+    application.applicationIconBadgeNumber = 0
+  }
+
+  func userNotificationCenter(
+    _ center: UNUserNotificationCenter,
+    willPresent notification: UNNotification,
+    withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+  ) {
+    #if canImport(FirebaseMessaging)
+    Messaging.messaging().appDidReceiveMessage(notification.request.content.userInfo)
+    #endif
+    completionHandler([.banner, .sound, .badge])
+  }
+
+  func userNotificationCenter(
+    _ center: UNUserNotificationCenter,
+    didReceive response: UNNotificationResponse,
+    withCompletionHandler completionHandler: @escaping () -> Void
+  ) {
+    #if canImport(FirebaseMessaging)
+    Messaging.messaging().appDidReceiveMessage(response.notification.request.content.userInfo)
+    #endif
+    completionHandler()
   }
 }
 

@@ -5,7 +5,7 @@ import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
 import { LedgerBillSummary, useGetGroupLedgerQuery } from '../../store/api/ledgerApi';
-import { formatCurrency, formatDate } from '../../utils/format';
+import { formatCurrency, formatDate, formatBillDisplayName } from '../../utils/format';
 
 const RECEIPT_PREVIEW = 20;
 
@@ -121,7 +121,7 @@ function GroupLedgerScreen({ groupId, onViewAllReceipts, onOpenBill }: Props) {
           activeOpacity={onOpenBill ? 0.75 : 1}
           disabled={!onOpenBill}>
           <View style={styles.billInfo}>
-            <Text style={[typography.labelLarge, styles.billTitle]}>{item.title ?? t('groupDetail.defaultBillName')}</Text>
+            <Text style={[typography.labelLarge, styles.billTitle]}>{formatBillDisplayName(item, t('groupDetail.defaultBillName'))}</Text>
             <Text style={[typography.bodySmall, styles.billDate]}>{formatDate(item.createdAt)}</Text>
           </View>
           <View style={styles.billRight}>

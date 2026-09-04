@@ -23,7 +23,7 @@ import { useGetMeQuery } from '../../store/api/usersApi';
 import { useGetGroupMessagesQuery, useSendGroupMessageMutation, useUploadChatImageMutation } from '../../store/api/groupsApi';
 import { ChatMessage } from '../../types/models';
 import { AppStackParamList } from '../../types/navigation';
-import { formatDate, formatCurrency } from '../../utils/format';
+import { formatDate, formatCurrency, formatBillDisplayName } from '../../utils/format';
 import { useKeyboardInsetHeight } from '../../services/keyboardInsets';
 import { ReceiptIcon, ChatBubbleIcon, PaperclipIcon, SendIcon, WarningIcon } from '../../components/icons';
 
@@ -143,7 +143,7 @@ function MessageBubble({
             </View>
             <View style={styles.receiptInfo}>
               <Text style={[typography.labelLarge, styles.receiptTitle]} numberOfLines={1}>
-                {t('chat.receiptAddedTitle', { title: msg.bill.title ?? t('chat.receiptDefaultTitle') })}
+                {t('chat.receiptAddedTitle', { title: formatBillDisplayName(msg.bill, t('chat.receiptDefaultTitle')) })}
               </Text>
               <Text style={[typography.bodySmall, styles.receiptMeta]}>
                 {msg.bill.itemCount > 0

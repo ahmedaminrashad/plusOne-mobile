@@ -9,19 +9,21 @@ import AuthStack from './AuthStack';
 import TabNavigator from './TabNavigator';
 import { View, ActivityIndicator, StyleSheet, Alert, AppState, AppStateStatus, InteractionManager } from 'react-native';
 import { Colors } from '../constants/colors';
-import { useGetMeQuery, useSaveFcmTokenMutation } from '../store/api/usersApi';
+import { useGetMeQuery, useSaveFcmTokenMutation, useSaveLanguageMutation } from '../store/api/usersApi';
 import {
   requestNotificationPermission,
   getFcmToken,
   onNotificationOpenedApp,
   getInitialNotificationWithRetry,
   onForegroundMessage,
+  clearAppBadge,
 } from '../services/notifications';
 import { consumePendingSharedText, consumePendingSharedImage } from '../services/shareIntent';
 import { isChatGroupActive } from '../services/activeChat';
 import { extractInstaPayIdentifierFromSharedText } from '../utils/instapay';
 import { TabParamList } from '../types/navigation';
 import { baseApi } from '../store/api/baseApi';
+import i18n, { AppLanguage } from '../i18n';
 
 function asDataRecord(data: Record<string, unknown> | undefined | null): Record<string, string> {
   if (!data) return {};
@@ -40,6 +42,7 @@ export default function RootNavigator() {
   const [tokensRestored, setTokensRestored] = useState(false);
   const [navReady, setNavReady] = useState(false);
   const [saveFcmToken] = useSaveFcmTokenMutation();
+  const [saveLanguage] = useSaveLanguageMutation();
   const navRef = useRef<NavigationContainerRef<TabParamList>>(null);
   const pendingNotificationRef = useRef<Record<string, string> | null>(null);
   const handledInitialRef = useRef(false);
@@ -57,16 +60,11 @@ export default function RootNavigator() {
     })();
   }, [dispatch]);
 
-  // Only block on the first session restore / first getMe — never on later
-  // isFetching, which remounts NavigationContainer and looks like an app reload
-  // (and resets Auth back to PhoneEntry after OTP).
-  const { isLoading: verifyingSession, isUninitialized: meUninitialized } = useGetMeQuery(undefined, {
+  // Session restore only — waiting on getMe remounts Auth after OTP and looks like a reload.
+  useGetMeQuery(undefined, {
     skip: !tokensRestored || !isAuthenticated,
   });
-
-  const loading =
-    !tokensRestored ||
-    (isAuthenticated && (meUninitialized || verifyingSession));
+  const loading = !tokensRestored;
   const showApp = isAuthenticated && isProfileComplete;
   showAppRef.current = showApp;
 
@@ -142,7 +140,7 @@ export default function RootNavigator() {
       } else if (
         (data.type === 'share_assigned' ||
           data.type === 'share_reminder' ||
-          data.type === 'share_initiated') &&
+          data.type === 'share_updated') &&
         data.groupId &&
         data.billId
       ) {
@@ -151,11 +149,22 @@ export default function RootNavigator() {
           groupName: data.groupName ?? '',
           billId: data.billId,
         });
-      } else if (data.type === 'share_settled' && data.groupId && data.billId) {
+      } else if (
+        (data.type === 'share_initiated' ||
+          data.type === 'share_settled' ||
+          data.type === 'share_stale_nudge') &&
+        data.groupId &&
+        data.billId
+      ) {
         openNestedHomeScreen('BillStatus', {
           groupId: data.groupId,
           groupName: data.groupName ?? '',
           billId: data.billId,
+        });
+      } else if (data.type === 'share_removed' && data.groupId) {
+        openNestedHomeScreen('GroupDetail', {
+          groupId: data.groupId,
+          groupName: data.groupName ?? '',
         });
       } else if (data.groupId && !data.type) {
         // Defensive: some Android OEMs drop `type` but keep groupId on tray taps.
@@ -205,7 +214,10 @@ export default function RootNavigator() {
         payload.type === 'share_assigned' ||
         payload.type === 'share_initiated' ||
         payload.type === 'share_settled' ||
-        payload.type === 'share_reminder'
+        payload.type === 'share_reminder' ||
+        payload.type === 'share_updated' ||
+        payload.type === 'share_removed' ||
+        payload.type === 'share_stale_nudge'
       ) {
         dispatch(
           baseApi.util.invalidateTags([
@@ -278,8 +290,19 @@ export default function RootNavigator() {
 
   useEffect(() => {
     if (!isAuthenticated) return;
+    const lang = (i18n.language === 'ar' ? 'ar' : 'en') as AppLanguage;
+    saveLanguage(lang).catch(() => {});
+  }, [isAuthenticated, saveLanguage]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    let lastInvalidate = 0;
     const subscription = AppState.addEventListener('change', (state: AppStateStatus) => {
       if (state !== 'active') return;
+      clearAppBadge();
+      const now = Date.now();
+      if (now - lastInvalidate < 30_000) return;
+      lastInvalidate = now;
       dispatch(
         baseApi.util.invalidateTags([
           'Group',

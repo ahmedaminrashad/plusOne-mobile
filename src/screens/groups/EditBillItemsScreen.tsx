@@ -22,7 +22,7 @@ import Avatar from '../../components/common/Avatar';
 import { useGetGroupMembersQuery } from '../../store/api/groupsApi';
 import { useGetBillDetailQuery, useUpdateBillItemsMutation } from '../../store/api/billsApi';
 import { GroupMember, TaxServiceType } from '../../types/models';
-import { formatCurrency, formatMoneyDigits, roundMoney, resolveAssetUrl } from '../../utils/format';
+import { formatCurrency, formatMoneyDigits, roundMoney, resolveAssetUrl, parseQty, sanitizeQtyInput } from '../../utils/format';
 import { useInputTextAlign } from '../../utils/rtl';
 import { useKeyboardInsetHeight } from '../../services/keyboardInsets';
 import i18n from '../../i18n';
@@ -118,12 +118,14 @@ function ItemRow({
       <View style={styles.itemHeader}>
         <View style={styles.itemNameBlock}>
           <Text style={[typography.labelLarge, styles.itemName]}>{item.name}</Text>
-          {item.qty > 1 && (
-            <Text style={[typography.bodySmall, styles.itemQty]}>{item.qty} ×</Text>
+          {item.qty !== 1 && (
+            <Text style={[typography.bodySmall, styles.itemQty]}>
+              {item.qty} × {formatCurrency(parseNum(item.price))}
+            </Text>
           )}
         </View>
         <TextInput
-          style={[typography.bodySmall, styles.priceInput]}
+          style={[typography.amountMedium, styles.priceInput]}
           value={item.price}
           onChangeText={(v) => onPriceChange(item.id, v)}
           keyboardType="decimal-pad"
@@ -253,7 +255,7 @@ function EditBillItemsScreen({ route, navigation }: Props) {
 
   const handleAddItem = useCallback(() => {
     const name = newItemName.trim();
-    const qty = parseInt(newItemQty, 10);
+    const qty = parseQty(newItemQty);
     const price = roundMoney(parseNum(newItemPrice));
     if (!name || price <= 0 || !qty || qty <= 0) {
       Alert.alert(t('common:error'), t('editBillItems.addItemInvalid'));
@@ -449,8 +451,8 @@ function EditBillItemsScreen({ route, navigation }: Props) {
             placeholder={t('createBill.qtyPlaceholder')}
             placeholderTextColor={Colors.textMuted}
             value={newItemQty}
-            onChangeText={setNewItemQty}
-            keyboardType="number-pad"
+            onChangeText={(v) => setNewItemQty(sanitizeQtyInput(v))}
+            keyboardType="decimal-pad"
           />
           <TextInput
             style={[typography.bodyMedium, styles.addItemInput, styles.addItemInputPrice]}
@@ -526,7 +528,7 @@ const styles = StyleSheet.create({
   emptyState: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 12 },
   emptyText: { color: Colors.textMuted, textAlign: 'center' },
 
-  receiptHeader: { padding: 20, alignItems: 'center', backgroundColor: Colors.surface, marginBottom: 12 },
+  receiptHeader: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 12, alignItems: 'center', backgroundColor: Colors.surface, marginBottom: 8 },
   totalLabel: { color: Colors.textMuted, marginTop: 8 },
   totalAmount: { color: Colors.primary },
   sectionTitle: { color: Colors.textSecondary, marginTop: 12 },
@@ -547,7 +549,7 @@ const styles = StyleSheet.create({
   itemHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 },
   itemNameBlock: { flex: 1, minWidth: 0, alignItems: 'flex-start', paddingRight: 8 },
   itemName: { color: Colors.text, textAlign: 'left' },
-  itemQty: { color: Colors.textMuted, marginTop: 4 },
+  itemQty: { color: Colors.textMuted, marginTop: 4, textAlign: 'left', alignSelf: 'flex-start' },
   itemSubtotal: { color: Colors.text, textAlign: 'right', marginLeft: 12 },
   priceInput: {
     color: Colors.text,
@@ -557,7 +559,8 @@ const styles = StyleSheet.create({
     borderRadius: Radius.sm,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    minWidth: 72,
+    minWidth: 80,
+    fontSize: 16,
     textAlign: 'right',
   },
   itemFooter: {
