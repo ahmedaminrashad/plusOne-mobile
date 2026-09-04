@@ -16,6 +16,7 @@ import { AppScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
+import { centeredInputText } from '../../utils/inputTextStyle';
 import { useInputTextAlign } from '../../utils/rtl';
 import Avatar from '../../components/common/Avatar';
 import Button from '../../components/common/Button';
@@ -212,7 +213,7 @@ function MyCircleScreen({ navigation }: Props) {
       <View style={styles.searchBar}>
         <SearchIcon size={16} color={Colors.textMuted} />
         <TextInput
-          style={[typography.bodyMedium, styles.searchInput]}
+          style={[centeredInputText(typography.bodyMedium), styles.searchInput]}
           placeholder={t('myCircle.searchPlaceholder')}
           placeholderTextColor={Colors.textMuted}
           value={query}
@@ -276,7 +277,7 @@ function MyCircleScreen({ navigation }: Props) {
           <View style={styles.modalCard}>
             <Text style={[typography.headingSmall, styles.modalTitle]}>{t('myCircle.addPhoneTitle')}</Text>
             <TextInput
-              style={[typography.bodyLarge, styles.modalInput]}
+              style={[centeredInputText(typography.bodyLarge), styles.modalInput]}
               placeholder={t('myCircle.addPhonePlaceholder')}
               placeholderTextColor={Colors.textMuted}
               value={newPhone}

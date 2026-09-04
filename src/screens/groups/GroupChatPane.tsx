@@ -17,6 +17,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
+import { centeredInputText } from '../../utils/inputTextStyle';
 import { ASSET_BASE_URL } from '../../config';
 import { setActiveChatGroupId } from '../../services/activeChat';
 import { useGetMeQuery } from '../../store/api/usersApi';
@@ -410,7 +411,7 @@ function GroupChatPane({ groupId, groupName, navigation, sharedImageUri, onShare
           <PaperclipIcon size={18} color={Colors.primary} />
         </TouchableOpacity>
         <TextInput
-          style={[typography.bodyMedium, styles.input]}
+          style={[centeredInputText(typography.bodyMedium), styles.input]}
           value={text}
           onChangeText={setText}
           placeholder={t('chat.messagePlaceholder')}

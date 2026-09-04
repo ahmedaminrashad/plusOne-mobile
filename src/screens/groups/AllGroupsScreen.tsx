@@ -16,6 +16,7 @@ import GroupBalanceCollector from '../../components/groups/GroupBalanceCollector
 import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
+import { centeredInputText } from '../../utils/inputTextStyle';
 import { ChevronLeftIcon, SearchIcon } from '../../components/icons';
 
 type Props = AppScreenProps<'AllGroups'>;
@@ -102,7 +103,7 @@ function AllGroupsScreen({ navigation }: Props) {
       <View style={styles.searchBar}>
         <SearchIcon size={16} color={Colors.textMuted} />
         <TextInput
-          style={[typography.bodyMedium, styles.searchInput]}
+          style={[centeredInputText(typography.bodyMedium), styles.searchInput]}
           placeholder={t('allGroups.searchPlaceholder')}
           placeholderTextColor={Colors.textMuted}
           value={query}

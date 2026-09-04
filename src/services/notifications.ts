@@ -112,6 +112,6 @@ export function clearAppBadge(): void {
   try {
     NativeModules.PushNotificationManager?.setApplicationIconBadgeNumber?.(0);
   } catch {
-    // Native badge API is best-effort; AppDelegate also clears on become-active.
+    // Native badge API is best-effort.
   }
 }

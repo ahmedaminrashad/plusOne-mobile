@@ -28,6 +28,7 @@ import Button from '../../components/common/Button';
 import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
+import { centeredInputText } from '../../utils/inputTextStyle';
 import { useGetMeQuery } from '../../store/api/usersApi';
 import { formatDate, formatCurrency, resolveAssetUrl, formatBillDisplayName } from '../../utils/format';
 import GroupChatPane from './GroupChatPane';
@@ -550,7 +551,7 @@ function GroupDetailScreen({ route, navigation }: Props) {
           <View style={styles.renameSheet}>
             <Text style={[typography.headingSmall, styles.renameTitle]}>{t('groupDetail.renameTitle')}</Text>
             <TextInput
-              style={[typography.bodyLarge, styles.renameInput]}
+              style={[centeredInputText(typography.bodyLarge), styles.renameInput]}
               value={renameValue}
               onChangeText={setRenameValue}
               placeholder={t('groupDetail.renamePlaceholder')}

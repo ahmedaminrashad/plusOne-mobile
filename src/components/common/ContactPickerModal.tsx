@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
+import { centeredInputText } from '../../utils/inputTextStyle';
 import { CloseIcon, SearchIcon, CheckIcon, PeopleIcon } from '../icons';
 import { DeviceContact, loadDeviceContacts, getContactsPermissionStatus, presentLimitedContactsPicker } from '../../utils/contacts';
 import { useLookupPhonesMutation } from '../../store/api/friendsApi';
@@ -153,7 +154,7 @@ function ContactPickerModal({
         <View style={styles.searchBar}>
           <SearchIcon size={16} color={Colors.textMuted} />
           <TextInput
-            style={[typography.bodyMedium, styles.searchInput]}
+            style={[centeredInputText(typography.bodyMedium), styles.searchInput]}
             placeholder={t('contacts.searchPlaceholder', { defaultValue: 'Search contacts…' })}
             placeholderTextColor={Colors.textMuted}
             value={query}

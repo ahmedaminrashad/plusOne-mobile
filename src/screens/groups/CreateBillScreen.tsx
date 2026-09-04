@@ -18,6 +18,7 @@ import { AppScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
+import { centeredInputText } from '../../utils/inputTextStyle';
 import Button from '../../components/common/Button';
 import { useCreateBillMutation } from '../../store/api/billsApi';
 import { useGetGroupMembersQuery } from '../../store/api/groupsApi';
@@ -257,7 +258,7 @@ function CreateBillScreen({ route, navigation }: Props) {
         {/* Venue */}
         <Text style={[typography.labelMedium, styles.sectionLabel]}>{t('createBill.venueLabel')}</Text>
         <TextInput
-          style={[typography.bodyLarge, styles.input]}
+          style={[centeredInputText(typography.bodyLarge), styles.input]}
           value={venueName}
           onChangeText={setVenueName}
           placeholder={t('createBill.venuePlaceholder')}
@@ -284,7 +285,7 @@ function CreateBillScreen({ route, navigation }: Props) {
           <>
             <Text style={[typography.labelMedium, styles.sectionLabel]}>{t('createBill.lumpSumAmountLabel')}</Text>
             <TextInput
-              style={[typography.bodyLarge, styles.input]}
+              style={[centeredInputText(typography.bodyLarge), styles.input]}
               value={lumpSumTotal}
               onChangeText={setLumpSumTotal}
               placeholder={t('createBill.amountPlaceholderZero')}
@@ -301,7 +302,7 @@ function CreateBillScreen({ route, navigation }: Props) {
               <View key={item.id} style={styles.itemRow}>
                 <Text style={[typography.bodyMedium, styles.itemIndex]}>{index + 1}</Text>
                 <TextInput
-                  style={[typography.bodyLarge, styles.itemNameInput]}
+                  style={[centeredInputText(typography.bodyLarge), styles.itemNameInput]}
                   value={item.name}
                   onChangeText={(v) => updateItem(item.id, 'name', v)}
                   placeholder={t('createBill.itemNamePlaceholder')}
@@ -310,7 +311,7 @@ function CreateBillScreen({ route, navigation }: Props) {
                   maxLength={100}
                 />
                 <TextInput
-                  style={[typography.bodyLarge, styles.itemPriceInput]}
+                  style={[centeredInputText(typography.bodyLarge), styles.itemPriceInput]}
                   value={item.unitPrice}
                   onChangeText={(v) => updateItem(item.id, 'unitPrice', v)}
                   placeholder={t('createBill.pricePlaceholder')}
@@ -321,7 +322,7 @@ function CreateBillScreen({ route, navigation }: Props) {
                 <Text style={styles.multiplySign}>×</Text>
                 <View style={styles.qtyChip}>
                   <TextInput
-                    style={[typography.labelMedium, styles.itemQtyInput]}
+                    style={[centeredInputText(typography.labelMedium), styles.itemQtyInput]}
                     value={item.qty}
                     onChangeText={(v) => updateItem(item.id, 'qty', sanitizeQtyInput(v))}
                     placeholder={t('createBill.qtyPlaceholder')}
@@ -352,7 +353,7 @@ function CreateBillScreen({ route, navigation }: Props) {
             <Text style={[typography.labelMedium, styles.sectionLabel]}>{t('createBill.taxLabel')}</Text>
             <View style={styles.amountTypeRow}>
               <TextInput
-                style={[typography.bodyLarge, styles.input, styles.flex1]}
+                style={[centeredInputText(typography.bodyLarge), styles.input, styles.flex1]}
                 value={taxValue}
                 onChangeText={setTaxValue}
                 placeholder={taxType === 'percent' ? t('createBill.taxPlaceholderPercent') : t('createBill.taxPlaceholderAmount')}
@@ -367,7 +368,7 @@ function CreateBillScreen({ route, navigation }: Props) {
             <Text style={[typography.labelMedium, styles.sectionLabel]}>{t('createBill.vatLabel')}</Text>
             <View style={styles.amountTypeRow}>
               <TextInput
-                style={[typography.bodyLarge, styles.input, styles.flex1]}
+                style={[centeredInputText(typography.bodyLarge), styles.input, styles.flex1]}
                 value={vatValue}
                 onChangeText={setVatValue}
                 placeholder={vatType === 'percent' ? t('createBill.vatPlaceholderPercent') : t('createBill.vatPlaceholderAmount')}
@@ -382,7 +383,7 @@ function CreateBillScreen({ route, navigation }: Props) {
             <Text style={[typography.labelMedium, styles.sectionLabel]}>{t('createBill.deliveryLabel')}</Text>
             <View style={styles.amountTypeRow}>
               <TextInput
-                style={[typography.bodyLarge, styles.input, styles.flex1]}
+                style={[centeredInputText(typography.bodyLarge), styles.input, styles.flex1]}
                 value={deliveryValue}
                 onChangeText={setDeliveryValue}
                 placeholder={deliveryType === 'percent' ? t('createBill.deliveryPlaceholderPercent') : t('createBill.deliveryPlaceholderAmount')}
@@ -402,7 +403,7 @@ function CreateBillScreen({ route, navigation }: Props) {
             {/* Override */}
             <Text style={[typography.labelMedium, styles.sectionLabel]}>{t('createBill.overrideLabel')}</Text>
             <TextInput
-              style={[typography.bodyLarge, styles.input]}
+              style={[centeredInputText(typography.bodyLarge), styles.input]}
               value={grandTotalOverride}
               onChangeText={setGrandTotalOverride}
               placeholder={t('createBill.overridePlaceholder')}
@@ -486,9 +487,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
     paddingHorizontal: 14,
-    // bodyLarge lineHeight (24) is taller than fontSize (15). iOS UITextField
-    // puts that extra leading above the glyphs, so the caret sits on the bottom
-    // padding. Android EditText centers text, which is why it looked fine there.
     paddingTop: 0,
     paddingBottom: 0,
     height: 48,
@@ -496,7 +494,6 @@ const styles = StyleSheet.create({
     color: Colors.text,
     marginBottom: 12,
     ...Platform.select({
-      ios: { lineHeight: 20 },
       android: { includeFontPadding: false },
     }),
   },

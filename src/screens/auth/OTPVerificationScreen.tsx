@@ -15,6 +15,7 @@ import Button from '../../components/common/Button';
 import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
+import { centeredInputText } from '../../utils/inputTextStyle';
 import { useLoginWithFirebaseMutation, useVerifyOtpMutation, useSendOtpMutation } from '../../store/api/authApi';
 import { sendFirebaseSms, confirmFirebaseSms, mapFirebaseAuthError } from '../../services/firebasePhoneAuth';
 import { useAppDispatch } from '../../hooks/useAppDispatch';
@@ -155,7 +156,7 @@ function OTPVerificationScreen({ route, navigation }: Props) {
                 otp.length === i && styles.otpBoxActive,
                 error && styles.otpBoxError,
               ]}>
-              <Text style={[typography.headingLarge, styles.otpDigit]}>{otp[i] ?? ''}</Text>
+              <Text style={[centeredInputText(typography.headingLarge), styles.otpDigit]}>{otp[i] ?? ''}</Text>
             </View>
           ))}
         </TouchableOpacity>
@@ -218,7 +219,7 @@ const styles = StyleSheet.create({
   },
   otpBoxActive: { borderColor: Colors.primary },
   otpBoxError: { borderColor: Colors.danger },
-  otpDigit: { color: Colors.text },
+  otpDigit: { color: Colors.text, includeFontPadding: false, textAlignVertical: 'center' },
   hiddenInput: {
     position: 'absolute',
     width: 1,

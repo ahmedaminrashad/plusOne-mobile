@@ -17,6 +17,7 @@ import { AppScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
+import { centeredInputText } from '../../utils/inputTextStyle';
 import Button from '../../components/common/Button';
 import Avatar from '../../components/common/Avatar';
 import { useGetGroupMembersQuery } from '../../store/api/groupsApi';
@@ -125,7 +126,7 @@ function ItemRow({
           )}
         </View>
         <TextInput
-          style={[typography.amountMedium, styles.priceInput]}
+          style={[centeredInputText(typography.amountMedium), styles.priceInput]}
           value={item.price}
           onChangeText={(v) => onPriceChange(item.id, v)}
           keyboardType="decimal-pad"
@@ -396,7 +397,7 @@ function EditBillItemsScreen({ route, navigation }: Props) {
         <Text style={[typography.labelMedium, styles.extrasLabel]}>{t('createBill.taxLabel')}</Text>
         <View style={styles.amountTypeRow}>
           <TextInput
-            style={[typography.bodyLarge, styles.extrasInput, styles.flex1]}
+            style={[centeredInputText(typography.bodyLarge), styles.extrasInput, styles.flex1]}
             value={taxValue}
             onChangeText={setTaxValue}
             placeholder={taxType === 'percent' ? t('createBill.taxPlaceholderPercent') : t('createBill.taxPlaceholderAmount')}
@@ -410,7 +411,7 @@ function EditBillItemsScreen({ route, navigation }: Props) {
         <Text style={[typography.labelMedium, styles.extrasLabel]}>{t('createBill.vatLabel')}</Text>
         <View style={styles.amountTypeRow}>
           <TextInput
-            style={[typography.bodyLarge, styles.extrasInput, styles.flex1]}
+            style={[centeredInputText(typography.bodyLarge), styles.extrasInput, styles.flex1]}
             value={vatValue}
             onChangeText={setVatValue}
             placeholder={vatType === 'percent' ? t('createBill.vatPlaceholderPercent') : t('createBill.vatPlaceholderAmount')}
@@ -424,7 +425,7 @@ function EditBillItemsScreen({ route, navigation }: Props) {
         <Text style={[typography.labelMedium, styles.extrasLabel]}>{t('createBill.deliveryLabel')}</Text>
         <View style={styles.amountTypeRow}>
           <TextInput
-            style={[typography.bodyLarge, styles.extrasInput, styles.flex1]}
+            style={[centeredInputText(typography.bodyLarge), styles.extrasInput, styles.flex1]}
             value={deliveryValue}
             onChangeText={setDeliveryValue}
             placeholder={deliveryType === 'percent' ? t('createBill.deliveryPlaceholderPercent') : t('createBill.deliveryPlaceholderAmount')}
@@ -440,14 +441,14 @@ function EditBillItemsScreen({ route, navigation }: Props) {
         <Text style={[typography.labelMedium, styles.addItemTitle]}>{t('editBillItems.addItemTitle')}</Text>
         <View style={styles.addItemRow}>
           <TextInput
-            style={[typography.bodyMedium, styles.addItemInput, styles.addItemInputName]}
+            style={[centeredInputText(typography.bodyMedium), styles.addItemInput, styles.addItemInputName]}
             placeholder={t('createBill.itemNamePlaceholder')}
             placeholderTextColor={Colors.textMuted}
             value={newItemName}
             onChangeText={setNewItemName}
           />
           <TextInput
-            style={[typography.bodyMedium, styles.addItemInput, styles.addItemInputQty]}
+            style={[centeredInputText(typography.bodyMedium), styles.addItemInput, styles.addItemInputQty]}
             placeholder={t('createBill.qtyPlaceholder')}
             placeholderTextColor={Colors.textMuted}
             value={newItemQty}
@@ -455,7 +456,7 @@ function EditBillItemsScreen({ route, navigation }: Props) {
             keyboardType="decimal-pad"
           />
           <TextInput
-            style={[typography.bodyMedium, styles.addItemInput, styles.addItemInputPrice]}
+            style={[centeredInputText(typography.bodyMedium), styles.addItemInput, styles.addItemInputPrice]}
             placeholder={t('createBill.pricePlaceholder')}
             placeholderTextColor={Colors.textMuted}
             value={newItemPrice}

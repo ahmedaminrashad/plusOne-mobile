@@ -11,6 +11,7 @@ import {
 import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
+import { centeredInputText } from '../../utils/inputTextStyle';
 
 interface Props extends TextInputProps {
   label?: string;
@@ -30,16 +31,15 @@ const Input = forwardRef<TextInput, Props>(
           {prefix ? (
             <>
               <View style={styles.prefixChip}>
-                <Text style={[typography.bodyLarge, styles.prefix]}>{prefix}</Text>
+                <Text style={[centeredInputText(typography.bodyLarge), styles.prefix]}>{prefix}</Text>
               </View>
               <View style={styles.prefixDivider} />
             </>
           ) : null}
           <TextInput
             ref={ref}
-            style={[typography.bodyLarge, styles.input, style]}
+            style={[centeredInputText(typography.bodyLarge), styles.input, style]}
             placeholderTextColor={Colors.textMuted}
-            // iOS keeps default vertical padding that throws off alignment with the prefix.
             textAlignVertical="center"
             {...rest}
           />
@@ -90,15 +90,12 @@ const styles = StyleSheet.create({
     flex: 1,
     color: Colors.text,
     paddingHorizontal: 12,
-    // Zero default OS padding so the caret lines up with the country-code chip on iOS.
+    // Zero default OS padding so the caret lines up with the country-code chip.
     paddingTop: 0,
     paddingBottom: 0,
     margin: 0,
     height: '100%',
     ...Platform.select({
-      ios: {
-        lineHeight: 20,
-      },
       android: {
         includeFontPadding: false,
         textAlignVertical: 'center',

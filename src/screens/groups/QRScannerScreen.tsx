@@ -7,6 +7,8 @@ import {
   Alert,
   ActivityIndicator,
   Platform,
+  AppState,
+  AppStateStatus,
 } from 'react-native';
 import SafeScreen from '../../components/common/SafeScreen';
 import { useTranslation } from 'react-i18next';
@@ -29,8 +31,16 @@ function QRScannerScreen({ route, navigation }: Props) {
   const groupName = route.params?.groupName;
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [parsing, setParsing] = useState(false);
+  const [cameraActive, setCameraActive] = useState(AppState.currentState === 'active');
   const scannedRef = useRef(false);
   const [parseQr] = useParseQrBillMutation();
+
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state: AppStateStatus) => {
+      setCameraActive(state === 'active');
+    });
+    return () => sub.remove();
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -141,14 +151,16 @@ function QRScannerScreen({ route, navigation }: Props) {
 
   return (
     <View style={styles.container}>
-      <Camera
-        style={StyleSheet.absoluteFill}
-        scanBarcode
-        onReadCode={handleReadCode}
-        showFrame={false}
-        laserColor="transparent"
-        frameColor={Colors.accent}
-      />
+      {cameraActive ? (
+        <Camera
+          style={StyleSheet.absoluteFill}
+          scanBarcode
+          onReadCode={handleReadCode}
+          showFrame={false}
+          laserColor="transparent"
+          frameColor={Colors.accent}
+        />
+      ) : null}
 
       <TouchableOpacity
         style={styles.overlayBackBtn}

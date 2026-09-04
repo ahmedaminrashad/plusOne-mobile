@@ -1,5 +1,4 @@
 import UIKit
-import UserNotifications
 import React
 import React_RCTAppDelegate
 import ReactAppDependencyProvider
@@ -10,7 +9,7 @@ import FirebaseMessaging
 #endif
 
 @main
-class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate {
   var window: UIWindow?
 
   var reactNativeDelegate: ReactNativeDelegate?
@@ -22,10 +21,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
   ) -> Bool {
     FirebaseApp.configure()
     // Silent APNs is how Firebase Phone Auth verifies the app on iOS without
-    // opening Safari. The new RN Swift AppDelegate is not reliably swizzled.
-    // Do not implement didReceiveRemoteNotification here —
-    // RNFirebase's AppDelegate interceptor owns FCM + Auth probe handling.
-    UNUserNotificationCenter.current().delegate = self
+    // opening Safari. Do not implement didReceiveRemoteNotification or become
+    // UNUserNotificationCenterDelegate here — RNFirebase's AppDelegate
+    // interceptor owns FCM + Auth probe handling, and stealing those
+    // callbacks leaves the RN surface paused after lock/unlock (black screen).
     application.registerForRemoteNotifications()
 
     let delegate = ReactNativeDelegate()
@@ -36,6 +35,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     reactNativeFactory = factory
 
     window = UIWindow(frame: UIScreen.main.bounds)
+    // Match the JS canvas so a GPU pause during lock does not flash black.
+    window?.backgroundColor = UIColor(red: 244 / 255, green: 243 / 255, blue: 239 / 255, alpha: 1)
 
     factory.startReactNative(
       withModuleName: "PlusOne",
@@ -95,32 +96,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
       return true
     }
     return false
-  }
-
-  func applicationDidBecomeActive(_ application: UIApplication) {
-    application.applicationIconBadgeNumber = 0
-  }
-
-  func userNotificationCenter(
-    _ center: UNUserNotificationCenter,
-    willPresent notification: UNNotification,
-    withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
-  ) {
-    #if canImport(FirebaseMessaging)
-    Messaging.messaging().appDidReceiveMessage(notification.request.content.userInfo)
-    #endif
-    completionHandler([.banner, .sound, .badge])
-  }
-
-  func userNotificationCenter(
-    _ center: UNUserNotificationCenter,
-    didReceive response: UNNotificationResponse,
-    withCompletionHandler completionHandler: @escaping () -> Void
-  ) {
-    #if canImport(FirebaseMessaging)
-    Messaging.messaging().appDidReceiveMessage(response.notification.request.content.userInfo)
-    #endif
-    completionHandler()
   }
 }
 

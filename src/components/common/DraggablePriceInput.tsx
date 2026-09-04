@@ -10,6 +10,7 @@ import {
 import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
+import { centeredInputText } from '../../utils/inputTextStyle';
 
 interface Props {
   value: string;
@@ -71,7 +72,7 @@ function DraggablePriceInput({ value, onChange, currency = 'EGP', onCommit }: Pr
       {...panResponder.panHandlers}>
       <Text style={[typography.caption, styles.label]}>{currency}</Text>
       <TextInput
-        style={[typography.amountMedium, styles.input]}
+        style={[centeredInputText(typography.amountMedium), styles.input]}
         value={value}
         onChangeText={handleChange}
         onEndEditing={onCommit}
