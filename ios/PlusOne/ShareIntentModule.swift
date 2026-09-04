@@ -48,6 +48,17 @@ class ShareIntentModule: NSObject {
   }
 
   @objc
+  func trimMemory(
+    _ resolve: @escaping RCTPromiseResolveBlock,
+    rejecter reject: @escaping RCTPromiseRejectBlock
+  ) {
+    DispatchQueue.main.async {
+      URLCache.shared.removeAllCachedResponses()
+      resolve(true)
+    }
+  }
+
+  @objc
   func shareText(
     _ message: String,
     resolver resolve: @escaping RCTPromiseResolveBlock,

@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Image,
   Alert,
+  Platform,
 } from 'react-native';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -346,6 +347,9 @@ function GroupChatPane({ groupId, groupName, navigation, sharedImageUri, onShare
         <FlatList
           ref={listRef}
           data={listData}
+          windowSize={5}
+          maxToRenderPerBatch={8}
+          removeClippedSubviews={Platform.OS === 'android'}
           keyExtractor={(item) => {
             if (item.kind === 'pending') return item.item.localId;
             if (item.kind === 'separator') return item.key;

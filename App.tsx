@@ -8,8 +8,11 @@ import RootNavigator from './src/navigation/RootNavigator';
 import { changeLanguage, DEFAULT_LANGUAGE } from './src/i18n';
 import { AppStorage } from './src/utils/storage';
 import ErrorBoundary from './src/components/common/ErrorBoundary';
+import { installMemoryGuard } from './src/utils/memoryGuard';
 
 export default function App() {
+  useEffect(() => installMemoryGuard(), []);
+
   useEffect(() => {
     Appearance.setColorScheme('light');
     if (Platform.OS === 'android') {

@@ -350,20 +350,12 @@ export default function RootNavigator() {
       refetchTimer = setTimeout(() => {
         if (AppState.currentState !== 'active') return;
         const now = Date.now();
-        if (now - lastInvalidate < 30_000) return;
+        if (now - lastInvalidate < 60_000) return;
         lastInvalidate = now;
-        dispatch(
-          baseApi.util.invalidateTags([
-            'Group',
-            'GroupMember',
-            'Invitation',
-            'Share',
-            'Bill',
-            'Ledger',
-            'Message',
-          ]),
-        );
-      }, 2000);
+        // Only the home badges — a full-tag invalidate reloaded ~650MB and
+        // jetsam-killed backboardd when leaving the app (no App Store crash).
+        dispatch(baseApi.util.invalidateTags(['Group', 'Share', 'Invitation']));
+      }, 2500);
     });
     return () => {
       subscription.remove();

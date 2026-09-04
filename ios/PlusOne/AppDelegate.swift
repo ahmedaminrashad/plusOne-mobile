@@ -84,6 +84,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
     return false
   }
+
+  func applicationDidEnterBackground(_ application: UIApplication) {
+    URLCache.shared.removeAllCachedResponses()
+  }
+
+  func applicationDidReceiveMemoryWarning(_ application: UIApplication) {
+    URLCache.shared.removeAllCachedResponses()
+  }
 }
 
 class ReactNativeDelegate: RCTDefaultReactNativeFactoryDelegate {
