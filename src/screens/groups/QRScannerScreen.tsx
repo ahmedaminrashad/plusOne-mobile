@@ -37,7 +37,9 @@ function QRScannerScreen({ route, navigation }: Props) {
 
   useEffect(() => {
     const sub = AppState.addEventListener('change', (state: AppStateStatus) => {
-      setCameraActive(state === 'active');
+      // Tear down only after we are fully backgrounded. Unmounting the camera
+      // on `inactive` (app switcher / opening another app) freezes the phone.
+      setCameraActive(state !== 'background');
     });
     return () => sub.remove();
   }, []);

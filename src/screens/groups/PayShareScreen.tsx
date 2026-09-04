@@ -6,9 +6,9 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
-  Linking,
   AppState,
   AppStateStatus,
+  ScrollView,
 } from 'react-native';
 import SafeScreen from '../../components/common/SafeScreen';
 import { useTranslation } from 'react-i18next';
@@ -24,17 +24,13 @@ import { usePayShareMutation, useCancelShareInitiationMutation } from '../../sto
 import { useGetMeQuery } from '../../store/api/usersApi';
 import { formatCurrency, resolveAssetUrl, formatBillDisplayName } from '../../utils/format';
 import { normalizeInstaPayIdentifier, buildInstaPayLink } from '../../utils/instapay';
+import { openExternalApp } from '../../utils/shareSheet';
 import { ChevronLeftIcon } from '../../components/icons';
 
 type Props = AppScreenProps<'PayShare'>;
 
 async function tryOpenInstaPay(url: string): Promise<boolean> {
-  try {
-    await Linking.openURL(url);
-    return true;
-  } catch {
-    return false;
-  }
+  return openExternalApp(url);
 }
 
 function PayShareScreen({ route, navigation }: Props) {
@@ -72,23 +68,32 @@ function PayShareScreen({ route, navigation }: Props) {
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (state: AppStateStatus) => {
       if (state !== 'active' || !awaitingReturnRef.current) return;
-      awaitingReturnRef.current = false;
-      if (!myShare || myShare.status !== 'initiated') return;
-
-      Alert.alert(
-        t('viewReceipt.paymentConfirmTitle'),
-        t('viewReceipt.paymentConfirmMessage', { amount: formatCurrency(myShare.amountPiastres / 100, myShare.currency) }),
-        [
-          {
-            text: t('viewReceipt.noCancelButton'),
-            style: 'cancel',
-            onPress: async () => {
-              try { await cancelInitiation(myShare.id).unwrap(); } catch { /* already reconciled */ }
+      const share = myShare;
+      if (!share || share.status !== 'initiated') return;
+      setTimeout(() => {
+        if (AppState.currentState !== 'active' || !awaitingReturnRef.current) return;
+        awaitingReturnRef.current = false;
+        Alert.alert(
+          t('viewReceipt.paymentConfirmTitle'),
+          t('viewReceipt.paymentConfirmMessage', {
+            amount: formatCurrency(share.amountPiastres / 100, share.currency),
+          }),
+          [
+            {
+              text: t('viewReceipt.noCancelButton'),
+              style: 'cancel',
+              onPress: async () => {
+                try {
+                  await cancelInitiation(share.id).unwrap();
+                } catch {
+                  /* already reconciled */
+                }
+              },
             },
-          },
-          { text: t('viewReceipt.yesPaidButton') },
-        ],
-      );
+            { text: t('viewReceipt.yesPaidButton') },
+          ],
+        );
+      }, 600);
     });
     return () => subscription.remove();
   }, [myShare, cancelInitiation, t]);
@@ -192,7 +197,11 @@ function PayShareScreen({ route, navigation }: Props) {
         <Text style={[typography.headingLarge, styles.title]}>{t('payShare.title')}</Text>
       </View>
 
-      <View style={styles.content}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}>
         {myShare?.status === 'settled' ? (
           <View style={styles.statusCard}>
             <Text style={[typography.headingMedium, styles.settledText]}>{t('viewReceipt.shareSettled')}</Text>
@@ -270,7 +279,7 @@ function PayShareScreen({ route, navigation }: Props) {
             <Text style={[typography.bodyLarge, styles.pendingText]}>{t('payShare.noShareFound')}</Text>
           </View>
         )}
-      </View>
+      </ScrollView>
     </SafeScreen>
   );
 }
@@ -295,7 +304,8 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   title: { color: Colors.text },
-  content: { padding: 20, alignItems: 'center' },
+  scroll: { flex: 1 },
+  content: { padding: 20, paddingBottom: 120, alignItems: 'center', flexGrow: 1 },
 
   card: {
     backgroundColor: Colors.surface,

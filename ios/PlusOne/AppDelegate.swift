@@ -11,6 +11,10 @@ import FirebaseMessaging
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
   var window: UIWindow?
+  /// Only un-hide if we hid the window for a background launch. Calling
+  /// makeKeyAndVisible on every become-active steals the key window while the
+  /// user is swiping to another app and can lock the iPhone (no crash report).
+  private var hiddenForBackgroundLaunch = false
 
   var reactNativeDelegate: ReactNativeDelegate?
   var reactNativeFactory: RCTReactNativeFactory?
@@ -49,17 +53,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     // for permissions is what locks the iPhone — and it is not an App Store crash.
     if application.applicationState == .background {
       window?.isHidden = true
+      hiddenForBackgroundLaunch = true
     }
 
     return true
   }
 
   func applicationDidBecomeActive(_ application: UIApplication) {
-    window?.backgroundColor = UIColor(red: 244 / 255, green: 243 / 255, blue: 239 / 255, alpha: 1)
+    guard hiddenForBackgroundLaunch else { return }
+    hiddenForBackgroundLaunch = false
     window?.isHidden = false
-    window?.makeKeyAndVisible()
-    window?.rootViewController?.view.isHidden = false
-    window?.rootViewController?.view.alpha = 1
   }
 
   func application(
