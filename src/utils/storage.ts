@@ -10,13 +10,38 @@ const BIOMETRICS_KEY = 'plusone_biometrics_enabled';
 const TWO_FACTOR_KEY = 'plusone_two_factor_enabled';
 const LOGIN_ALERTS_KEY = 'plusone_login_alerts_enabled';
 
+const KEYCHAIN_OPTS = {
+  accessible: Keychain.ACCESSIBLE.AFTER_FIRST_UNLOCK,
+};
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | null> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(null), ms);
+    promise
+      .then((value) => {
+        clearTimeout(timer);
+        resolve(value);
+      })
+      .catch(() => {
+        clearTimeout(timer);
+        resolve(null);
+      });
+  });
+}
+
 export const SecureStorage = {
   async saveTokens(accessToken: string, refreshToken: string, isProfileComplete: boolean): Promise<void> {
-    await Keychain.setGenericPassword(ACCESS_TOKEN_KEY, JSON.stringify({ accessToken, refreshToken, isProfileComplete }));
+    await Keychain.setGenericPassword(
+      ACCESS_TOKEN_KEY,
+      JSON.stringify({ accessToken, refreshToken, isProfileComplete }),
+      KEYCHAIN_OPTS,
+    );
   },
 
   async getTokens(): Promise<{ accessToken: string; refreshToken: string; isProfileComplete: boolean } | null> {
-    const result = await Keychain.getGenericPassword();
+    // A locked-device / background keychain read can block the JS thread long
+    // enough for iOS to watchdog the whole phone (black screen, no crash report).
+    const result = await withTimeout(Keychain.getGenericPassword(), 2000);
     if (!result) return null;
     try {
       const parsed = JSON.parse(result.password);

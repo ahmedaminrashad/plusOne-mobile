@@ -1,4 +1,4 @@
-import { Platform, PermissionsAndroid, Alert, Linking, NativeModules } from 'react-native';
+import { AppState, Platform, PermissionsAndroid, Alert, Linking, NativeModules } from 'react-native';
 
 type CameraKitNative = {
   requestDeviceCameraAuthorization?: () => Promise<boolean>;
@@ -42,10 +42,11 @@ export async function requestCameraPermission(labels: {
   } else {
     const native = getCameraKitNative();
     try {
-      if (native?.requestDeviceCameraAuthorization) {
-        granted = await native.requestDeviceCameraAuthorization();
-      } else if (native?.checkDeviceCameraAuthorizationStatus) {
+      if (native?.checkDeviceCameraAuthorizationStatus) {
         granted = await native.checkDeviceCameraAuthorizationStatus();
+      }
+      if (!granted && AppState.currentState === 'active' && native?.requestDeviceCameraAuthorization) {
+        granted = await native.requestDeviceCameraAuthorization();
       }
     } catch {
       granted = false;
@@ -53,6 +54,7 @@ export async function requestCameraPermission(labels: {
   }
 
   if (granted) return true;
+  if (AppState.currentState !== 'active') return false;
 
   const buttons: Array<{ text: string; onPress?: () => void; style?: 'cancel' | 'destructive' }> = [];
   if (labels.onManualEntry) {

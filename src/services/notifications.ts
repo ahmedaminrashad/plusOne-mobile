@@ -1,5 +1,5 @@
 import messaging, { FirebaseMessagingTypes } from '@react-native-firebase/messaging';
-import { Platform, PermissionsAndroid, NativeModules } from 'react-native';
+import { AppState, Platform, PermissionsAndroid, NativeModules } from 'react-native';
 
 function dataFromRemoteMessage(
   remoteMessage: FirebaseMessagingTypes.RemoteMessage | null | undefined,
@@ -17,6 +17,16 @@ function dataFromRemoteMessage(
 
 export async function requestNotificationPermission(): Promise<boolean> {
   if (Platform.OS === 'ios') {
+    const current = await messaging().hasPermission();
+    if (
+      current === messaging.AuthorizationStatus.AUTHORIZED ||
+      current === messaging.AuthorizationStatus.PROVISIONAL
+    ) {
+      return true;
+    }
+    if (current === messaging.AuthorizationStatus.DENIED) return false;
+    // Prompting while backgrounded (Home button / silent push) can freeze the phone.
+    if (AppState.currentState !== 'active') return false;
     const status = await messaging().requestPermission({
       alert: true,
       badge: true,

@@ -14,6 +14,7 @@ export default function SettingsStack() {
       screenOptions={{
         headerShown: false,
         contentStyle: { backgroundColor: Colors.background },
+        freezeOnBlur: false,
       }}>
       <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen name="EditProfile" component={EditProfileScreen} />

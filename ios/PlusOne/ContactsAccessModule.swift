@@ -50,10 +50,6 @@ class ContactsAccessModule: NSObject {
         host.view.isOpaque = false
         box.controller = host
         presenter.present(host, animated: false)
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 45) {
-          finish([])
-        }
       } else {
         reject("UNSUPPORTED", "Limited contacts picker requires iOS 18", nil)
       }

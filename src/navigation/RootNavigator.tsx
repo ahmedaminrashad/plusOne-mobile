@@ -25,6 +25,7 @@ import { extractInstaPayIdentifierFromSharedText } from '../utils/instapay';
 import { TabParamList } from '../types/navigation';
 import { baseApi } from '../store/api/baseApi';
 import i18n, { AppLanguage } from '../i18n';
+import { whenForeground } from '../utils/whenForeground';
 
 function asDataRecord(data: Record<string, unknown> | undefined | null): Record<string, string> {
   if (!data) return {};
@@ -74,16 +75,21 @@ export default function RootNavigator() {
   useEffect(() => {
     if (!isAuthenticated) return;
     let unsub: (() => void) | undefined;
-    (async () => {
-      const granted = await requestNotificationPermission();
-      if (!granted) return;
-      const token = await getFcmToken();
-      if (token) await saveFcmToken(token);
-      unsub = onFcmTokenRefresh((next) => {
-        saveFcmToken(next);
-      });
-    })();
-    return () => unsub?.();
+    const stopWait = whenForeground(() => {
+      (async () => {
+        const granted = await requestNotificationPermission();
+        if (!granted) return;
+        const token = await getFcmToken();
+        if (token) await saveFcmToken(token);
+        unsub = onFcmTokenRefresh((next) => {
+          saveFcmToken(next);
+        });
+      })();
+    });
+    return () => {
+      stopWait();
+      unsub?.();
+    };
   }, [isAuthenticated, saveFcmToken]);
 
   // Reset the Home stack onto the target screen so cold-start taps can't land
@@ -307,25 +313,35 @@ export default function RootNavigator() {
   useEffect(() => {
     if (!isAuthenticated) return;
     let lastInvalidate = 0;
+    let timer: ReturnType<typeof setTimeout> | null = null;
     const subscription = AppState.addEventListener('change', (state: AppStateStatus) => {
       if (state !== 'active') return;
       clearAppBadge();
-      const now = Date.now();
-      if (now - lastInvalidate < 30_000) return;
-      lastInvalidate = now;
-      dispatch(
-        baseApi.util.invalidateTags([
-          'Group',
-          'GroupMember',
-          'Invitation',
-          'Share',
-          'Bill',
-          'Ledger',
-          'Message',
-        ]),
-      );
+      if (timer) clearTimeout(timer);
+      // Let iOS finish the Home-button / lock transition before refetching.
+      // Immediate invalidation on resume is what shows the spinner, then hangs.
+      timer = setTimeout(() => {
+        if (AppState.currentState !== 'active') return;
+        const now = Date.now();
+        if (now - lastInvalidate < 30_000) return;
+        lastInvalidate = now;
+        dispatch(
+          baseApi.util.invalidateTags([
+            'Group',
+            'GroupMember',
+            'Invitation',
+            'Share',
+            'Bill',
+            'Ledger',
+            'Message',
+          ]),
+        );
+      }, 2000);
     });
-    return () => subscription.remove();
+    return () => {
+      subscription.remove();
+      if (timer) clearTimeout(timer);
+    };
   }, [dispatch, isAuthenticated]);
 
   if (loading) {

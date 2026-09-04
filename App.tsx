@@ -26,11 +26,11 @@ export default function App() {
   return (
     <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>
-        <ErrorBoundary>
-          <Provider store={store}>
+        <Provider store={store}>
+          <ErrorBoundary>
             <RootNavigator />
-          </Provider>
-        </ErrorBoundary>
+          </ErrorBoundary>
+        </Provider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

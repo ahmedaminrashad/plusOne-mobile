@@ -44,7 +44,22 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
       launchOptions: launchOptions
     )
 
+    // Silent push / background fetch relaunches the process while the user is
+    // on SpringBoard. Showing the RN window then (black + spinner) and prompting
+    // for permissions is what locks the iPhone — and it is not an App Store crash.
+    if application.applicationState == .background {
+      window?.isHidden = true
+    }
+
     return true
+  }
+
+  func applicationDidBecomeActive(_ application: UIApplication) {
+    window?.backgroundColor = UIColor(red: 244 / 255, green: 243 / 255, blue: 239 / 255, alpha: 1)
+    window?.isHidden = false
+    window?.makeKeyAndVisible()
+    window?.rootViewController?.view.isHidden = false
+    window?.rootViewController?.view.alpha = 1
   }
 
   func application(

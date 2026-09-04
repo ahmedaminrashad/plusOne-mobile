@@ -40,6 +40,7 @@ export default function AppStack() {
         headerBackTitle: '',
         headerBackButtonDisplayMode: 'minimal',
         contentStyle: { backgroundColor: Colors.background },
+        freezeOnBlur: false,
       }}>
       <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ headerShown: false }} />
