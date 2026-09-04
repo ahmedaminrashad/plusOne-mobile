@@ -198,7 +198,7 @@
     "cameraOpenFailed": "Couldn't open the camera. Try again.",
     "galleryOpenFailed": "Couldn't open the photo library. Try again.",
     "processFailedTitle": "Couldn't process the image",
-    "ocrNotConfiguredMessage": "The OCR service isn't currently enabled, please enter manually.",
+    "ocrNotConfiguredMessage": "Receipt reading isn't currently enabled, please enter manually.",
     "ocrReadFailedMessage": "Couldn't read the receipt, please enter manually.",
     "connectionFailedTitle": "Couldn't connect",
     "connectionFailedMessage": "Couldn't connect to the server. Check your internet connection and try again.",

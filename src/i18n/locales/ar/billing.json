@@ -196,7 +196,7 @@
     "cameraOpenFailed": "تعذر فتح الكاميرا. حاول مرة أخرى.",
     "galleryOpenFailed": "تعذر فتح معرض الصور. حاول مرة أخرى.",
     "processFailedTitle": "تعذر معالجة الصورة",
-    "ocrNotConfiguredMessage": "خدمة OCR غير مفعّلة حالياً، يرجى الإدخال اليدوي.",
+    "ocrNotConfiguredMessage": "خدمة قراءة الإيصال غير مفعّلة حالياً، يرجى الإدخال اليدوي.",
     "ocrReadFailedMessage": "تعذرت قراءة الإيصال، يرجى الإدخال اليدوي.",
     "connectionFailedTitle": "تعذر الاتصال",
     "connectionFailedMessage": "تعذر الاتصال بالخادم. تحقق من الاتصال بالإنترنت وحاول مرة أخرى.",
