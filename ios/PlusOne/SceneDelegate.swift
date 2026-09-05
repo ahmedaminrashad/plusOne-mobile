@@ -1,9 +1,14 @@
 import UIKit
 import React
 import FirebaseAuth
+import os.log
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
   var window: UIWindow?
+  /// Opaque cover on the existing scene window only. A second UIWindow or
+  /// hiding this window during Recents is what locks the phone.
+  private var recentsCover: UIView?
+  private let log = OSLog(subsystem: "com.refaat.plusone", category: "lifecycle")
 
   func scene(
     _ scene: UIScene,
@@ -49,5 +54,24 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     if let url = userActivity.webpageURL {
       _ = Auth.auth().canHandle(url)
     }
+  }
+
+  func sceneWillResignActive(_ scene: UIScene) {
+    os_log("sceneWillResignActive", log: log, type: .info)
+    guard recentsCover == nil, let window else { return }
+    window.endEditing(true)
+    let cover = UIView(frame: window.bounds)
+    cover.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+    cover.isOpaque = true
+    cover.isUserInteractionEnabled = false
+    cover.backgroundColor = UIColor(red: 244 / 255, green: 243 / 255, blue: 239 / 255, alpha: 1)
+    window.addSubview(cover)
+    recentsCover = cover
+  }
+
+  func sceneDidBecomeActive(_ scene: UIScene) {
+    os_log("sceneDidBecomeActive", log: log, type: .info)
+    recentsCover?.removeFromSuperview()
+    recentsCover = nil
   }
 }

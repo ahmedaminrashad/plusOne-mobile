@@ -1,5 +1,4 @@
 import { AppState, AppStateStatus, NativeModules, Platform } from 'react-native';
-import { enableFreeze } from 'react-native-screens';
 import { store } from '../store';
 import { baseApi } from '../store/api/baseApi';
 
@@ -15,23 +14,14 @@ function trimCaches(): void {
 }
 
 /**
- * JetsamEvent-2026-09-04-185318: PlusOne was ~650MB and still frontmost
- * when iOS killed backboardd (per-process-limit, ~2.1GB). The snapshot
- * happens on inactive (app switcher) — do not run heavy JS there.
+ * Recents snapshots the live UI while we are only `inactive`. Freezing
+ * screens or resetting caches at that moment is what locks SpringBoard.
+ * Trim only after a real background (Home / another app), never in Recents.
  */
 export function installMemoryGuard(): () => void {
   const onChange = (state: AppStateStatus) => {
-    if (state === 'inactive') {
-      enableFreeze(true);
-      return;
-    }
     if (state === 'background') {
-      enableFreeze(true);
       trimCaches();
-      return;
-    }
-    if (state === 'active') {
-      enableFreeze(false);
     }
   };
   const sub = AppState.addEventListener('change', onChange);
