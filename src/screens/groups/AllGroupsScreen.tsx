@@ -1,4 +1,5 @@
-import React, { useCallback, useMemo, useState, memo } from 'react';
+import React, { useCallback, useMemo, useState, memo, useEffect } from 'react';
+import { useIsFocused } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import {
   View,
@@ -42,6 +43,8 @@ const FILTER_STYLES: Record<Filter, { restBg: string; restText: string; activeBg
 function AllGroupsScreen({ navigation }: Props) {
   const { t } = useTranslation('groups');
   const typography = useTypography();
+  const focused = useIsFocused();
+  const [collectBalances, setCollectBalances] = useState(false);
   const { data: groups } = useGetGroupsQuery();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
@@ -50,6 +53,18 @@ function AllGroupsScreen({ navigation }: Props) {
   const handleBalance = useCallback((groupId: string, net: number) => {
     setBalances((prev) => (prev[groupId] === net ? prev : { ...prev, [groupId]: net }));
   }, []);
+
+  useEffect(() => {
+    if (!focused) {
+      setCollectBalances(false);
+      return;
+    }
+    const timeout = setTimeout(() => setCollectBalances(true), 800);
+    return () => {
+      clearTimeout(timeout);
+      setCollectBalances(false);
+    };
+  }, [focused]);
 
   const filtered = useMemo(() => {
     let list = groups ?? [];
@@ -82,9 +97,10 @@ function AllGroupsScreen({ navigation }: Props) {
 
   return (
     <SafeScreen style={styles.container}>
-      {(groups ?? []).map((g) => (
-        <GroupBalanceCollector key={g.id} groupId={g.id} onBalance={handleBalance} />
-      ))}
+      {collectBalances &&
+        (groups ?? []).map((g) => (
+          <GroupBalanceCollector key={g.id} groupId={g.id} onBalance={handleBalance} />
+        ))}
 
       <View style={styles.headerRow}>
         <View style={styles.headerLeft}>

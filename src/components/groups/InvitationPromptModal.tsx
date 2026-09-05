@@ -2,7 +2,6 @@ import React, { useState, useCallback, memo } from 'react';
 import {
   View,
   Text,
-  Modal,
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
@@ -56,8 +55,7 @@ function InvitationPromptModal({ invitations, onAccept, onDecline, onDismiss }: 
   if (!inv) return null;
 
   return (
-    <Modal visible transparent animationType="slide" onRequestClose={onDismiss}>
-      <View style={styles.overlay}>
+    <View style={styles.overlay} pointerEvents="box-none">
         <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={onDismiss} />
         <View style={styles.sheet}>
           <View style={styles.handle} />
@@ -109,8 +107,7 @@ function InvitationPromptModal({ invitations, onAccept, onDecline, onDismiss }: 
             <Text style={styles.laterTxt}>{t('invitationPrompt.laterButton')}</Text>
           </TouchableOpacity>
         </View>
-      </View>
-    </Modal>
+    </View>
   );
 }
 
@@ -118,8 +115,9 @@ export default memo(InvitationPromptModal);
 
 const styles = StyleSheet.create({
   overlay: {
-    flex: 1,
+    ...StyleSheet.absoluteFillObject,
     justifyContent: 'flex-end',
+    zIndex: 20,
   },
   backdrop: {
     ...StyleSheet.absoluteFill,

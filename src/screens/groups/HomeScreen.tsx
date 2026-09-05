@@ -3,13 +3,15 @@ import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
-  FlatList,
+  ScrollView,
   TouchableOpacity,
   StyleSheet,
   StatusBar,
   ActivityIndicator,
   RefreshControl,
+  InteractionManager,
 } from 'react-native';
+import { useIsFocused } from '@react-navigation/native';
 import SafeScreen from '../../components/common/SafeScreen';
 import { AppScreenProps } from '../../types/navigation';
 import {
@@ -40,6 +42,8 @@ const PREVIEW_COUNT = 4;
 function HomeScreen({ navigation }: Props) {
   const { t } = useTranslation('groups');
   const typography = useTypography();
+  const focused = useIsFocused();
+  const [collectBalances, setCollectBalances] = useState(false);
   const { data: me } = useGetMeQuery();
   const dispatch = useAppDispatch();
   const { data: groups, isLoading, refetch, isError } = useGetGroupsQuery();
@@ -116,6 +120,24 @@ function HomeScreen({ navigation }: Props) {
     }
   }, [invitations]);
 
+  // Ledger fan-out + FlatList relayout on Home is what Recents snapshots.
+  // Other screens work because this tree is detached. Delay until Home is idle.
+  useEffect(() => {
+    if (!focused) {
+      setCollectBalances(false);
+      return;
+    }
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    const task = InteractionManager.runAfterInteractions(() => {
+      timeout = setTimeout(() => setCollectBalances(true), 800);
+    });
+    return () => {
+      task.cancel();
+      if (timeout) clearTimeout(timeout);
+      setCollectBalances(false);
+    };
+  }, [focused]);
+
   const handleAccept = useCallback(
     async (membershipId: string) => { await accept(membershipId).unwrap(); },
     [accept],
@@ -150,95 +172,92 @@ function HomeScreen({ navigation }: Props) {
     <SafeScreen style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
 
-      {(groups ?? []).map((g) => (
-        <GroupBalanceCollector key={g.id} groupId={g.id} onBalance={handleBalance} />
-      ))}
+      {collectBalances &&
+        (groups ?? []).map((g) => (
+          <GroupBalanceCollector key={g.id} groupId={g.id} onBalance={handleBalance} />
+        ))}
 
-      <FlatList
-        data={previewGroups}
-        keyExtractor={(g) => g.id}
-        ListHeaderComponent={
-          <>
-            <View style={styles.headerRow}>
-              <View style={styles.headerLeft}>
-                <Avatar uri={resolveAssetUrl(me?.photoUrl)} name={me?.displayName} seed={me?.id} size={40} />
-                <Text style={[typography.labelLarge, styles.headerGreeting]} numberOfLines={2}>{greeting}</Text>
-              </View>
-              <TouchableOpacity
-                style={styles.headerIconBtn}
-                onPress={() => navigation.navigate('Notifications')}
-                activeOpacity={0.7}>
-                <BellIcon size={20} color={Colors.text} />
-                {pendingCount > 0 && <View style={styles.badgeDot} />}
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.heroCard}>
-              <View style={styles.heroTopRow}>
-                <Text style={[typography.labelMedium, styles.heroLabel]}>{t('home.acrossAllGroups')}</Text>
-                <TouchableOpacity style={styles.settleBtn} onPress={() => navigation.navigate('SettleUp')} activeOpacity={0.8}>
-                  <Text style={[typography.labelMedium, styles.settleBtnText]}>{t('home.settleUp')}</Text>
-                </TouchableOpacity>
-              </View>
-              <View style={styles.heroRow}>
-                <View style={styles.heroAmounts}>
-                  <View>
-                    <Text style={[typography.bodySmall, styles.heroAmountLabel]}>{t('home.youAreOwed')}</Text>
-                    <Text style={[typography.amountMedium, styles.heroAmount]}>{formatCurrency(owed / 100)}</Text>
-                  </View>
-                  <View>
-                    <Text style={[typography.bodySmall, styles.heroAmountLabel]}>{t('home.youOwe')}</Text>
-                    <Text style={[typography.amountMedium, styles.heroAmount]}>{formatCurrency(owe / 100)}</Text>
-                  </View>
-                </View>
-              </View>
-            </View>
-
-            <View style={styles.tileRow}>
-              {[
-                { label: t('home.tileNewGroup'), Icon: PeopleIcon, iconColor: Colors.primary, onPress: () => navigation.navigate('CreateGroup'), bg: Colors.tint },
-                { label: t('home.tileMyCircle'), Icon: PersonIcon, iconColor: Colors.warningDark, onPress: () => navigation.navigate('MyCircle'), bg: Colors.warningTint },
-                { label: t('home.tileRemind'), Icon: BellIcon, iconColor: Colors.secondaryDark, onPress: () => navigation.navigate('Remind'), bg: Colors.successTint },
-                { label: t('home.tileMyLedger'), Icon: ReceiptIcon, iconColor: Colors.primary, onPress: () => navigation.navigate('MyLedger'), bg: Colors.tint },
-              ].map((tile) => (
-                <TouchableOpacity key={tile.label} style={styles.tile} onPress={tile.onPress} activeOpacity={0.75}>
-                  <View style={[styles.tileIconWrap, { backgroundColor: tile.bg }]}>
-                    <tile.Icon size={26} color={tile.iconColor} />
-                  </View>
-                  <Text style={[typography.labelMedium, styles.tileLabel]}>{tile.label}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            <View style={styles.sectionHeader}>
-              <View style={styles.sectionTitleBlock}>
-                <Text style={[typography.headingMedium, styles.sectionTitle]}>{t('home.yourGroups')}</Text>
-                <Text style={[typography.bodySmall, styles.sectionSubtitle]}>{t('home.yourGroupsSubtitle')}</Text>
-              </View>
-              <TouchableOpacity onPress={() => navigation.navigate('AllGroups')}>
-                <Text style={[typography.labelMedium, styles.viewAll]}>{t('home.viewAll')}</Text>
-              </TouchableOpacity>
-            </View>
-
-            {isError && <Text style={[typography.bodyMedium, styles.errorBanner]}>{t('home.loadError')}</Text>}
-          </>
-        }
-        renderItem={({ item }) => (
-          <GroupCard group={item} onPress={() => handleGroupPress(item.id, item.name)} />
-        )}
-        ListEmptyComponent={isLoading ? null : renderEmpty}
+      <ScrollView
         contentContainerStyle={
           (!groups || groups.length === 0) && !isLoading ? styles.listEmpty : styles.list
         }
         refreshControl={
           <RefreshControl refreshing={manualRefreshing} onRefresh={handleRefresh} tintColor={Colors.secondary} />
-        }
-        ListFooterComponent={
-          isLoading ? <ActivityIndicator color={Colors.secondary} style={styles.loader} /> : null
-        }
-      />
+        }>
+        <View>
+          <View style={styles.headerRow}>
+            <View style={styles.headerLeft}>
+              <Avatar uri={resolveAssetUrl(me?.photoUrl)} name={me?.displayName} seed={me?.id} size={40} />
+              <Text style={[typography.labelLarge, styles.headerGreeting]} numberOfLines={2}>{greeting}</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.headerIconBtn}
+              onPress={() => navigation.navigate('Notifications')}
+              activeOpacity={0.7}>
+              <BellIcon size={20} color={Colors.text} />
+              {pendingCount > 0 && <View style={styles.badgeDot} />}
+            </TouchableOpacity>
+          </View>
 
-      {showModal && invitations && invitations.length > 0 && (
+          <View style={styles.heroCard}>
+            <View style={styles.heroTopRow}>
+              <Text style={[typography.labelMedium, styles.heroLabel]}>{t('home.acrossAllGroups')}</Text>
+              <TouchableOpacity style={styles.settleBtn} onPress={() => navigation.navigate('SettleUp')} activeOpacity={0.8}>
+                <Text style={[typography.labelMedium, styles.settleBtnText]}>{t('home.settleUp')}</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.heroRow}>
+              <View style={styles.heroAmounts}>
+                <View>
+                  <Text style={[typography.bodySmall, styles.heroAmountLabel]}>{t('home.youAreOwed')}</Text>
+                  <Text style={[typography.amountMedium, styles.heroAmount]}>{formatCurrency(owed / 100)}</Text>
+                </View>
+                <View>
+                  <Text style={[typography.bodySmall, styles.heroAmountLabel]}>{t('home.youOwe')}</Text>
+                  <Text style={[typography.amountMedium, styles.heroAmount]}>{formatCurrency(owe / 100)}</Text>
+                </View>
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.tileRow}>
+            {[
+              { label: t('home.tileNewGroup'), Icon: PeopleIcon, iconColor: Colors.primary, onPress: () => navigation.navigate('CreateGroup'), bg: Colors.tint },
+              { label: t('home.tileMyCircle'), Icon: PersonIcon, iconColor: Colors.warningDark, onPress: () => navigation.navigate('MyCircle'), bg: Colors.warningTint },
+              { label: t('home.tileRemind'), Icon: BellIcon, iconColor: Colors.secondaryDark, onPress: () => navigation.navigate('Remind'), bg: Colors.successTint },
+              { label: t('home.tileMyLedger'), Icon: ReceiptIcon, iconColor: Colors.primary, onPress: () => navigation.navigate('MyLedger'), bg: Colors.tint },
+            ].map((tile) => (
+              <TouchableOpacity key={tile.label} style={styles.tile} onPress={tile.onPress} activeOpacity={0.75}>
+                <View style={[styles.tileIconWrap, { backgroundColor: tile.bg }]}>
+                  <tile.Icon size={26} color={tile.iconColor} />
+                </View>
+                <Text style={[typography.labelMedium, styles.tileLabel]}>{tile.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionTitleBlock}>
+              <Text style={[typography.headingMedium, styles.sectionTitle]}>{t('home.yourGroups')}</Text>
+              <Text style={[typography.bodySmall, styles.sectionSubtitle]}>{t('home.yourGroupsSubtitle')}</Text>
+            </View>
+            <TouchableOpacity onPress={() => navigation.navigate('AllGroups')}>
+              <Text style={[typography.labelMedium, styles.viewAll]}>{t('home.viewAll')}</Text>
+            </TouchableOpacity>
+          </View>
+
+          {isError && <Text style={[typography.bodyMedium, styles.errorBanner]}>{t('home.loadError')}</Text>}
+        </View>
+
+        {previewGroups.map((item) => (
+          <GroupCard key={item.id} group={item} onPress={() => handleGroupPress(item.id, item.name)} />
+        ))}
+
+        {!isLoading && previewGroups.length === 0 && renderEmpty()}
+        {isLoading ? <ActivityIndicator color={Colors.secondary} style={styles.loader} /> : null}
+      </ScrollView>
+
+      {focused && showModal && invitations && invitations.length > 0 && (
         <InvitationPromptModal
           invitations={invitations}
           onAccept={handleAccept}

@@ -79,11 +79,8 @@ const styles = StyleSheet.create({
     borderRadius: Radius.xl,
     padding: 14,
     marginBottom: 10,
-    shadowColor: Colors.primaryDark,
-    shadowOpacity: 0.06,
-    shadowOffset: { width: 0, height: 3 },
-    shadowRadius: 8,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
   },
   row: {
     flexDirection: 'row',
