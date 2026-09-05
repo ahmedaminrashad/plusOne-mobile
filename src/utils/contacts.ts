@@ -15,8 +15,19 @@ let contactsCacheAt = 0;
 const CACHE_TTL_MS = 5 * 60 * 1000;
 
 const { ContactsAccessModule } = NativeModules as {
-  ContactsAccessModule?: { presentLimitedAccessPicker: () => Promise<string[] | null> };
+  ContactsAccessModule?: {
+    authorizationStatus?: () => Promise<string>;
+    requestAccess?: () => Promise<string>;
+    presentLimitedAccessPicker: () => Promise<string[] | null>;
+  };
 };
+
+function normalizeStatus(status: string | null | undefined): ContactsPermission {
+  if (status === 'authorized' || status === 'limited' || status === 'denied' || status === 'undefined') {
+    return status;
+  }
+  return 'undefined';
+}
 
 export function invalidateContactsCache(): void {
   contactsCache = null;
@@ -34,16 +45,64 @@ export function showContactsPermissionDeniedAlert(): void {
   );
 }
 
-export async function getContactsPermissionStatus(): Promise<ContactsPermission> {
-  if (Platform.OS !== 'ios') return 'authorized';
-  const status = await Contacts.checkPermission();
-  if (status === 'authorized' || status === 'limited' || status === 'denied' || status === 'undefined') {
-    return status;
-  }
-  return 'undefined';
+function showFullAccessRequiredAlert(): Promise<void> {
+  return new Promise((resolve) => {
+    Alert.alert(
+      'Full contacts access',
+      'PlusOne needs access to all of your contacts to add members. In Settings, set Contacts to Full Access.',
+      [
+        { text: 'Not now', style: 'cancel', onPress: () => resolve() },
+        {
+          text: 'Open Settings',
+          onPress: () => {
+            void Linking.openSettings();
+            resolve();
+          },
+        },
+      ],
+    );
+  });
 }
 
-export async function requestContactsPermission(options?: { showDeniedAlert?: boolean }): Promise<boolean> {
+export async function getContactsPermissionStatus(): Promise<ContactsPermission> {
+  if (Platform.OS !== 'ios') return 'authorized';
+  try {
+    if (ContactsAccessModule?.authorizationStatus) {
+      return normalizeStatus(await ContactsAccessModule.authorizationStatus());
+    }
+    return normalizeStatus(await Contacts.checkPermission());
+  } catch {
+    return 'undefined';
+  }
+}
+
+async function requestIosAccess(): Promise<ContactsPermission> {
+  try {
+    if (ContactsAccessModule?.requestAccess) {
+      return normalizeStatus(await ContactsAccessModule.requestAccess());
+    }
+    return normalizeStatus(await Contacts.requestPermission());
+  } catch {
+    return 'undefined';
+  }
+}
+
+/** True when the OS will let us read at least some contacts. */
+export function canReadContacts(status: ContactsPermission): boolean {
+  return status === 'authorized' || status === 'limited';
+}
+
+/**
+ * Ask for contacts permission, and for Full Access on iOS when the app
+ * only has limited / selected-contacts access.
+ */
+export async function requestContactsPermission(options?: {
+  showDeniedAlert?: boolean;
+  requireFullAccess?: boolean;
+}): Promise<boolean> {
+  const requireFull = options?.requireFullAccess !== false;
+  const showDenied = options?.showDeniedAlert !== false;
+
   if (Platform.OS === 'android') {
     const result = await PermissionsAndroid.request(
       PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
@@ -55,19 +114,36 @@ export async function requestContactsPermission(options?: { showDeniedAlert?: bo
       },
     );
     const granted = result === PermissionsAndroid.RESULTS.GRANTED;
-    if (!granted && options?.showDeniedAlert !== false) showContactsPermissionDeniedAlert();
+    if (!granted && showDenied) showContactsPermissionDeniedAlert();
     return granted;
   }
 
-  // Check first so we don't re-prompt (or hang) when the user already chose
-  // iOS "Allow selected contacts" / limited access.
-  const existing = await Contacts.checkPermission();
-  if (existing === 'authorized' || existing === 'limited') return true;
+  let status = await getContactsPermissionStatus();
 
-  const requested = await Contacts.requestPermission();
-  const granted = requested === 'authorized' || requested === 'limited';
-  if (!granted && options?.showDeniedAlert !== false) showContactsPermissionDeniedAlert();
-  return granted;
+  if (status === 'authorized') return true;
+
+  if (status === 'undefined') {
+    status = await requestIosAccess();
+    if (status === 'authorized') return true;
+    if (status === 'limited') {
+      if (requireFull) await showFullAccessRequiredAlert();
+      return true;
+    }
+    if (showDenied) showContactsPermissionDeniedAlert();
+    return false;
+  }
+
+  if (status === 'limited') {
+    // requestAccess is a no-op after the user already chose Limited, but
+    // still run it in case the OS can upgrade. Then ask for Full Access.
+    const next = await requestIosAccess();
+    if (next === 'authorized') return true;
+    if (requireFull) await showFullAccessRequiredAlert();
+    return true;
+  }
+
+  if (showDenied) showContactsPermissionDeniedAlert();
+  return false;
 }
 
 /** iOS 18 limited access: re-open the system sheet so the user can grant more contacts. */
@@ -114,7 +190,10 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
 
 /** Loads device contacts that have a usable phone number. */
 export async function loadDeviceContacts(options?: { force?: boolean }): Promise<DeviceContact[]> {
-  const granted = await requestContactsPermission({ showDeniedAlert: true });
+  const granted = await requestContactsPermission({
+    showDeniedAlert: true,
+    requireFullAccess: false,
+  });
   if (!granted) return [];
 
   if (

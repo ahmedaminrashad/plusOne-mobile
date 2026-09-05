@@ -67,7 +67,7 @@
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>PlusOne needs photo library access so you can share receipts, chat images, and profile photos.</string>
 	<key>NSContactsUsageDescription</key>
-	<string>PlusOne needs contacts access so you can invite people you already know to groups and your Circle.</string>
+	<string>PlusOne needs full access to your contacts so you can invite people you already know to groups and your Circle.</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>

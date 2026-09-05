@@ -31,8 +31,10 @@
     "confirm": "Add {{count}}",
     "inviteAction": "Invite",
     "inCircle": "In Circle",
-    "limitedAccess": "Only some contacts are shared with +one.",
-    "selectMore": "Select more contacts"
+    "limitedAccess": "Only some contacts are shared with +one. Grant Full Access to see everyone.",
+    "selectMore": "Select more contacts",
+    "grantFullAccess": "Grant full access",
+    "openError": "Couldn't open your contacts. Check Contacts permission in Settings."
   },
   "notifications": {
     "title": "Notifications",

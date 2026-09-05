@@ -5,14 +5,44 @@ import SwiftUI
 import UIKit
 
 // iOS 18 "Select Contacts" (limited access) never re-prompts via
-// requestAccess. This module presents Apple's contactAccessPicker so the user
-// can add more people to the set +one is allowed to read.
+// requestAccess. This module:
+//  - reports the real CNAuthorizationStatus (full / limited / none)
+//  - requests access so the system Full Access sheet can appear
+//  - presents Apple's contactAccessPicker so the user can add more people
 @objc(ContactsAccessModule)
 class ContactsAccessModule: NSObject {
 
   @objc
   static func requiresMainQueueSetup() -> Bool {
     return true
+  }
+
+  @objc
+  func authorizationStatus(
+    _ resolve: @escaping RCTPromiseResolveBlock,
+    rejecter reject: @escaping RCTPromiseRejectBlock
+  ) {
+    DispatchQueue.main.async {
+      resolve(Self.statusString(CNContactStore.authorizationStatus(for: .contacts)))
+    }
+  }
+
+  @objc
+  func requestAccess(
+    _ resolve: @escaping RCTPromiseResolveBlock,
+    rejecter reject: @escaping RCTPromiseRejectBlock
+  ) {
+    DispatchQueue.main.async {
+      let current = CNContactStore.authorizationStatus(for: .contacts)
+      if current == .authorized {
+        resolve("authorized")
+        return
+      }
+      CNContactStore().requestAccess(for: .contacts) { _, _ in
+        let next = CNContactStore.authorizationStatus(for: .contacts)
+        resolve(Self.statusString(next))
+      }
+    }
   }
 
   @objc
@@ -53,6 +83,22 @@ class ContactsAccessModule: NSObject {
       } else {
         reject("UNSUPPORTED", "Limited contacts picker requires iOS 18", nil)
       }
+    }
+  }
+
+  private static func statusString(_ status: CNAuthorizationStatus) -> String {
+    switch status {
+    case .authorized:
+      return "authorized"
+    case .denied, .restricted:
+      return "denied"
+    case .notDetermined:
+      return "undefined"
+    default:
+      if #available(iOS 18.0, *), status == .limited {
+        return "limited"
+      }
+      return "undefined"
     }
   }
 

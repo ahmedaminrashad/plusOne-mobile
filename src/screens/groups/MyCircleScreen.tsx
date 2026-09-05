@@ -187,6 +187,18 @@ function MyCircleScreen({ navigation }: Props) {
     </View>
   );
 
+  const openContactsPicker = useCallback(async () => {
+    try {
+      const granted = await requestContactsPermission({ requireFullAccess: true });
+      if (granted) setContactPickerOpen(true);
+    } catch {
+      Alert.alert(
+        t('common:error'),
+        t('contacts.openError', { defaultValue: "Couldn't open your contacts. Check Contacts permission in Settings." }),
+      );
+    }
+  }, [t]);
+
   if (isLoading) {
     return (
       <SafeScreen style={styles.container}>
@@ -196,7 +208,8 @@ function MyCircleScreen({ navigation }: Props) {
   }
 
   return (
-    <SafeScreen style={styles.container}>
+    <>
+    <SafeScreen style={styles.container} keepMounted={contactPickerOpen || addModalVisible}>
       <View style={styles.headerRow}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} hitSlop={12}>
           <ChevronLeftIcon size={20} color={Colors.text} />
@@ -232,10 +245,7 @@ function MyCircleScreen({ navigation }: Props) {
         <View style={styles.growActions}>
           <TouchableOpacity
             style={styles.growBtnOutline}
-            onPress={async () => {
-              const granted = await requestContactsPermission();
-              if (granted) setContactPickerOpen(true);
-            }}>
+            onPress={() => { void openContactsPicker(); }}>
             <Text style={[typography.labelMedium, styles.growBtnOutlineText]}>
               {t('myCircle.fromContacts', { defaultValue: 'Contacts' })}
             </Text>
@@ -271,6 +281,7 @@ function MyCircleScreen({ navigation }: Props) {
           }
         />
       )}
+    </SafeScreen>
 
       <Modal visible={addModalVisible} transparent animationType="fade" onRequestClose={() => setAddModalVisible(false)}>
         <View style={styles.modalOverlay}>
@@ -304,7 +315,7 @@ function MyCircleScreen({ navigation }: Props) {
         onInvite={handleInviteContact}
         onAddRegistered={handleAddRegisteredContact}
       />
-    </SafeScreen>
+    </>
   );
 }
 

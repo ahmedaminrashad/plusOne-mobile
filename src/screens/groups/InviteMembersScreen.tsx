@@ -142,8 +142,21 @@ function InviteMembersScreen({ route, navigation }: Props) {
     }
   }, [selected, contactNames, groupId, inviteMembers, navigation, t]);
 
+  const openContactsPicker = useCallback(async () => {
+    try {
+      const granted = await requestContactsPermission({ requireFullAccess: true });
+      if (granted) setPickerOpen(true);
+    } catch {
+      Alert.alert(
+        t('common:error'),
+        t('contacts.openError', { defaultValue: "Couldn't open your contacts. Check Contacts permission in Settings." }),
+      );
+    }
+  }, [t]);
+
   return (
-    <SafeScreen style={styles.container} edges={[]}>
+    <>
+    <SafeScreen style={styles.container} edges={[]} keepMounted={pickerOpen || circleOpen}>
       <View style={styles.content}>
         <Text style={[typography.headingLarge, styles.title]}>{t('inviteMembers.title')}</Text>
         <Text style={[typography.bodyLarge, styles.subtitle]}>
@@ -152,10 +165,7 @@ function InviteMembersScreen({ route, navigation }: Props) {
 
         <TouchableOpacity
           style={styles.contactsBtn}
-          onPress={async () => {
-            const granted = await requestContactsPermission();
-            if (granted) setPickerOpen(true);
-          }}
+          onPress={() => { void openContactsPicker(); }}
           activeOpacity={0.8}>
           <PeopleIcon size={18} color={Colors.primary} />
           <Text style={[typography.labelLarge, styles.contactsBtnText]}>
@@ -219,6 +229,7 @@ function InviteMembersScreen({ route, navigation }: Props) {
           disabled={selected.length === 0}
         />
       </View>
+    </SafeScreen>
 
       <ContactPickerModal
         visible={pickerOpen}
@@ -228,7 +239,7 @@ function InviteMembersScreen({ route, navigation }: Props) {
       />
 
       <Modal visible={circleOpen} animationType="slide" onRequestClose={() => setCircleOpen(false)}>
-        <SafeScreen style={styles.circleModal}>
+        <SafeScreen style={styles.circleModal} keepMounted>
           <View style={styles.circleHeader}>
             <Text style={[typography.headingMedium, styles.circleTitle]}>{t('inviteMembers.fromCircleTitle')}</Text>
             <TouchableOpacity onPress={() => setCircleOpen(false)} hitSlop={12} style={styles.closeBtn}>
@@ -277,7 +288,7 @@ function InviteMembersScreen({ route, navigation }: Props) {
           )}
         </SafeScreen>
       </Modal>
-    </SafeScreen>
+    </>
   );
 }
 

@@ -8,6 +8,7 @@ import {
   TextInput,
   StyleSheet,
   ActivityIndicator,
+  Linking,
 } from 'react-native';
 import SafeScreen from './SafeScreen';
 import { useTranslation } from 'react-i18next';
@@ -100,6 +101,10 @@ function ContactPickerModal({
     await loadList();
   }, [loadList]);
 
+  const handleRequestFullAccess = useCallback(async () => {
+    await Linking.openSettings();
+  }, []);
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return contacts;
@@ -128,7 +133,7 @@ function ContactPickerModal({
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <SafeScreen style={styles.container}>
+      <SafeScreen style={styles.container} keepMounted>
         <View style={styles.header}>
           <Text style={[typography.headingMedium, styles.title]}>
             {title ?? t('contacts.pickerTitle', { defaultValue: 'Choose from contacts' })}
@@ -139,16 +144,23 @@ function ContactPickerModal({
         </View>
 
         {limitedAccess && (
-          <TouchableOpacity style={styles.limitedBanner} onPress={handleSelectMore} activeOpacity={0.8}>
+          <View style={styles.limitedBanner}>
             <Text style={[typography.bodySmall, styles.limitedText]}>
               {t('contacts.limitedAccess', {
-                defaultValue: 'Only some contacts are shared with +one.',
+                defaultValue: 'Only some contacts are shared with +one. Grant Full Access to see everyone.',
               })}
             </Text>
-            <Text style={[typography.labelMedium, styles.limitedAction]}>
-              {t('contacts.selectMore', { defaultValue: 'Select more contacts' })}
-            </Text>
-          </TouchableOpacity>
+            <TouchableOpacity onPress={handleRequestFullAccess} activeOpacity={0.8}>
+              <Text style={[typography.labelMedium, styles.limitedAction]}>
+                {t('contacts.grantFullAccess', { defaultValue: 'Grant full access' })}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleSelectMore} activeOpacity={0.8}>
+              <Text style={[typography.labelMedium, styles.limitedAction]}>
+                {t('contacts.selectMore', { defaultValue: 'Select more contacts' })}
+              </Text>
+            </TouchableOpacity>
+          </View>
         )}
 
         <View style={styles.searchBar}>
