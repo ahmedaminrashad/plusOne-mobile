@@ -26,8 +26,21 @@ export interface GroupLedgerResponse {
   computedAt: string;
 }
 
+export interface HomeSummary {
+  owedPiastres: number;
+  owePiastres: number;
+  approvalCount: number;
+  toPayCount: number;
+  invitationCount: number;
+  groupNets: Record<string, number>;
+}
+
 export const ledgerApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
+    getHomeSummary: builder.query<HomeSummary, void>({
+      query: () => '/ledger/home',
+      providesTags: ['Ledger'],
+    }),
     getGroupLedger: builder.query<GroupLedgerResponse, string>({
       query: (groupId) => `/ledger/group/${groupId}`,
       providesTags: (_r, _e, groupId) => [{ type: 'Ledger', id: groupId }],
@@ -35,4 +48,4 @@ export const ledgerApi = baseApi.injectEndpoints({
   }),
 });
 
-export const { useGetGroupLedgerQuery } = ledgerApi;
+export const { useGetHomeSummaryQuery, useGetGroupLedgerQuery } = ledgerApi;

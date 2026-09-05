@@ -6,7 +6,11 @@ import { ASSET_BASE_URL } from '../config';
 // pass for an in-progress preview are returned untouched.
 export function resolveAssetUrl(url: string | null | undefined): string | null {
   if (!url) return null;
-  if (/^(https?:|file:|content:)/.test(url)) return url;
+  // Device-local picker paths (file://) were saved as group avatars and crash
+  // iOS Image during Recents snapshot. Only http(s) and /uploads/ are valid.
+  if (/^(file:|content:)/i.test(url)) return null;
+  if (/^https?:/i.test(url)) return url;
+  if (url.startsWith('/uploads/')) return `${ASSET_BASE_URL}${url}`;
   return `${ASSET_BASE_URL}${url}`;
 }
 

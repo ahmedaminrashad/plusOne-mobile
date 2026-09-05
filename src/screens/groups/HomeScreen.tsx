@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, memo, useEffect, useRef, useState } from 'react';
+import React, { useCallback, memo, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   View,
@@ -9,7 +9,6 @@ import {
   StatusBar,
   ActivityIndicator,
   RefreshControl,
-  InteractionManager,
 } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import SafeScreen from '../../components/common/SafeScreen';
@@ -21,7 +20,6 @@ import {
   useDeclineInvitationMutation,
 } from '../../store/api/groupsApi';
 import GroupCard from '../../components/groups/GroupCard';
-import GroupBalanceCollector from '../../components/groups/GroupBalanceCollector';
 import Button from '../../components/common/Button';
 import Avatar from '../../components/common/Avatar';
 import InvitationPromptModal from '../../components/groups/InvitationPromptModal';
@@ -30,10 +28,8 @@ import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
 import { useGetMeQuery } from '../../store/api/usersApi';
-import { useGetMySharesQuery } from '../../store/api/sharesApi';
+import { useGetHomeSummaryQuery } from '../../store/api/ledgerApi';
 import { formatCurrency, resolveAssetUrl } from '../../utils/format';
-import { useAppDispatch } from '../../hooks/useAppDispatch';
-import { baseApi } from '../../store/api/baseApi';
 
 type Props = AppScreenProps<'Home'>;
 
@@ -43,27 +39,16 @@ function HomeScreen({ navigation }: Props) {
   const { t } = useTranslation('groups');
   const typography = useTypography();
   const focused = useIsFocused();
-  const [collectBalances, setCollectBalances] = useState(false);
   const { data: me } = useGetMeQuery();
-  const dispatch = useAppDispatch();
   const { data: groups, isLoading, refetch, isError } = useGetGroupsQuery();
   const { data: invitations, refetch: refetchInvites } = useGetMyInvitationsQuery();
-  const { data: myShares, refetch: refetchShares } = useGetMySharesQuery();
+  const { data: home, refetch: refetchHome } = useGetHomeSummaryQuery();
   const [accept] = useAcceptInvitationMutation();
   const [decline] = useDeclineInvitationMutation();
 
-  const approvalCount = useMemo(
-    () => (myShares ?? []).filter((s) => s.status === 'initiated' && s.initiatorUserId === me?.id).length,
-    [myShares, me?.id],
-  );
-  const toPayCount = useMemo(
-    () =>
-      (myShares ?? []).filter(
-        (s) => s.ownerUserId === me?.id && (s.status === 'pending' || s.status === 'failed'),
-      ).length,
-    [myShares, me?.id],
-  );
-  const pendingCount = (invitations?.length ?? 0) + approvalCount + toPayCount;
+  const approvalCount = home?.approvalCount ?? 0;
+  const toPayCount = home?.toPayCount ?? 0;
+  const pendingCount = (invitations?.length ?? home?.invitationCount ?? 0) + approvalCount + toPayCount;
   const [showModal, setShowModal] = useState(false);
   const shownRef = useRef(false);
   const [manualRefreshing, setManualRefreshing] = useState(false);
@@ -71,47 +56,14 @@ function HomeScreen({ navigation }: Props) {
   const handleRefresh = useCallback(async () => {
     setManualRefreshing(true);
     try {
-      await Promise.all([
-        refetch(),
-        refetchShares(),
-        refetchInvites(),
-      ]);
-      dispatch(baseApi.util.invalidateTags(['Ledger']));
+      await Promise.all([refetch(), refetchHome(), refetchInvites()]);
     } finally {
       setManualRefreshing(false);
     }
-  }, [refetch, refetchShares, refetchInvites, dispatch]);
+  }, [refetch, refetchHome, refetchInvites]);
 
-  const [balances, setBalances] = useState<Record<string, number>>({});
-  const handleBalance = useCallback((groupId: string, net: number) => {
-    setBalances((prev) => (prev[groupId] === net ? prev : { ...prev, [groupId]: net }));
-  }, []);
-
-  const groupIds = useMemo(() => new Set((groups ?? []).map((g) => g.id)), [groups]);
-
-  useEffect(() => {
-    setBalances((prev) => {
-      const next: Record<string, number> = {};
-      let changed = false;
-      for (const [id, net] of Object.entries(prev)) {
-        if (groupIds.has(id)) next[id] = net;
-        else changed = true;
-      }
-      return changed || Object.keys(next).length !== Object.keys(prev).length ? next : prev;
-    });
-  }, [groupIds]);
-
-  const { owed, owe } = useMemo(() => {
-    let owedTotal = 0;
-    let oweTotal = 0;
-    for (const id of groupIds) {
-      const net = balances[id];
-      if (net == null) continue;
-      if (net > 0) owedTotal += net;
-      else oweTotal += -net;
-    }
-    return { owed: owedTotal, owe: oweTotal };
-  }, [balances, groupIds]);
+  const owed = home?.owedPiastres ?? 0;
+  const owe = home?.owePiastres ?? 0;
 
   useEffect(() => {
     if (!shownRef.current && invitations && invitations.length > 0) {
@@ -119,24 +71,6 @@ function HomeScreen({ navigation }: Props) {
       setShowModal(true);
     }
   }, [invitations]);
-
-  // Ledger fan-out + FlatList relayout on Home is what Recents snapshots.
-  // Other screens work because this tree is detached. Delay until Home is idle.
-  useEffect(() => {
-    if (!focused) {
-      setCollectBalances(false);
-      return;
-    }
-    let timeout: ReturnType<typeof setTimeout> | undefined;
-    const task = InteractionManager.runAfterInteractions(() => {
-      timeout = setTimeout(() => setCollectBalances(true), 800);
-    });
-    return () => {
-      task.cancel();
-      if (timeout) clearTimeout(timeout);
-      setCollectBalances(false);
-    };
-  }, [focused]);
 
   const handleAccept = useCallback(
     async (membershipId: string) => { await accept(membershipId).unwrap(); },
@@ -171,11 +105,6 @@ function HomeScreen({ navigation }: Props) {
   return (
     <SafeScreen style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
-
-      {collectBalances &&
-        (groups ?? []).map((g) => (
-          <GroupBalanceCollector key={g.id} groupId={g.id} onBalance={handleBalance} />
-        ))}
 
       <ScrollView
         contentContainerStyle={

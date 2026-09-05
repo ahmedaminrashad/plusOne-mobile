@@ -1,5 +1,4 @@
-import React, { useCallback, useMemo, useState, memo, useEffect } from 'react';
-import { useIsFocused } from '@react-navigation/native';
+import React, { useCallback, useMemo, useState, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   View,
@@ -12,8 +11,8 @@ import {
 import SafeScreen from '../../components/common/SafeScreen';
 import { AppScreenProps } from '../../types/navigation';
 import { useGetGroupsQuery } from '../../store/api/groupsApi';
+import { useGetHomeSummaryQuery } from '../../store/api/ledgerApi';
 import GroupCard from '../../components/groups/GroupCard';
-import GroupBalanceCollector from '../../components/groups/GroupBalanceCollector';
 import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
@@ -43,28 +42,11 @@ const FILTER_STYLES: Record<Filter, { restBg: string; restText: string; activeBg
 function AllGroupsScreen({ navigation }: Props) {
   const { t } = useTranslation('groups');
   const typography = useTypography();
-  const focused = useIsFocused();
-  const [collectBalances, setCollectBalances] = useState(false);
   const { data: groups } = useGetGroupsQuery();
+  const { data: home } = useGetHomeSummaryQuery();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
-  const [balances, setBalances] = useState<Record<string, number>>({});
-
-  const handleBalance = useCallback((groupId: string, net: number) => {
-    setBalances((prev) => (prev[groupId] === net ? prev : { ...prev, [groupId]: net }));
-  }, []);
-
-  useEffect(() => {
-    if (!focused) {
-      setCollectBalances(false);
-      return;
-    }
-    const timeout = setTimeout(() => setCollectBalances(true), 800);
-    return () => {
-      clearTimeout(timeout);
-      setCollectBalances(false);
-    };
-  }, [focused]);
+  const balances = home?.groupNets ?? {};
 
   const filtered = useMemo(() => {
     let list = groups ?? [];
@@ -97,11 +79,6 @@ function AllGroupsScreen({ navigation }: Props) {
 
   return (
     <SafeScreen style={styles.container}>
-      {collectBalances &&
-        (groups ?? []).map((g) => (
-          <GroupBalanceCollector key={g.id} groupId={g.id} onBalance={handleBalance} />
-        ))}
-
       <View style={styles.headerRow}>
         <View style={styles.headerLeft}>
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} hitSlop={12}>

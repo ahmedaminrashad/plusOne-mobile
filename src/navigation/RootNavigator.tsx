@@ -354,7 +354,7 @@ export default function RootNavigator() {
         lastInvalidate = now;
         // Only the home badges — a full-tag invalidate reloaded ~650MB and
         // jetsam-killed backboardd when leaving the app (no App Store crash).
-        dispatch(baseApi.util.invalidateTags(['Group', 'Share', 'Invitation']));
+        dispatch(baseApi.util.invalidateTags(['Group', 'Share', 'Invitation', 'Ledger']));
       }, 2500);
     });
     return () => {
