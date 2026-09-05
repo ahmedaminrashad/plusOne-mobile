@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
@@ -25,7 +25,7 @@ import { useGetMeQuery } from '../../store/api/usersApi';
 import { useGetGroupMessagesQuery, useSendGroupMessageMutation, useUploadChatImageMutation } from '../../store/api/groupsApi';
 import { ChatMessage } from '../../types/models';
 import { AppStackParamList } from '../../types/navigation';
-import { formatDate, formatCurrency, formatBillDisplayName } from '../../utils/format';
+import { formatDate, formatCurrency, formatBillDisplayName, resolveAssetUrl } from '../../utils/format';
 import { downsampledSource } from '../../utils/remoteImage';
 import { useKeyboardInsetHeight } from '../../services/keyboardInsets';
 import { ReceiptIcon, ChatBubbleIcon, PaperclipIcon, SendIcon, WarningIcon } from '../../components/icons';
@@ -40,7 +40,7 @@ import { ReceiptIcon, ChatBubbleIcon, PaperclipIcon, SendIcon, WarningIcon } fro
 // is still used, just for FCM push notifications (see notifications.service.ts).
 
 const PAGE_SIZE = 30;
-const POLL_INTERVAL_MS = 3000;
+const POLL_INTERVAL_MS = 8000;
 
 // A message send in flight: shown locally until the POST resolves. Unlike the old
 // Firestore version, a REST send is a real round trip with no local-cache shortcut,
@@ -167,8 +167,8 @@ function MessageBubble({
             msg.imageUrl && styles.bubbleImageWrap,
             isMine ? styles.bubbleMine : styles.bubbleTheirs,
           ]}>
-            {msg.imageUrl && (
-              <Image source={downsampledSource(msg.imageUrl, 200)} resizeMethod="resize" style={styles.bubbleImage} resizeMode="cover" />
+            {!!resolveAssetUrl(msg.imageUrl) && (
+              <Image source={downsampledSource(resolveAssetUrl(msg.imageUrl)!, 200)} resizeMethod="resize" style={styles.bubbleImage} resizeMode="cover" />
             )}
             {!!msg.text && (
               <Text style={[typography.bodyMedium, styles.bubbleText, isMine && styles.bubbleTextMine]}>{msg.text}</Text>
@@ -194,6 +194,7 @@ interface GroupChatPaneProps {
 function GroupChatPane({ groupId, groupName, navigation, sharedImageUri, onSharedImageConsumed }: GroupChatPaneProps) {
   const { t } = useTranslation('groups');
   const typography = useTypography();
+  const focused = useIsFocused();
   const { data: me } = useGetMeQuery();
   const [sendGroupMessage] = useSendGroupMessageMutation();
   const [uploadChatImage] = useUploadChatImageMutation();
@@ -222,7 +223,7 @@ function GroupChatPane({ groupId, groupName, navigation, sharedImageUri, onShare
     isError,
   } = useGetGroupMessagesQuery(
     { groupId, limit: pageLimit },
-    { pollingInterval: POLL_INTERVAL_MS },
+    { pollingInterval: focused ? POLL_INTERVAL_MS : 0 },
   );
 
   useEffect(() => {
@@ -303,6 +304,12 @@ function GroupChatPane({ groupId, groupName, navigation, sharedImageUri, onShare
   const handleOpenReceipt = useCallback((billId: string) => {
     navigation.navigate('BillStatus', { groupId, groupName, billId });
   }, [navigation, groupId, groupName]);
+
+  // Drop the inverted image list as soon as we blur so the Home pop
+  // animation is not compositing two full screens (locks the phone).
+  if (!focused) {
+    return <View style={styles.flex} />;
+  }
 
   if (isLoading) {
     return (

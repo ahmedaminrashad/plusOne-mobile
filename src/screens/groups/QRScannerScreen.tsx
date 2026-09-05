@@ -152,7 +152,7 @@ function QRScannerScreen({ route, navigation }: Props) {
   }
 
   return (
-    <View style={styles.container}>
+    <SafeScreen style={styles.container} edges={[]}>
       {cameraActive ? (
         <Camera
           style={StyleSheet.absoluteFill}
@@ -208,7 +208,7 @@ function QRScannerScreen({ route, navigation }: Props) {
           </View>
         </View>
       </View>
-    </View>
+    </SafeScreen>
   );
 }
 

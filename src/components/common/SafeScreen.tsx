@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, StatusBar, Platform, StyleProp, ViewStyle } from 'react-native';
+import { useIsFocused } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type Edge = 'top' | 'bottom';
@@ -10,6 +11,8 @@ interface Props {
   edges?: Edge[];
   /** Fill the status-bar inset (use the header color on dark-header screens). */
   statusBarColor?: string;
+  /** Keep children mounted while another screen is on top. Default drops them. */
+  keepMounted?: boolean;
 }
 
 export function useAppSafeInsets() {
@@ -22,15 +25,23 @@ export function useAppSafeInsets() {
  * Drop-in for React Native's SafeAreaView. RN's version is a no-op on Android
  * edge-to-edge, so headers/buttons sit under the system status bar.
  */
-export default function SafeScreen({ children, style, edges = ['top'], statusBarColor }: Props) {
+export default function SafeScreen({
+  children,
+  style,
+  edges = ['top'],
+  statusBarColor,
+  keepMounted = false,
+}: Props) {
+  const focused = useIsFocused();
   const { top, bottom } = useAppSafeInsets();
   const flat = StyleSheet.flatten(style) as ViewStyle | undefined;
   const insetBg = statusBarColor ?? (typeof flat?.backgroundColor === 'string' ? flat.backgroundColor : undefined);
+  const showChildren = keepMounted || focused;
 
   return (
     <View style={[styles.root, style]}>
       {edges.includes('top') ? <View style={{ height: top, backgroundColor: insetBg }} /> : null}
-      {children}
+      {showChildren ? children : null}
       {edges.includes('bottom') ? <View style={{ height: bottom }} /> : null}
     </View>
   );

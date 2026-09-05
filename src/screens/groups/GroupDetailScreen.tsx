@@ -29,6 +29,7 @@ import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
 import { centeredInputText } from '../../utils/inputTextStyle';
+import { useIsFocused } from '@react-navigation/native';
 import { useGetMeQuery } from '../../store/api/usersApi';
 import { formatDate, formatCurrency, resolveAssetUrl, formatBillDisplayName } from '../../utils/format';
 import GroupChatPane from './GroupChatPane';
@@ -199,6 +200,7 @@ function BillCard({
 function GroupDetailScreen({ route, navigation }: Props) {
   const { t } = useTranslation('groups');
   const typography = useTypography();
+  const focused = useIsFocused();
   const { groupId, groupName: routeGroupName, initialTab } = route.params;
   const [activeTab, setActiveTab] = useState<Tab>(initialTab ?? 'chat');
   const [displayName, setDisplayName] = useState(routeGroupName);
@@ -210,7 +212,7 @@ function GroupDetailScreen({ route, navigation }: Props) {
   }, [initialTab, groupId]);
 
   const { data: members, isLoading, refetch } = useGetGroupMembersQuery(groupId, {
-    pollingInterval: 10_000,
+    pollingInterval: focused ? 15_000 : 0,
   });
   const { data: bills, isLoading: billsLoading } = useGetGroupBillsQuery(groupId, {
     skip: activeTab !== 'bills',
