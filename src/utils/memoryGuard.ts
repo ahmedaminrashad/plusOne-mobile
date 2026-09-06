@@ -5,9 +5,9 @@ import { baseApi } from '../store/api/baseApi';
 const ShareIntent = NativeModules.ShareIntentModule as { trimMemory?: () => Promise<boolean> } | undefined;
 
 function trimCaches(): void {
-  // Drop API payloads (chat images, receipts, ledgers). Auth tokens live in
-  // authSlice, so this does not log the user out.
-  store.dispatch(baseApi.util.resetApiState());
+  // Do not resetApiState() — Home stays mounted, so an empty cache shows
+  // owed/owe as 0 and never refetches. Chat images are the heavy part.
+  store.dispatch(baseApi.util.invalidateTags(['Message']));
   if (Platform.OS === 'ios') {
     ShareIntent?.trimMemory?.().catch(() => {});
   }

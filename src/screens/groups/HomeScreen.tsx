@@ -42,7 +42,9 @@ function HomeScreen({ navigation }: Props) {
   const { data: me } = useGetMeQuery();
   const { data: groups, isLoading, refetch, isError } = useGetGroupsQuery();
   const { data: invitations, refetch: refetchInvites } = useGetMyInvitationsQuery();
-  const { data: home, refetch: refetchHome } = useGetHomeSummaryQuery();
+  const { data: home, refetch: refetchHome } = useGetHomeSummaryQuery(undefined, {
+    refetchOnFocus: true,
+  });
   const [accept] = useAcceptInvitationMutation();
   const [decline] = useDeclineInvitationMutation();
 
@@ -64,6 +66,10 @@ function HomeScreen({ navigation }: Props) {
 
   const owed = home?.owedPiastres ?? 0;
   const owe = home?.owePiastres ?? 0;
+
+  useEffect(() => {
+    if (focused) refetchHome();
+  }, [focused, refetchHome]);
 
   useEffect(() => {
     if (!shownRef.current && invitations && invitations.length > 0) {
