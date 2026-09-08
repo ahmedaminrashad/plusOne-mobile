@@ -60,6 +60,14 @@ function QRScannerScreen({ route, navigation }: Props) {
     })();
   }, [navigation, groupId, groupName, t]);
 
+  const leaveAfterCameraStop = useCallback(
+    (fn: () => void) => {
+      setCameraActive(false);
+      setTimeout(fn, 80);
+    },
+    [],
+  );
+
   const handlePayload = useCallback(
     async (payload: string) => {
       if (scannedRef.current || parsing) return;
@@ -83,7 +91,9 @@ function QRScannerScreen({ route, navigation }: Props) {
             captureMethod: 'qr',
             sourceRef: result.bill.sourceRef,
           };
-          navigation.replace('AddBill', { groupId, groupName, prefilledData });
+          leaveAfterCameraStop(() =>
+            navigation.replace('AddBill', { groupId, groupName, prefilledData }),
+          );
           return;
         }
 
@@ -92,7 +102,7 @@ function QRScannerScreen({ route, navigation }: Props) {
             t('qrScanner.qrNotRecognizedTitle'),
             t('qrScanner.webviewFallbackMessage'),
             [
-              { text: t('qrScanner.manualEntryButton'), onPress: () => navigation.replace('AddBill', { groupId, groupName }) },
+              { text: t('qrScanner.manualEntryButton'), onPress: () => leaveAfterCameraStop(() => navigation.replace('AddBill', { groupId, groupName })) },
               { text: t('common:cancel'), onPress: () => { scannedRef.current = false; setParsing(false); } },
             ],
           );

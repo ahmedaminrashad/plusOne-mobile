@@ -11,7 +11,11 @@ interface Props {
   edges?: Edge[];
   /** Fill the status-bar inset (use the header color on dark-header screens). */
   statusBarColor?: string;
-  /** Keep children mounted while another screen is on top. Default drops them. */
+  /**
+   * Keep children mounted while another screen or native sheet is on top.
+   * Default is true: unmounting on blur destroys Camera / image-picker /
+   * contacts hosts mid-presentation and is the main iOS crash source.
+   */
   keepMounted?: boolean;
 }
 
@@ -30,7 +34,7 @@ export default function SafeScreen({
   style,
   edges = ['top'],
   statusBarColor,
-  keepMounted = false,
+  keepMounted = true,
 }: Props) {
   const focused = useIsFocused();
   const { top, bottom } = useAppSafeInsets();
