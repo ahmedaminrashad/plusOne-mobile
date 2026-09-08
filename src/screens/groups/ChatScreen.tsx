@@ -12,7 +12,6 @@ import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
 import { useGetGroupMembersQuery } from '../../store/api/groupsApi';
 import Avatar from '../../components/common/Avatar';
-import { resolveAssetUrl } from '../../utils/format';
 import GroupChatPane from './GroupChatPane';
 import { ChevronLeftIcon } from '../../components/icons';
 
@@ -55,7 +54,6 @@ function ChatScreen({ route, navigation }: Props) {
           {visibleMembers.map((m, i) => (
             <Avatar
               key={m.id}
-              uri={resolveAssetUrl(m.user?.photoUrl)}
               name={m.user?.displayName ?? m.pendingPhone}
               seed={m.userId ?? m.id}
               size={28}

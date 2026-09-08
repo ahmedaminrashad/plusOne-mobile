@@ -195,7 +195,7 @@ function HomeScreen({ navigation }: Props) {
     ) : null;
 
   return (
-    <SafeScreen style={styles.container}>
+    <SafeScreen style={styles.container} keepMounted={false}>
       <FlatList
         data={previewGroups}
         keyExtractor={(item) => item.id}

@@ -44,7 +44,9 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   }, [menuOpen, fabRotate]);
 
   const handleHomePress = useCallback(() => {
-    navigation.navigate('Home', { screen: 'Home' } as any);
+    // Reset the Home stack so GroupDetail/Chat unmount instead of sitting
+    // under Home and re-decoding photos on the next open.
+    navigation.navigate('Home', { screen: 'Home', initial: true } as any);
   }, [navigation]);
 
   const handleProfilePress = useCallback(() => navigation.navigate('SettingsTab'), [navigation]);

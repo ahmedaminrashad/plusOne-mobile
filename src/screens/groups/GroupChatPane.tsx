@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef, useMemo, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   View,
@@ -40,7 +40,8 @@ import { ReceiptIcon, ChatBubbleIcon, PaperclipIcon, SendIcon, WarningIcon } fro
 // is still used, just for FCM push notifications (see notifications.service.ts).
 
 const PAGE_SIZE = 30;
-const POLL_INTERVAL_MS = 8000;
+const POLL_INTERVAL_MS = 20_000;
+const BUBBLE_IMAGE = 140;
 
 // A message send in flight: shown locally until the POST resolves. Unlike the old
 // Firestore version, a REST send is a real round trip with no local-cache shortcut,
@@ -73,7 +74,7 @@ function dayLabel(iso: string, t: (key: string) => string) {
   return formatDate(d, { day: 'numeric', month: 'short' });
 }
 
-function MessageBubble({
+const MessageBubble = memo(function MessageBubble({
   item,
   isMine,
   showSender,
@@ -105,7 +106,7 @@ function MessageBubble({
               pending.failed && styles.bubbleFailed,
             ]}>
               {pending.imageUri && (
-                <Image source={downsampledSource(pending.imageUri, 200)} resizeMethod="resize" style={styles.bubbleImage} resizeMode="cover" />
+                <Image source={downsampledSource(pending.imageUri, BUBBLE_IMAGE)} resizeMethod="resize" style={styles.bubbleImage} resizeMode="cover" />
               )}
               {!!pending.text && (
                 <Text style={[typography.bodyMedium, styles.bubbleText, styles.bubbleTextMine]}>{pending.text}</Text>
@@ -168,7 +169,7 @@ function MessageBubble({
             isMine ? styles.bubbleMine : styles.bubbleTheirs,
           ]}>
             {!!resolveAssetUrl(msg.imageUrl) && (
-              <Image source={downsampledSource(resolveAssetUrl(msg.imageUrl)!, 200)} resizeMethod="resize" style={styles.bubbleImage} resizeMode="cover" />
+              <Image source={downsampledSource(resolveAssetUrl(msg.imageUrl)!, BUBBLE_IMAGE)} resizeMethod="resize" style={styles.bubbleImage} resizeMode="cover" />
             )}
             {!!msg.text && (
               <Text style={[typography.bodyMedium, styles.bubbleText, isMine && styles.bubbleTextMine]}>{msg.text}</Text>
@@ -178,7 +179,7 @@ function MessageBubble({
       </View>
     </View>
   );
-}
+});
 
 interface GroupChatPaneProps {
   groupId: string;
@@ -212,7 +213,10 @@ function GroupChatPane({ groupId, groupName, navigation, sharedImageUri, onShare
   useFocusEffect(
     useCallback(() => {
       setActiveChatGroupId(groupId);
-      return () => setActiveChatGroupId(null);
+      return () => {
+        setActiveChatGroupId(null);
+        setPageLimit(PAGE_SIZE);
+      };
     }, [groupId]),
   );
 
@@ -223,7 +227,7 @@ function GroupChatPane({ groupId, groupName, navigation, sharedImageUri, onShare
     isError,
   } = useGetGroupMessagesQuery(
     { groupId, limit: pageLimit },
-    { pollingInterval: focused ? POLL_INTERVAL_MS : 0 },
+    { skip: !focused, pollingInterval: focused ? POLL_INTERVAL_MS : 0 },
   );
 
   useEffect(() => {
@@ -305,6 +309,61 @@ function GroupChatPane({ groupId, groupName, navigation, sharedImageUri, onShare
     navigation.navigate('BillStatus', { groupId, groupName, billId });
   }, [navigation, groupId, groupName]);
 
+  const listData = useMemo<ChatListItem[]>(() => {
+    const messageItems: ChatListItem[] = [];
+    (messages ?? []).forEach((message, idx) => {
+      messageItems.push({ kind: 'message', message });
+      const next = (messages ?? [])[idx + 1];
+      if (!next || dayKey(next.createdAt) !== dayKey(message.createdAt)) {
+        messageItems.push({ kind: 'separator', key: `sep-${message.id}`, label: dayLabel(message.createdAt, t) });
+      }
+    });
+    return [
+      ...pending.filter((item) => item.failed).map((item) => ({ kind: 'pending' as const, item })),
+      ...messageItems,
+    ];
+  }, [messages, pending, t]);
+
+  const keyExtractor = useCallback((item: ChatListItem) => {
+    if (item.kind === 'pending') return item.item.localId;
+    if (item.kind === 'separator') return item.key;
+    return item.message.id;
+  }, []);
+
+  const renderItem = useCallback(
+    ({ item, index }: { item: ChatListItem; index: number }) => {
+      if (item.kind === 'pending') {
+        return (
+          <MessageBubble item={item} isMine showSender={false} onRetry={handleRetry} onOpenReceipt={handleOpenReceipt} />
+        );
+      }
+      if (item.kind === 'separator') {
+        return (
+          <View style={styles.dateSeparatorRow}>
+            <View style={styles.dateSeparatorPill}>
+              <Text style={[typography.labelMedium, styles.dateSeparatorText]}>{item.label}</Text>
+            </View>
+          </View>
+        );
+      }
+      const msg = item.message;
+      const isMine = msg.senderId === me?.id;
+      const nextItem = listData[index + 1];
+      const nextMsg = nextItem?.kind === 'message' ? nextItem.message : undefined;
+      const showSender = !isMine && (!nextMsg || nextMsg.senderId !== msg.senderId);
+      return (
+        <MessageBubble
+          item={item}
+          isMine={isMine}
+          showSender={showSender}
+          onRetry={handleRetry}
+          onOpenReceipt={handleOpenReceipt}
+        />
+      );
+    },
+    [handleRetry, handleOpenReceipt, listData, me?.id, typography.labelMedium],
+  );
+
   // Drop the inverted image list as soon as we blur so the Home pop
   // animation is not compositing two full screens (locks the phone).
   if (!focused) {
@@ -327,23 +386,6 @@ function GroupChatPane({ groupId, groupName, navigation, sharedImageUri, onShare
     );
   }
 
-  // Messages arrive newest-first (for the inverted list); a date-pill separator is
-  // inserted right after the oldest message of each calendar day so it renders above
-  // that day's block on screen (Figma: rounded "Today" pill between message groups).
-  const messageItems: ChatListItem[] = [];
-  (messages ?? []).forEach((message, idx) => {
-    messageItems.push({ kind: 'message', message });
-    const next = (messages ?? [])[idx + 1];
-    if (!next || dayKey(next.createdAt) !== dayKey(message.createdAt)) {
-      messageItems.push({ kind: 'separator', key: `sep-${message.id}`, label: dayLabel(message.createdAt, t) });
-    }
-  });
-
-  const listData: ChatListItem[] = [
-    ...pending.filter((item) => item.failed).map((item) => ({ kind: 'pending' as const, item })),
-    ...messageItems,
-  ];
-
   return (
     <View style={styles.flex}>
       {listData.length === 0 ? (
@@ -355,44 +397,13 @@ function GroupChatPane({ groupId, groupName, navigation, sharedImageUri, onShare
         <FlatList
           ref={listRef}
           data={listData}
-          windowSize={5}
-          maxToRenderPerBatch={8}
+          windowSize={3}
+          initialNumToRender={8}
+          maxToRenderPerBatch={4}
+          updateCellsBatchingPeriod={80}
           removeClippedSubviews={Platform.OS === 'android'}
-          keyExtractor={(item) => {
-            if (item.kind === 'pending') return item.item.localId;
-            if (item.kind === 'separator') return item.key;
-            return item.message.id;
-          }}
-          renderItem={({ item, index }) => {
-            if (item.kind === 'pending') {
-              return (
-                <MessageBubble item={item} isMine showSender={false} onRetry={handleRetry} onOpenReceipt={handleOpenReceipt} />
-              );
-            }
-            if (item.kind === 'separator') {
-              return (
-                <View style={styles.dateSeparatorRow}>
-                  <View style={styles.dateSeparatorPill}>
-                    <Text style={[typography.labelMedium, styles.dateSeparatorText]}>{item.label}</Text>
-                  </View>
-                </View>
-              );
-            }
-            const msg = item.message;
-            const isMine = msg.senderId === me?.id;
-            const nextItem = listData[index + 1];
-            const nextMsg = nextItem?.kind === 'message' ? nextItem.message : undefined;
-            const showSender = !isMine && (!nextMsg || nextMsg.senderId !== msg.senderId);
-            return (
-              <MessageBubble
-                item={item}
-                isMine={isMine}
-                showSender={showSender}
-                onRetry={handleRetry}
-                onOpenReceipt={handleOpenReceipt}
-              />
-            );
-          }}
+          keyExtractor={keyExtractor}
+          renderItem={renderItem}
           inverted
           contentContainerStyle={styles.messagesList}
           onEndReached={loadMore}
@@ -443,7 +454,7 @@ function GroupChatPane({ groupId, groupName, navigation, sharedImageUri, onShare
   );
 }
 
-export default GroupChatPane;
+export default memo(GroupChatPane);
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
@@ -517,7 +528,7 @@ const styles = StyleSheet.create({
   receiptCta: { color: Colors.primary },
   receiptAmount: { color: Colors.text, marginLeft: 6 },
   bubbleImageWrap: { padding: 4 },
-  bubbleImage: { width: 200, height: 200, borderRadius: 12, marginBottom: 4 },
+  bubbleImage: { width: BUBBLE_IMAGE, height: BUBBLE_IMAGE, borderRadius: 12, marginBottom: 4 },
   bubbleText: { color: Colors.text },
   bubbleTextMine: { color: Colors.textOnPrimary },
   bubbleTimeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 3, marginTop: 4 },

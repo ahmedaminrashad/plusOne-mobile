@@ -240,11 +240,15 @@ export default function RootNavigator() {
   useEffect(() => {
     const unsub = onForegroundMessage((notification, data) => {
       const payload = asDataRecord(data);
-      // Keep group/member caches fresh across devices without requiring an app restart.
-      if (
-        payload.type === 'member_joined' ||
-        payload.type === 'invitation' ||
-        payload.type === 'chat_message' ||
+      // Narrow invalidation — a full-tag wipe re-decoded every chat photo
+      // on the next Home → Chat open and jetsam-killed the phone.
+      if (payload.type === 'chat_message') {
+        if (!(payload.groupId && isChatGroupActive(payload.groupId))) {
+          dispatch(baseApi.util.invalidateTags(['Message']));
+        }
+      } else if (payload.type === 'invitation' || payload.type === 'member_joined') {
+        dispatch(baseApi.util.invalidateTags(['Invitation', 'GroupMember', 'Group']));
+      } else if (
         payload.type === 'share_assigned' ||
         payload.type === 'share_initiated' ||
         payload.type === 'share_settled' ||
@@ -253,17 +257,7 @@ export default function RootNavigator() {
         payload.type === 'share_removed' ||
         payload.type === 'share_stale_nudge'
       ) {
-        dispatch(
-          baseApi.util.invalidateTags([
-            'Group',
-            'GroupMember',
-            'Invitation',
-            'Message',
-            'Bill',
-            'Share',
-            'Ledger',
-          ]),
-        );
+        dispatch(baseApi.util.invalidateTags(['Share', 'Ledger', 'Bill']));
       }
 
       // The chat itself already reflects new messages via polling — don't also

@@ -212,7 +212,7 @@ function GroupDetailScreen({ route, navigation }: Props) {
   }, [initialTab, groupId]);
 
   const { data: members, isLoading, refetch } = useGetGroupMembersQuery(groupId, {
-    pollingInterval: focused ? 15_000 : 0,
+    pollingInterval: focused && activeTab === 'members' ? 15_000 : 0,
   });
   const { data: bills, isLoading: billsLoading } = useGetGroupBillsQuery(groupId, {
     skip: activeTab !== 'bills',
@@ -420,7 +420,6 @@ function GroupDetailScreen({ route, navigation }: Props) {
             {headerAvatars.map((m, i) => (
               <Avatar
                 key={m.id}
-                uri={resolveAssetUrl(m.user?.photoUrl)}
                 name={m.user?.displayName ?? m.pendingPhone ?? t('groupDetail.defaultUserName')}
                 seed={m.userId ?? m.id}
                 size={28}
