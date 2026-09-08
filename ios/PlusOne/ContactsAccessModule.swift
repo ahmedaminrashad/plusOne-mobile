@@ -57,7 +57,7 @@ class ContactsAccessModule: NSObject {
           resolve(NSNull())
           return
         }
-        guard let presenter = Self.topViewController() else {
+        guard let presenter = Self.topViewController(), presenter.view.window != nil else {
           reject("NO_VIEW", "No view controller to present from", nil)
           return
         }

@@ -130,7 +130,7 @@ function AssignItemsScreen({ route, navigation }: Props) {
     try {
       const parsed: ParsedReceiptData = JSON.parse(receiptJson);
       setReceipt(parsed);
-      const mapped = parsed.items.map((it, idx) => ({
+      const mapped = (parsed.items ?? []).map((it, idx) => ({
         id: it.id ?? String(idx),
         name: it.name,
         price: roundMoney(Number(it.price)),

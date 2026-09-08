@@ -65,7 +65,7 @@ function OCRCaptureScreen({ route, navigation }: Props) {
     if (!ok) return;
 
     launchCamera(
-      { mediaType: 'photo', quality: 1.0, includeBase64: false },
+      { mediaType: 'photo', quality: 0.7, maxWidth: 1600, maxHeight: 1600, includeBase64: false },
       (response) => {
         if (response.didCancel) return;
         if (response.errorCode) {
@@ -75,11 +75,11 @@ function OCRCaptureScreen({ route, navigation }: Props) {
         applyAsset(response.assets?.[0]);
       },
     );
-  }, [requestCameraPermission, applyAsset, t]);
+  }, [requestCameraPermissionLocal, applyAsset, t]);
 
   const handlePickGallery = useCallback(() => {
     launchImageLibrary(
-      { mediaType: 'photo', quality: 1.0, selectionLimit: 1, includeBase64: false },
+      { mediaType: 'photo', quality: 0.7, maxWidth: 1600, maxHeight: 1600, selectionLimit: 1, includeBase64: false },
       (response) => {
         if (response.didCancel) return;
         if (response.errorCode) {

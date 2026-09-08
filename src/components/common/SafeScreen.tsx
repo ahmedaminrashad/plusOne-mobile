@@ -13,8 +13,9 @@ interface Props {
   statusBarColor?: string;
   /**
    * Keep children mounted while another screen or native sheet is on top.
-   * Default is true: unmounting on blur destroys Camera / image-picker /
+   * Default is true on iOS: unmounting on blur destroys Camera / image-picker /
    * contacts hosts mid-presentation and is the main iOS crash source.
+   * Android still unmounts offscreen screens to save memory.
    */
   keepMounted?: boolean;
 }
@@ -34,7 +35,7 @@ export default function SafeScreen({
   style,
   edges = ['top'],
   statusBarColor,
-  keepMounted = true,
+  keepMounted = Platform.OS === 'ios',
 }: Props) {
   const focused = useIsFocused();
   const { top, bottom } = useAppSafeInsets();

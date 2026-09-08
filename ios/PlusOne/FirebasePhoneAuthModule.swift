@@ -8,14 +8,36 @@ import UIKit
 private final class PhoneAuthPresenter: NSObject, AuthUIDelegate {
   func present(_ viewControllerToPresent: UIViewController, animated flag: Bool, completion: (() -> Void)? = nil) {
     DispatchQueue.main.async {
-      Self.topViewController()?.present(viewControllerToPresent, animated: flag, completion: completion)
+      Self.presentWhenReady(viewControllerToPresent, animated: flag, completion: completion, attemptsLeft: 10)
     }
   }
 
   func dismiss(animated flag: Bool, completion: (() -> Void)? = nil) {
     DispatchQueue.main.async {
-      Self.topViewController()?.dismiss(animated: flag, completion: completion)
+      guard let top = Self.topViewController(), top.view.window != nil else {
+        completion?()
+        return
+      }
+      top.dismiss(animated: flag, completion: completion)
     }
+  }
+
+  static func presentWhenReady(
+    _ viewController: UIViewController,
+    animated: Bool,
+    completion: (() -> Void)?,
+    attemptsLeft: Int
+  ) {
+    guard let presenter = topViewController(), presenter.view.window != nil else {
+      if attemptsLeft > 0 {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
+          presentWhenReady(viewController, animated: animated, completion: completion, attemptsLeft: attemptsLeft - 1)
+        }
+      }
+      return
+    }
+    if presenter === viewController { return }
+    presenter.present(viewController, animated: animated, completion: completion)
   }
 
   static func topViewController() -> UIViewController? {

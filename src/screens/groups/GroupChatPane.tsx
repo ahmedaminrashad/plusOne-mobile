@@ -140,7 +140,7 @@ function MessageBubble({
           <TouchableOpacity
             style={styles.receiptCard}
             activeOpacity={0.8}
-            onPress={() => onOpenReceipt(msg.bill!.id)}>
+            onPress={() => { if (msg.bill) onOpenReceipt(msg.bill.id); }}>
             <View style={styles.receiptIcon}>
               <ReceiptIcon size={18} color={Colors.primary} />
             </View>

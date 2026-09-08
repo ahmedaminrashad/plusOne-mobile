@@ -69,7 +69,7 @@ class ShareIntentModule: NSObject {
         resolve(false)
         return
       }
-      guard let presenter = Self.topViewController() else {
+      guard let presenter = Self.topViewController(), presenter.view.window != nil else {
         resolve(false)
         return
       }

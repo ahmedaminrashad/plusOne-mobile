@@ -318,7 +318,7 @@ function BillStatusScreen({ route, navigation }: Props) {
             {(bill.lineItems?.length ?? 0) > 0 && (
               <View style={styles.lineItemsCard}>
                 <Text style={[typography.labelMedium, styles.lineItemsTitle]}>{t('viewReceipt.itemsTitle')}</Text>
-                {bill.lineItems!.map((it, idx) => (
+                {(bill.lineItems ?? []).map((it, idx) => (
                   <View key={`${it.name}-${idx}`} style={styles.lineItemRow}>
                     <Text style={[typography.bodyMedium, styles.lineItemName]} numberOfLines={2}>
                       {it.qty > 1 ? `${it.qty}× ` : ''}{it.name}

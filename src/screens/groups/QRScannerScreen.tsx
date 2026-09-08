@@ -114,7 +114,7 @@ function QRScannerScreen({ route, navigation }: Props) {
           t('qrScanner.qrNotRecognizedTitle'),
           result.reason ?? t('qrScanner.invalidQrMessage'),
           [
-            { text: t('qrScanner.manualEntryButton'), onPress: () => navigation.replace('AddBill', { groupId, groupName }) },
+            { text: t('qrScanner.manualEntryButton'), onPress: () => leaveAfterCameraStop(() => navigation.replace('AddBill', { groupId, groupName })) },
             { text: t('common:retry'), onPress: () => { scannedRef.current = false; setParsing(false); } },
           ],
         );
@@ -123,17 +123,21 @@ function QRScannerScreen({ route, navigation }: Props) {
           t('qrScanner.loadFailedTitle'),
           t('qrScanner.processErrorMessage'),
           [
-            { text: t('qrScanner.manualEntryButton'), onPress: () => navigation.replace('AddBill', { groupId, groupName }) },
+            { text: t('qrScanner.manualEntryButton'), onPress: () => leaveAfterCameraStop(() => navigation.replace('AddBill', { groupId, groupName })) },
             { text: t('common:retry'), onPress: () => { scannedRef.current = false; setParsing(false); } },
           ],
         );
       }
     },
-    [parsing, groupId, groupName, parseQr, navigation, t],
+    [parsing, groupId, groupName, parseQr, navigation, t, leaveAfterCameraStop],
   );
 
   const handleReadCode = useCallback(
-    (event: any) => handlePayload(event.nativeEvent.codeStringValue),
+    (event: { nativeEvent?: { codeStringValue?: string } }) => {
+      const value = event?.nativeEvent?.codeStringValue;
+      if (typeof value !== 'string' || !value) return;
+      handlePayload(value);
+    },
     [handlePayload],
   );
 
@@ -161,37 +165,30 @@ function QRScannerScreen({ route, navigation }: Props) {
     );
   }
 
-  if (parsing) {
-    return (
-      <SafeScreen style={styles.loadingScreen}>
-        <ActivityIndicator size="large" color={Colors.primary} />
-        <Text style={[typography.bodyLarge, styles.loadingText]}>{t('qrScanner.analyzingText')}</Text>
-      </SafeScreen>
-    );
-  }
-
   return (
     <SafeScreen style={styles.container} edges={[]}>
       {cameraActive ? (
-        <Camera
-          style={StyleSheet.absoluteFill}
-          scanBarcode
-          onReadCode={handleReadCode}
-          showFrame={false}
-          laserColor="transparent"
-          frameColor={Colors.accent}
-        />
+        <View style={StyleSheet.absoluteFill} collapsable={false}>
+          <Camera
+            style={StyleSheet.absoluteFill}
+            scanBarcode
+            onReadCode={handleReadCode}
+            showFrame={false}
+            laserColor="transparent"
+            frameColor={Colors.accent}
+          />
+        </View>
       ) : null}
 
       <TouchableOpacity
         style={styles.overlayBackBtn}
-        onPress={() => navigation.goBack()}
+        onPress={() => leaveAfterCameraStop(() => navigation.goBack())}
         hitSlop={12}
         activeOpacity={0.8}>
         <ChevronLeftIcon size={20} color="#fff" />
       </TouchableOpacity>
 
-      <View style={styles.overlay}>
+      <View style={styles.overlay} pointerEvents={parsing ? 'none' : 'box-none'}>
         <View style={styles.overlayTop} />
         <View style={styles.overlayMiddle}>
           <View style={styles.overlaySide} />
@@ -209,17 +206,24 @@ function QRScannerScreen({ route, navigation }: Props) {
           <View style={styles.pillRow}>
             <TouchableOpacity
               style={styles.pillBtn}
-              onPress={() => navigation.replace('OCRCapture', { groupId, groupName })}>
+              onPress={() => leaveAfterCameraStop(() => navigation.replace('OCRCapture', { groupId, groupName }))}>
               <Text style={[typography.labelMedium, styles.pillBtnText]}>{t('qrScanner.photoInsteadButton')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.pillBtn}
-              onPress={() => navigation.replace('AddBill', { groupId, groupName })}>
+              onPress={() => leaveAfterCameraStop(() => navigation.replace('AddBill', { groupId, groupName }))}>
               <Text style={[typography.labelMedium, styles.pillBtnText]}>{t('qrScanner.manualEntryButton')}</Text>
             </TouchableOpacity>
           </View>
         </View>
       </View>
+
+      {parsing ? (
+        <View style={styles.parsingOverlay} pointerEvents="auto">
+          <ActivityIndicator size="large" color={Colors.primary} />
+          <Text style={[typography.bodyLarge, styles.loadingText]}>{t('qrScanner.analyzingText')}</Text>
+        </View>
+      ) : null}
     </SafeScreen>
   );
 }
@@ -239,6 +243,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: Colors.background,
     gap: 12,
+  },
+  parsingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: Colors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 12,
+    zIndex: 30,
   },
   loadingText: { color: Colors.textSecondary },
   permissionScreen: {
