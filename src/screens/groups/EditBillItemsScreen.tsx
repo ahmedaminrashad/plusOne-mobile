@@ -384,9 +384,11 @@ function EditBillItemsScreen({ route, navigation }: Props) {
   const summaryRows = activeMembers.filter((m) => memberTotals[getMemberId(m)] !== undefined);
 
   const ListHeader = (
-    <View style={styles.receiptHeader}>
-      <Text style={[typography.caption, styles.totalLabel]}>{t('receiptSplit.grandTotalLabel')}</Text>
-      <Text style={[typography.amountLarge, styles.totalAmount]}>{formatCurrency(grandTotal, bill.currency)}</Text>
+    <View style={styles.receiptHeaderWrap}>
+      <View style={styles.totalCard}>
+        <Text style={[typography.caption, styles.totalLabel]}>{t('receiptSplit.grandTotalLabel')}</Text>
+        <Text style={[typography.amountLarge, styles.totalAmount]}>{formatCurrency(grandTotal, bill.currency)}</Text>
+      </View>
       <Text style={[typography.labelMedium, styles.sectionTitle]}>{t('receiptSplit.chooseItemsHint')}</Text>
     </View>
   );
@@ -480,6 +482,7 @@ function EditBillItemsScreen({ route, navigation }: Props) {
         ListHeaderComponent={ListHeader}
         ListFooterComponent={ListFooter}
         contentContainerStyle={styles.list}
+        contentInsetAdjustmentBehavior="never"
         keyboardShouldPersistTaps="handled"
       />
 
@@ -523,16 +526,29 @@ export default memo(EditBillItemsScreen);
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   flex: { flex: 1 },
-  list: { paddingBottom: 8 },
+  list: { paddingTop: 10, paddingBottom: 8 },
   loader: { flex: 1 },
 
   emptyState: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 12 },
   emptyText: { color: Colors.textMuted, textAlign: 'center' },
 
-  receiptHeader: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 10, alignItems: 'center', marginBottom: 10 },
+  receiptHeaderWrap: { marginBottom: 10 },
+  totalCard: {
+    backgroundColor: Colors.surface,
+    marginHorizontal: 16,
+    borderRadius: Radius.xl,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 4,
+    elevation: 1,
+  },
   totalLabel: { color: Colors.textMuted },
   totalAmount: { color: Colors.primary },
-  sectionTitle: { color: Colors.textSecondary, marginTop: 6 },
+  sectionTitle: { color: Colors.textSecondary, marginTop: 10, marginHorizontal: 16 },
 
   itemCard: {
     backgroundColor: Colors.surface,
