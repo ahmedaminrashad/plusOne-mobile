@@ -129,9 +129,9 @@ function QRScannerScreen({ route, navigation }: Props) {
 
   if (hasPermission === null) {
     return (
-      <View style={styles.centered}>
+      <SafeScreen style={styles.loadingScreen}>
         <ActivityIndicator size="large" color={Colors.primary} />
-      </View>
+      </SafeScreen>
     );
   }
 
@@ -147,6 +147,15 @@ function QRScannerScreen({ route, navigation }: Props) {
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Text style={[typography.bodyMedium, styles.backBtnText]}>{t('common:back')}</Text>
         </TouchableOpacity>
+      </SafeScreen>
+    );
+  }
+
+  if (parsing) {
+    return (
+      <SafeScreen style={styles.loadingScreen}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+        <Text style={[typography.bodyLarge, styles.loadingText]}>{t('qrScanner.analyzingText')}</Text>
       </SafeScreen>
     );
   }
@@ -186,14 +195,7 @@ function QRScannerScreen({ route, navigation }: Props) {
           <View style={styles.overlaySide} />
         </View>
         <View style={styles.overlayBottom}>
-          {parsing ? (
-            <>
-              <ActivityIndicator size="large" color="#fff" />
-              <Text style={[typography.bodyMedium, styles.parsingText]}>{t('qrScanner.analyzingText')}</Text>
-            </>
-          ) : (
             <Text style={[typography.bodyMedium, styles.hint]}>{t('qrScanner.scanHint')}</Text>
-          )}
           <View style={styles.pillRow}>
             <TouchableOpacity
               style={styles.pillBtn}
@@ -221,7 +223,14 @@ const CORNER_RADIUS = 10;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000' },
+  loadingScreen: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Colors.background,
+    gap: 12,
+  },
+  loadingText: { color: Colors.textSecondary },
   permissionScreen: {
     flex: 1,
     justifyContent: 'center',
@@ -283,7 +292,6 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   hint: { color: Colors.textOnDarkMuted, textAlign: 'center', paddingHorizontal: 32 },
-  parsingText: { color: '#fff', opacity: 0.9 },
   testBtn: {
     paddingHorizontal: 24,
     paddingVertical: 9,

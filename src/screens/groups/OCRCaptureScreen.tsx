@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   Image,
   Dimensions,
+  Alert,
 } from 'react-native';
 import { downsampledSource } from '../../utils/remoteImage';
 import SafeScreen from '../../components/common/SafeScreen';
@@ -152,30 +153,28 @@ function OCRCaptureScreen({ route, navigation }: Props) {
             style={styles.previewImage}
             resizeMode="contain"
           />
-          <View style={styles.previewActions}>
-            {processing ? (
-              <View style={styles.processingRow}>
-                <ActivityIndicator color={Colors.primary} />
-                <Text style={[typography.bodyLarge, styles.processingText]}>
-                  {t('ocrCapture.processingText')}
-                </Text>
-              </View>
-            ) : (
-              <>
-                <TouchableOpacity style={styles.primaryBtn} onPress={handleProcess}>
-                  <Text style={[typography.labelLarge, styles.primaryBtnText]}>{t('ocrCapture.processButton')}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.secondaryBtn} onPress={() => setCaptured(null)}>
-                  <Text style={[typography.labelLarge, styles.secondaryBtnText]}>{t('ocrCapture.chooseAnotherButton')}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.linkBtn}
-                  onPress={() => navigation.replace('AddBill', { groupId, groupName })}>
-                  <Text style={[typography.labelLarge, styles.linkBtnText]}>{t('ocrCapture.manualEntryButton')}</Text>
-                </TouchableOpacity>
-              </>
-            )}
-          </View>
+          {processing ? (
+            <View style={styles.processingOverlay} pointerEvents="none">
+              <ActivityIndicator size="large" color={Colors.primary} />
+              <Text style={[typography.bodyLarge, styles.processingText]}>
+                {t('ocrCapture.processingText')}
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.previewActions}>
+              <TouchableOpacity style={styles.primaryBtn} onPress={handleProcess}>
+                <Text style={[typography.labelLarge, styles.primaryBtnText]}>{t('ocrCapture.processButton')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.secondaryBtn} onPress={() => setCaptured(null)}>
+                <Text style={[typography.labelLarge, styles.secondaryBtnText]}>{t('ocrCapture.chooseAnotherButton')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.linkBtn}
+                onPress={() => navigation.replace('AddBill', { groupId, groupName })}>
+                <Text style={[typography.labelLarge, styles.linkBtnText]}>{t('ocrCapture.manualEntryButton')}</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       ) : (
         <View style={styles.captureContainer}>
@@ -232,8 +231,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   captureBtnText: { color: '#fff' },
-  previewContainer: { flex: 1 },
-  previewImage: { flex: 1, backgroundColor: '#000' },
+  previewContainer: { flex: 1, backgroundColor: Colors.background },
+  previewImage: { flex: 1, backgroundColor: Colors.background },
+  processingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: Colors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 12,
+  },
   previewActions: {
     backgroundColor: Colors.surface,
     padding: 20,
@@ -241,7 +247,6 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: Colors.border,
   },
-  processingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, paddingVertical: 12 },
   processingText: { color: Colors.textSecondary },
   primaryBtn: {
     backgroundColor: Colors.primary,

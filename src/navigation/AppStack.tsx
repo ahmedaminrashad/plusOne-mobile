@@ -58,12 +58,12 @@ export default function AppStack() {
       <Stack.Screen
         name="QRScanner"
         component={QRScannerScreen}
-        options={{ headerShown: false }}
+        options={{ headerShown: false, contentStyle: { backgroundColor: Colors.background } }}
       />
       <Stack.Screen
         name="OCRCapture"
         component={OCRCaptureScreen}
-        options={{ title: t('appStack.ocrCaptureTitle') }}
+        options={{ title: t('appStack.ocrCaptureTitle'), contentStyle: { backgroundColor: Colors.background } }}
       />
       <Stack.Screen
         name="AssignItems"

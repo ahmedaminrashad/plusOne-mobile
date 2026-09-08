@@ -364,7 +364,7 @@ function EditBillItemsScreen({ route, navigation }: Props) {
 
   if (isLoading || !bill) {
     return (
-      <SafeScreen style={styles.container}>
+      <SafeScreen style={styles.container} edges={[]}>
         <ActivityIndicator color={Colors.primary} style={styles.loader} />
       </SafeScreen>
     );
@@ -372,7 +372,7 @@ function EditBillItemsScreen({ route, navigation }: Props) {
 
   if (bill.aggregateStatus === 'fully_settled') {
     return (
-      <SafeScreen style={styles.container}>
+      <SafeScreen style={styles.container} edges={[]}>
         <View style={styles.emptyState}>
           <LockIcon size={44} color={Colors.textMuted} />
           <Text style={[typography.bodyLarge, styles.emptyText]}>{t('editBillItems.billClosedMessage')}</Text>
@@ -472,7 +472,7 @@ function EditBillItemsScreen({ route, navigation }: Props) {
   );
 
   return (
-    <SafeScreen style={styles.container}>
+    <SafeScreen style={styles.container} edges={[]}>
       <FlatList
         data={items}
         keyExtractor={(it) => it.id}
@@ -529,10 +529,10 @@ const styles = StyleSheet.create({
   emptyState: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 12 },
   emptyText: { color: Colors.textMuted, textAlign: 'center' },
 
-  receiptHeader: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 12, alignItems: 'center', backgroundColor: Colors.surface, marginBottom: 8 },
-  totalLabel: { color: Colors.textMuted, marginTop: 8 },
+  receiptHeader: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 10, alignItems: 'center', marginBottom: 10 },
+  totalLabel: { color: Colors.textMuted },
   totalAmount: { color: Colors.primary },
-  sectionTitle: { color: Colors.textSecondary, marginTop: 12 },
+  sectionTitle: { color: Colors.textSecondary, marginTop: 6 },
 
   itemCard: {
     backgroundColor: Colors.surface,
