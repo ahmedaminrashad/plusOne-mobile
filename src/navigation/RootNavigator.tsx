@@ -352,9 +352,9 @@ export default function RootNavigator() {
         const now = Date.now();
         if (now - lastInvalidate < 60_000) return;
         lastInvalidate = now;
-        // Only the home badges — a full-tag invalidate reloaded ~650MB and
-        // jetsam-killed backboardd when leaving the app (no App Store crash).
-        dispatch(baseApi.util.invalidateTags(['Group', 'Share', 'Invitation', 'Ledger']));
+        // Ledger + invite badge only. Reloading Group/Share here re-decoded
+        // every list photo and jetsam-killed backboardd on iPhone 11.
+        dispatch(baseApi.util.invalidateTags(['Invitation', 'Ledger']));
       }, 2500);
     });
     return () => {

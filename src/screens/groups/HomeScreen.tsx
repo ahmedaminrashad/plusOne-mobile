@@ -1,58 +1,134 @@
-import React, { useCallback, memo, useEffect, useRef, useState } from 'react';
+import React, { useCallback, memo, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
-  ScrollView,
+  FlatList,
   TouchableOpacity,
   StyleSheet,
-  StatusBar,
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
-import { useIsFocused } from '@react-navigation/native';
 import SafeScreen from '../../components/common/SafeScreen';
 import { AppScreenProps } from '../../types/navigation';
-import {
-  useGetGroupsQuery,
-  useGetMyInvitationsQuery,
-  useAcceptInvitationMutation,
-  useDeclineInvitationMutation,
-} from '../../store/api/groupsApi';
+import { useGetGroupsQuery, useGetMyInvitationsQuery } from '../../store/api/groupsApi';
 import GroupCard from '../../components/groups/GroupCard';
 import Button from '../../components/common/Button';
 import Avatar from '../../components/common/Avatar';
-import InvitationPromptModal from '../../components/groups/InvitationPromptModal';
 import { PeopleIcon, BellIcon, ReceiptIcon, PersonIcon } from '../../components/icons';
 import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
 import { useGetMeQuery } from '../../store/api/usersApi';
 import { useGetHomeSummaryQuery } from '../../store/api/ledgerApi';
-import { formatCurrency, resolveAssetUrl } from '../../utils/format';
+import { formatCurrency } from '../../utils/format';
+import { Group } from '../../types/models';
 
 type Props = AppScreenProps<'Home'>;
 
 const PREVIEW_COUNT = 4;
 
+const TILES = [
+  { key: 'newGroup', labelKey: 'home.tileNewGroup', Icon: PeopleIcon, iconColor: Colors.primary, bg: Colors.tint, screen: 'CreateGroup' as const },
+  { key: 'circle', labelKey: 'home.tileMyCircle', Icon: PersonIcon, iconColor: Colors.warningDark, bg: Colors.warningTint, screen: 'MyCircle' as const },
+  { key: 'remind', labelKey: 'home.tileRemind', Icon: BellIcon, iconColor: Colors.secondaryDark, bg: Colors.successTint, screen: 'Remind' as const },
+  { key: 'ledger', labelKey: 'home.tileMyLedger', Icon: ReceiptIcon, iconColor: Colors.primary, bg: Colors.tint, screen: 'MyLedger' as const },
+];
+
+function HomeHeader({
+  greeting,
+  pendingCount,
+  owed,
+  owe,
+  onNotifications,
+  onSettle,
+  onTile,
+  onViewAll,
+  isError,
+}: {
+  greeting: string;
+  pendingCount: number;
+  owed: number;
+  owe: number;
+  onNotifications: () => void;
+  onSettle: () => void;
+  onTile: (screen: (typeof TILES)[number]['screen']) => void;
+  onViewAll: () => void;
+  isError: boolean;
+}) {
+  const { t } = useTranslation('groups');
+  const typography = useTypography();
+  const { data: me } = useGetMeQuery();
+
+  return (
+    <View>
+      <View style={styles.headerRow}>
+        <View style={styles.headerLeft}>
+          <Avatar name={me?.displayName} seed={me?.id} size={40} />
+          <Text style={[typography.labelLarge, styles.headerGreeting]} numberOfLines={1}>
+            {greeting}
+          </Text>
+        </View>
+        <TouchableOpacity style={styles.headerIconBtn} onPress={onNotifications} activeOpacity={0.7}>
+          <BellIcon size={20} color={Colors.text} />
+          {pendingCount > 0 ? <View style={styles.badgeDot} /> : null}
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.heroCard}>
+        <View style={styles.heroTopRow}>
+          <Text style={[typography.labelMedium, styles.heroLabel]}>{t('home.acrossAllGroups')}</Text>
+          <TouchableOpacity style={styles.settleBtn} onPress={onSettle} activeOpacity={0.8}>
+            <Text style={[typography.labelMedium, styles.settleBtnText]}>{t('home.settleUp')}</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.heroAmounts}>
+          <View>
+            <Text style={[typography.bodySmall, styles.heroAmountLabel]}>{t('home.youAreOwed')}</Text>
+            <Text style={[typography.amountMedium, styles.heroAmount]}>{formatCurrency(owed / 100)}</Text>
+          </View>
+          <View>
+            <Text style={[typography.bodySmall, styles.heroAmountLabel]}>{t('home.youOwe')}</Text>
+            <Text style={[typography.amountMedium, styles.heroAmount]}>{formatCurrency(owe / 100)}</Text>
+          </View>
+        </View>
+      </View>
+
+      <View style={styles.tileRow}>
+        {TILES.map((tile) => (
+          <TouchableOpacity key={tile.key} style={styles.tile} onPress={() => onTile(tile.screen)} activeOpacity={0.75}>
+            <View style={[styles.tileIconWrap, { backgroundColor: tile.bg }]}>
+              <tile.Icon size={26} color={tile.iconColor} />
+            </View>
+            <Text style={[typography.labelMedium, styles.tileLabel]}>{t(tile.labelKey)}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <View style={styles.sectionHeader}>
+        <View style={styles.sectionTitleBlock}>
+          <Text style={[typography.headingMedium, styles.sectionTitle]}>{t('home.yourGroups')}</Text>
+          <Text style={[typography.bodySmall, styles.sectionSubtitle]}>{t('home.yourGroupsSubtitle')}</Text>
+        </View>
+        <TouchableOpacity onPress={onViewAll}>
+          <Text style={[typography.labelMedium, styles.viewAll]}>{t('home.viewAll')}</Text>
+        </TouchableOpacity>
+      </View>
+
+      {isError ? <Text style={[typography.bodyMedium, styles.errorBanner]}>{t('home.loadError')}</Text> : null}
+    </View>
+  );
+}
+
+const HomeHeaderMemo = memo(HomeHeader);
+
 function HomeScreen({ navigation }: Props) {
   const { t } = useTranslation('groups');
   const typography = useTypography();
-  const focused = useIsFocused();
   const { data: me } = useGetMeQuery();
   const { data: groups, isLoading, refetch, isError } = useGetGroupsQuery();
   const { data: invitations, refetch: refetchInvites } = useGetMyInvitationsQuery();
-  const { data: home, refetch: refetchHome } = useGetHomeSummaryQuery(undefined, {
-    refetchOnFocus: true,
-  });
-  const [accept] = useAcceptInvitationMutation();
-  const [decline] = useDeclineInvitationMutation();
-
-  const approvalCount = home?.approvalCount ?? 0;
-  const toPayCount = home?.toPayCount ?? 0;
-  const pendingCount = (invitations?.length ?? home?.invitationCount ?? 0) + approvalCount + toPayCount;
-  const [showModal, setShowModal] = useState(false);
-  const shownRef = useRef(false);
+  const { data: home, refetch: refetchHome } = useGetHomeSummaryQuery();
   const [manualRefreshing, setManualRefreshing] = useState(false);
 
   const handleRefresh = useCallback(async () => {
@@ -64,142 +140,76 @@ function HomeScreen({ navigation }: Props) {
     }
   }, [refetch, refetchHome, refetchInvites]);
 
+  const pendingCount =
+    (invitations?.length ?? home?.invitationCount ?? 0) + (home?.approvalCount ?? 0) + (home?.toPayCount ?? 0);
   const owed = home?.owedPiastres ?? 0;
   const owe = home?.owePiastres ?? 0;
-
-  useEffect(() => {
-    if (focused) refetchHome();
-  }, [focused, refetchHome]);
-
-  useEffect(() => {
-    if (!shownRef.current && invitations && invitations.length > 0) {
-      shownRef.current = true;
-      setShowModal(true);
-    }
-  }, [invitations]);
-
-  const handleAccept = useCallback(
-    async (membershipId: string) => { await accept(membershipId).unwrap(); },
-    [accept],
-  );
-
-  const handleDecline = useCallback(
-    async (membershipId: string) => { await decline(membershipId).unwrap(); },
-    [decline],
-  );
+  const firstName = me?.displayName?.split(' ')[0];
+  const greeting = firstName ? t('home.greetingWithName', { name: firstName }) : t('home.greeting');
+  const previewGroups = useMemo(() => (groups ?? []).slice(0, PREVIEW_COUNT), [groups]);
 
   const handleGroupPress = useCallback(
     (groupId: string, groupName: string) => navigation.navigate('GroupDetail', { groupId, groupName }),
     [navigation],
   );
 
-  const firstName = me?.displayName?.split(' ')[0];
-  const greeting = firstName ? t('home.greetingWithName', { name: firstName }) : t('home.greeting');
-  const previewGroups = (groups ?? []).slice(0, PREVIEW_COUNT);
+  const onNotifications = useCallback(() => navigation.navigate('Notifications'), [navigation]);
+  const onSettle = useCallback(() => navigation.navigate('SettleUp'), [navigation]);
+  const onViewAll = useCallback(() => navigation.navigate('AllGroups'), [navigation]);
+  const onTile = useCallback((screen: (typeof TILES)[number]['screen']) => navigation.navigate(screen), [navigation]);
+  const onCreateGroup = useCallback(() => navigation.navigate('CreateGroup'), [navigation]);
 
-  const renderEmpty = () => (
-    <View style={styles.empty}>
-      <View style={styles.emptyIconWrap}>
-        <PeopleIcon size={44} color={Colors.primary} />
-      </View>
-      <Text style={[typography.headingMedium, styles.emptyTitle]}>{t('home.emptyTitle')}</Text>
-      <Text style={[typography.bodyMedium, styles.emptySubtitle]}>{t('home.emptySubtitle')}</Text>
-      <Button title={t('home.createGroupCta')} onPress={() => navigation.navigate('CreateGroup')} style={styles.emptyCta} />
-    </View>
+  const renderItem = useCallback(
+    ({ item }: { item: Group }) => (
+      <GroupCard group={item} onPress={() => handleGroupPress(item.id, item.name)} />
+    ),
+    [handleGroupPress],
   );
+
+  const listHeader = (
+    <HomeHeaderMemo
+      greeting={greeting}
+      pendingCount={pendingCount}
+      owed={owed}
+      owe={owe}
+      onNotifications={onNotifications}
+      onSettle={onSettle}
+      onTile={onTile}
+      onViewAll={onViewAll}
+      isError={!!isError}
+    />
+  );
+
+  const listEmpty =
+    !isLoading && previewGroups.length === 0 ? (
+      <View style={styles.empty}>
+        <View style={styles.emptyIconWrap}>
+          <PeopleIcon size={44} color={Colors.primary} />
+        </View>
+        <Text style={[typography.headingMedium, styles.emptyTitle]}>{t('home.emptyTitle')}</Text>
+        <Text style={[typography.bodyMedium, styles.emptySubtitle]}>{t('home.emptySubtitle')}</Text>
+        <Button title={t('home.createGroupCta')} onPress={onCreateGroup} style={styles.emptyCta} />
+      </View>
+    ) : isLoading ? (
+      <ActivityIndicator color={Colors.secondary} style={styles.loader} />
+    ) : null;
 
   return (
     <SafeScreen style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
-
-      <ScrollView
-        contentContainerStyle={
-          (!groups || groups.length === 0) && !isLoading ? styles.listEmpty : styles.list
-        }
+      <FlatList
+        data={previewGroups}
+        keyExtractor={(item) => item.id}
+        renderItem={renderItem}
+        ListHeaderComponent={listHeader}
+        ListEmptyComponent={listEmpty}
+        contentContainerStyle={previewGroups.length === 0 ? styles.listEmpty : styles.list}
         refreshControl={
           <RefreshControl refreshing={manualRefreshing} onRefresh={handleRefresh} tintColor={Colors.secondary} />
-        }>
-        <View>
-          <View style={styles.headerRow}>
-            <View style={styles.headerLeft}>
-              <Avatar uri={resolveAssetUrl(me?.photoUrl)} name={me?.displayName} seed={me?.id} size={40} />
-              <Text style={[typography.labelLarge, styles.headerGreeting]} numberOfLines={2}>{greeting}</Text>
-            </View>
-            <TouchableOpacity
-              style={styles.headerIconBtn}
-              onPress={() => navigation.navigate('Notifications')}
-              activeOpacity={0.7}>
-              <BellIcon size={20} color={Colors.text} />
-              {pendingCount > 0 && <View style={styles.badgeDot} />}
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.heroCard}>
-            <View style={styles.heroTopRow}>
-              <Text style={[typography.labelMedium, styles.heroLabel]}>{t('home.acrossAllGroups')}</Text>
-              <TouchableOpacity style={styles.settleBtn} onPress={() => navigation.navigate('SettleUp')} activeOpacity={0.8}>
-                <Text style={[typography.labelMedium, styles.settleBtnText]}>{t('home.settleUp')}</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={styles.heroRow}>
-              <View style={styles.heroAmounts}>
-                <View>
-                  <Text style={[typography.bodySmall, styles.heroAmountLabel]}>{t('home.youAreOwed')}</Text>
-                  <Text style={[typography.amountMedium, styles.heroAmount]}>{formatCurrency(owed / 100)}</Text>
-                </View>
-                <View>
-                  <Text style={[typography.bodySmall, styles.heroAmountLabel]}>{t('home.youOwe')}</Text>
-                  <Text style={[typography.amountMedium, styles.heroAmount]}>{formatCurrency(owe / 100)}</Text>
-                </View>
-              </View>
-            </View>
-          </View>
-
-          <View style={styles.tileRow}>
-            {[
-              { label: t('home.tileNewGroup'), Icon: PeopleIcon, iconColor: Colors.primary, onPress: () => navigation.navigate('CreateGroup'), bg: Colors.tint },
-              { label: t('home.tileMyCircle'), Icon: PersonIcon, iconColor: Colors.warningDark, onPress: () => navigation.navigate('MyCircle'), bg: Colors.warningTint },
-              { label: t('home.tileRemind'), Icon: BellIcon, iconColor: Colors.secondaryDark, onPress: () => navigation.navigate('Remind'), bg: Colors.successTint },
-              { label: t('home.tileMyLedger'), Icon: ReceiptIcon, iconColor: Colors.primary, onPress: () => navigation.navigate('MyLedger'), bg: Colors.tint },
-            ].map((tile) => (
-              <TouchableOpacity key={tile.label} style={styles.tile} onPress={tile.onPress} activeOpacity={0.75}>
-                <View style={[styles.tileIconWrap, { backgroundColor: tile.bg }]}>
-                  <tile.Icon size={26} color={tile.iconColor} />
-                </View>
-                <Text style={[typography.labelMedium, styles.tileLabel]}>{tile.label}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          <View style={styles.sectionHeader}>
-            <View style={styles.sectionTitleBlock}>
-              <Text style={[typography.headingMedium, styles.sectionTitle]}>{t('home.yourGroups')}</Text>
-              <Text style={[typography.bodySmall, styles.sectionSubtitle]}>{t('home.yourGroupsSubtitle')}</Text>
-            </View>
-            <TouchableOpacity onPress={() => navigation.navigate('AllGroups')}>
-              <Text style={[typography.labelMedium, styles.viewAll]}>{t('home.viewAll')}</Text>
-            </TouchableOpacity>
-          </View>
-
-          {isError && <Text style={[typography.bodyMedium, styles.errorBanner]}>{t('home.loadError')}</Text>}
-        </View>
-
-        {previewGroups.map((item) => (
-          <GroupCard key={item.id} group={item} onPress={() => handleGroupPress(item.id, item.name)} />
-        ))}
-
-        {!isLoading && previewGroups.length === 0 && renderEmpty()}
-        {isLoading ? <ActivityIndicator color={Colors.secondary} style={styles.loader} /> : null}
-      </ScrollView>
-
-      {focused && showModal && invitations && invitations.length > 0 && (
-        <InvitationPromptModal
-          invitations={invitations}
-          onAccept={handleAccept}
-          onDecline={handleDecline}
-          onDismiss={() => setShowModal(false)}
-        />
-      )}
+        }
+        initialNumToRender={4}
+        windowSize={3}
+        removeClippedSubviews={false}
+      />
     </SafeScreen>
   );
 }
@@ -208,35 +218,35 @@ export default memo(HomeScreen);
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-
-  // ── Header — plain canvas, no banner ──
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
     paddingTop: 12,
     marginBottom: 12,
   },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flexShrink: 1 },
   headerGreeting: { color: Colors.textSecondary, flexShrink: 1 },
   headerIconBtn: {
-    width: 38, height: 38, borderRadius: 14,
+    width: 38,
+    height: 38,
+    borderRadius: 14,
     backgroundColor: Colors.surface,
-    justifyContent: 'center', alignItems: 'center',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   badgeDot: {
-    position: 'absolute', top: 5, right: 5,
-    width: 7, height: 7, borderRadius: 3.5,
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
     backgroundColor: Colors.danger,
   },
-
-  // ── Hero balance card — self-contained inset card, not a banner ──
   heroCard: {
     backgroundColor: Colors.primary,
     borderRadius: Radius.xl,
-    marginHorizontal: 16,
-    marginTop: 4,
     padding: 16,
   },
   heroTopRow: {
@@ -247,7 +257,6 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   heroLabel: { color: 'rgba(255,255,255,0.7)', letterSpacing: 0.5, flexShrink: 1 },
-  heroRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   heroAmounts: { flexDirection: 'row', gap: 24 },
   heroAmountLabel: { color: 'rgba(255,255,255,0.7)', marginBottom: 2 },
   heroAmount: { color: '#FFFFFF' },
@@ -258,50 +267,55 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   settleBtnText: { color: '#FFFFFF' },
-
-  // ── Tiles ──
-  tileRow: { flexDirection: 'row', paddingHorizontal: 16, paddingTop: 18, gap: 10 },
+  tileRow: { flexDirection: 'row', paddingTop: 18, gap: 10 },
   tile: { flex: 1, alignItems: 'center', gap: 6 },
   tileIconWrap: {
-    width: 56, height: 56, borderRadius: Radius.lg,
-    justifyContent: 'center', alignItems: 'center',
+    width: 56,
+    height: 56,
+    borderRadius: Radius.lg,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   tileLabel: { color: Colors.text, textAlign: 'center' },
-
-  // ── Section header ──
   sectionHeader: {
-    flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between',
-    paddingHorizontal: 16, paddingTop: 24, paddingBottom: 10, gap: 12,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    paddingTop: 24,
+    paddingBottom: 10,
+    gap: 12,
   },
   sectionTitleBlock: { flex: 1 },
   sectionTitle: { color: Colors.text },
   sectionSubtitle: { color: Colors.textSecondary, marginTop: 2 },
   viewAll: { color: Colors.primary, marginTop: 2 },
-
-  // ── List ──
   list: { paddingHorizontal: 16, paddingBottom: 110 },
-  listEmpty: { flex: 1, paddingHorizontal: 16 },
+  listEmpty: { flexGrow: 1, paddingHorizontal: 16, paddingBottom: 110 },
   loader: { marginVertical: 24 },
-
-  // ── Empty state ──
   empty: {
-    flex: 1, justifyContent: 'center', alignItems: 'center',
-    paddingHorizontal: 32, gap: 12,
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 24,
+    gap: 12,
   },
   emptyIconWrap: {
-    width: 88, height: 88, borderRadius: 44,
+    width: 88,
+    height: 88,
+    borderRadius: 44,
     backgroundColor: Colors.tint,
-    justifyContent: 'center', alignItems: 'center',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 4,
   },
   emptyTitle: { color: Colors.text, textAlign: 'center' },
   emptySubtitle: { color: Colors.textSecondary, textAlign: 'center' },
   emptyCta: { marginTop: 8, width: '100%' },
-
-  // ── Error ──
   errorBanner: {
-    backgroundColor: Colors.dangerTint, color: Colors.danger,
-    textAlign: 'center', padding: 10,
-    borderRadius: Radius.md, marginHorizontal: 14, marginBottom: 8,
+    backgroundColor: Colors.dangerTint,
+    color: Colors.danger,
+    textAlign: 'center',
+    padding: 10,
+    borderRadius: Radius.md,
+    marginBottom: 8,
   },
 });
