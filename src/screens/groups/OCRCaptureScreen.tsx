@@ -1,4 +1,4 @@
-import React, { useState, useCallback, memo } from 'react';
+import React, { useState, useCallback, useEffect, useRef, memo } from 'react';
 import {
   View,
   Text,
@@ -37,9 +37,12 @@ function OCRCaptureScreen({ route, navigation }: Props) {
   const [captured, setCaptured] = useState<CapturedImage | null>(null);
   const [processing, setProcessing] = useState(false);
   const [parseReceipt] = useParseReceiptBillMutation();
+  const startedForUri = useRef<string | null>(null);
+  const inFlightRef = useRef(false);
 
   const applyAsset = useCallback((asset?: Asset) => {
     if (!asset?.uri) return;
+    startedForUri.current = null;
     setCaptured({
       uri: asset.uri,
       fileName: asset.fileName ?? 'receipt.jpg',
@@ -91,16 +94,18 @@ function OCRCaptureScreen({ route, navigation }: Props) {
     );
   }, [applyAsset, t]);
 
-  const handleProcess = useCallback(async () => {
-    if (!captured) return;
+  const handleProcess = useCallback(async (image?: CapturedImage | null) => {
+    const src = image ?? captured;
+    if (!src || inFlightRef.current) return;
+    inFlightRef.current = true;
     setProcessing(true);
 
     try {
       const result = await parseReceipt({
         groupId,
-        uri: captured.uri,
-        fileName: captured.fileName ?? 'receipt.jpg',
-        mimeType: captured.mimeType ?? 'image/jpeg',
+        uri: src.uri,
+        fileName: src.fileName ?? 'receipt.jpg',
+        mimeType: src.mimeType ?? 'image/jpeg',
       }).unwrap();
 
       if (result.success && result.bill) {
@@ -127,7 +132,7 @@ function OCRCaptureScreen({ route, navigation }: Props) {
 
       Alert.alert(t('ocrCapture.processFailedTitle'), message, [
         { text: t('ocrCapture.manualEntryButton'), onPress: () => navigation.replace('AddBill', { groupId, groupName }) },
-        { text: t('common:retry'), onPress: () => { setCaptured(null); } },
+        { text: t('common:retry'), onPress: () => { handleProcess(src); } },
       ]);
     } catch {
       Alert.alert(
@@ -135,13 +140,20 @@ function OCRCaptureScreen({ route, navigation }: Props) {
         t('ocrCapture.connectionFailedMessage'),
         [
           { text: t('ocrCapture.manualEntryButton'), onPress: () => navigation.replace('AddBill', { groupId, groupName }) },
-          { text: t('common:retry'), onPress: () => { setCaptured(null); } },
+          { text: t('common:retry'), onPress: () => { handleProcess(src); } },
         ],
       );
     } finally {
+      inFlightRef.current = false;
       setProcessing(false);
     }
   }, [captured, groupId, groupName, navigation, parseReceipt, t]);
+
+  useEffect(() => {
+    if (!captured || startedForUri.current === captured.uri) return;
+    startedForUri.current = captured.uri;
+    handleProcess(captured);
+  }, [captured, handleProcess]);
 
   return (
     <SafeScreen style={styles.container}>
@@ -153,28 +165,35 @@ function OCRCaptureScreen({ route, navigation }: Props) {
             style={styles.previewImage}
             resizeMode="contain"
           />
-          {processing ? (
-            <View style={styles.processingOverlay} pointerEvents="none">
-              <ActivityIndicator size="large" color={Colors.primary} />
-              <Text style={[typography.bodyLarge, styles.processingText]}>
-                {t('ocrCapture.processingText')}
-              </Text>
-            </View>
-          ) : (
-            <View style={styles.previewActions}>
-              <TouchableOpacity style={styles.primaryBtn} onPress={handleProcess}>
-                <Text style={[typography.labelLarge, styles.primaryBtnText]}>{t('ocrCapture.processButton')}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.secondaryBtn} onPress={() => setCaptured(null)}>
-                <Text style={[typography.labelLarge, styles.secondaryBtnText]}>{t('ocrCapture.chooseAnotherButton')}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.linkBtn}
-                onPress={() => navigation.replace('AddBill', { groupId, groupName })}>
-                <Text style={[typography.labelLarge, styles.linkBtnText]}>{t('ocrCapture.manualEntryButton')}</Text>
-              </TouchableOpacity>
-            </View>
-          )}
+          <View style={styles.previewActions}>
+            {processing ? (
+              <View style={styles.processingBar}>
+                <ActivityIndicator size="small" color={Colors.primary} />
+                <Text style={[typography.labelLarge, styles.processingText]}>
+                  {t('ocrCapture.processingText')}
+                </Text>
+              </View>
+            ) : (
+              <>
+                <TouchableOpacity style={styles.primaryBtn} onPress={() => handleProcess()}>
+                  <Text style={[typography.labelLarge, styles.primaryBtnText]}>{t('ocrCapture.processButton')}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.secondaryBtn}
+                  onPress={() => {
+                    startedForUri.current = null;
+                    setCaptured(null);
+                  }}>
+                  <Text style={[typography.labelLarge, styles.secondaryBtnText]}>{t('ocrCapture.chooseAnotherButton')}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.linkBtn}
+                  onPress={() => navigation.replace('AddBill', { groupId, groupName })}>
+                  <Text style={[typography.labelLarge, styles.linkBtnText]}>{t('ocrCapture.manualEntryButton')}</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
         </View>
       ) : (
         <View style={styles.captureContainer}>
@@ -231,15 +250,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   captureBtnText: { color: '#fff' },
-  previewContainer: { flex: 1, backgroundColor: Colors.background },
-  previewImage: { flex: 1, backgroundColor: Colors.background },
-  processingOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: Colors.background,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 12,
-  },
+  previewContainer: { flex: 1, backgroundColor: Colors.neutral800 },
+  previewImage: { flex: 1, width: '100%', backgroundColor: Colors.neutral800 },
   previewActions: {
     backgroundColor: Colors.surface,
     padding: 20,
@@ -247,7 +259,14 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: Colors.border,
   },
-  processingText: { color: Colors.textSecondary },
+  processingBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    minHeight: 52,
+  },
+  processingText: { color: Colors.text },
   primaryBtn: {
     backgroundColor: Colors.primary,
     borderRadius: Radius.pill,
