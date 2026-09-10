@@ -30,6 +30,25 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | null> {
 }
 
 export const SecureStorage = {
+  /**
+   * iOS Keychain survives app delete. AsyncStorage does not. A reinstall
+   * therefore looks like first signup (onboarding/language gone) while stale
+   * tokens still restore — that remounts Auth on Phone Entry after OTP.
+   * If onboarding was never finished on this install, drop the leftover session.
+   */
+  async restoreForThisInstall(): Promise<{
+    accessToken: string;
+    refreshToken: string;
+    isProfileComplete: boolean;
+  } | null> {
+    const seenOnboarding = await AppStorage.hasSeenOnboarding();
+    if (!seenOnboarding) {
+      await SecureStorage.clearTokens();
+      return null;
+    }
+    return SecureStorage.getTokens();
+  },
+
   async saveTokens(accessToken: string, refreshToken: string, isProfileComplete: boolean): Promise<void> {
     await Keychain.setGenericPassword(
       ACCESS_TOKEN_KEY,

@@ -57,7 +57,7 @@ export default function RootNavigator() {
 
     const load = async () => {
       if (cancelled || loaded || AppState.currentState !== 'active') return;
-      const tokens = await SecureStorage.getTokens();
+      const tokens = await SecureStorage.restoreForThisInstall();
       if (cancelled) return;
       if (AppState.currentState !== 'active' && !tokens) return;
       loaded = true;
