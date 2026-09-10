@@ -1,4 +1,4 @@
-import i18n from '../i18n';
+import i18n, { resolveAppLanguage } from '../i18n';
 import { ASSET_BASE_URL } from '../config';
 
 // Server-stored asset paths (e.g. group avatars) are relative — resolve them against
@@ -60,12 +60,12 @@ export function formatBillDisplayName(
 }
 
 function locale(): string {
-  return i18n.language === 'en' ? 'en-US' : 'ar-EG';
+  return resolveAppLanguage(i18n.language) === 'en' ? 'en-US' : 'ar-EG';
 }
 
 export function formatCurrency(amount: number, currency: string = 'EGP'): string {
   const amountText = roundMoney(Number(amount)).toFixed(2);
-  if (i18n.language === 'en') {
+  if (resolveAppLanguage(i18n.language) === 'en') {
     return `${currency} ${amountText}`;
   }
   const currencyLabel = currency === 'EGP' ? i18n.t('common:currencyEGP') : currency;

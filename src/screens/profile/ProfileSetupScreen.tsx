@@ -17,16 +17,21 @@ import Input from '../../components/common/Input';
 import Avatar from '../../components/common/Avatar';
 import { Colors } from '../../constants/colors';
 import { isValidDisplayName, isValidInstaPayAlias } from '../../utils/validation';
-import { useUpdateProfileMutation, useUploadProfilePhotoMutation } from '../../store/api/usersApi';
+import { useUpdateProfileMutation, useUploadProfilePhotoMutation, useSaveLanguageMutation } from '../../store/api/usersApi';
 import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { setProfileComplete } from '../../store/slices/authSlice';
 import { SecureStorage } from '../../utils/storage';
+import { changeLanguage, resolveAppLanguage, AppLanguage } from '../../i18n';
+import { useTypography } from '../../hooks/useTypography';
 
 type Props = AuthScreenProps<'ProfileSetup'>;
 
 function ProfileSetupScreen({ navigation }: Props) {
-  const { t } = useTranslation('auth');
+  const { t, i18n } = useTranslation('auth');
+  const typography = useTypography();
   const dispatch = useAppDispatch();
+  const currentLanguage = resolveAppLanguage(i18n.language);
+  const [saveLanguage] = useSaveLanguageMutation();
   const [displayName, setDisplayName] = useState('');
   const [photoUrl, setPhotoUrl] = useState<string | undefined>();
   const [instaPayAlias, setInstaPayAlias] = useState('');
@@ -63,6 +68,12 @@ function ProfileSetupScreen({ navigation }: Props) {
     }
   }, [validate, updateProfile, uploadProfilePhoto, displayName, photoUrl, instaPayAlias, dispatch]);
 
+  const toggleLanguage = useCallback(() => {
+    const next: AppLanguage = currentLanguage === 'en' ? 'ar' : 'en';
+    changeLanguage(next);
+    saveLanguage(next).catch(() => {});
+  }, [currentLanguage, saveLanguage]);
+
   const handleAddPhoto = useCallback(() => {
     Alert.alert(t('profileSetup.addPhotoTitle'), t('profileSetup.addPhotoMessage'), [
       {
@@ -84,6 +95,11 @@ function ProfileSetupScreen({ navigation }: Props) {
   return (
     <SafeScreen style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+        <TouchableOpacity style={styles.langToggle} onPress={toggleLanguage} hitSlop={12}>
+          <Text style={[typography.labelMedium, styles.langToggleText]}>
+            {currentLanguage === 'en' ? 'العربية' : 'English'}
+          </Text>
+        </TouchableOpacity>
         <Text style={styles.title}>{t('profileSetup.title')}</Text>
         <Text style={styles.subtitle}>{t('profileSetup.subtitle')}</Text>
 
@@ -129,6 +145,8 @@ export default memo(ProfileSetupScreen);
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   scroll: { padding: 24, paddingTop: 32 },
+  langToggle: { alignSelf: 'flex-end', marginBottom: 16, paddingVertical: 4, paddingHorizontal: 8 },
+  langToggleText: { color: Colors.primary },
   title: { fontSize: 26, fontWeight: '700', color: Colors.text, marginBottom: 8 },
   subtitle: { fontSize: 15, color: Colors.textSecondary, marginBottom: 32, lineHeight: 22 },
   avatarSection: { alignItems: 'center', marginBottom: 32, gap: 10 },

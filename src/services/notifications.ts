@@ -126,4 +126,12 @@ export function clearAppBadge(): void {
   const badge = NativeModules.AppBadgeModule as { clear?: () => Promise<boolean> } | undefined;
   if (!badge?.clear) return;
   badge.clear().catch(() => {});
+  // Reset the server count so the next push starts at 1 again.
+  try {
+    const { store } = require('../store') as typeof import('../store');
+    const { usersApi } = require('../store/api/usersApi') as typeof import('../store/api/usersApi');
+    store.dispatch(usersApi.endpoints.clearUnreadBadge.initiate());
+  } catch {
+    /* store not ready */
+  }
 }

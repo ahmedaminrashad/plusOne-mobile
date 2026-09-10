@@ -1,5 +1,5 @@
 import React, { memo, useMemo } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Group } from '../../types/models';
 import Avatar from '../common/Avatar';
@@ -7,6 +7,8 @@ import { PeopleIcon } from '../icons';
 import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
+import { resolveAssetUrl } from '../../utils/format';
+import { downsampledSource } from '../../utils/remoteImage';
 
 const VISIBLE_AVATARS = 3;
 
@@ -25,12 +27,17 @@ function GroupCard({ group, onPress }: Props) {
   const memberCount = group.memberCount ?? activeMembers.length;
   const visibleMembers = activeMembers.slice(0, VISIBLE_AVATARS);
   const overflowCount = Math.max(0, memberCount - visibleMembers.length);
+  const avatarUrl = resolveAssetUrl(group.avatarUrl);
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.75}>
       <View style={styles.row}>
         <View style={styles.groupIconWrap}>
-          <PeopleIcon size={22} color={Colors.primary} />
+          {avatarUrl ? (
+            <Image source={downsampledSource(avatarUrl, 48)} resizeMethod="resize" style={styles.groupIconImage} />
+          ) : (
+            <PeopleIcon size={22} color={Colors.primary} />
+          )}
         </View>
         <View style={styles.mainCol}>
           <Text style={[typography.labelLarge, styles.cardName]} numberOfLines={1}>
@@ -83,7 +90,9 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.tint,
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'hidden',
   },
+  groupIconImage: { width: 48, height: 48 },
   mainCol: { flex: 1, gap: 6 },
   cardName: { color: Colors.text },
   membersRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },

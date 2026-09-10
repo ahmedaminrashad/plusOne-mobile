@@ -24,7 +24,7 @@ import { isChatGroupActive } from '../services/activeChat';
 import { extractInstaPayIdentifierFromSharedText } from '../utils/instapay';
 import { TabParamList } from '../types/navigation';
 import { baseApi } from '../store/api/baseApi';
-import i18n, { AppLanguage } from '../i18n';
+import i18n, { resolveAppLanguage } from '../i18n';
 import { whenStableForeground } from '../utils/whenForeground';
 
 function asDataRecord(data: Record<string, unknown> | undefined | null): Record<string, string> {
@@ -321,7 +321,7 @@ export default function RootNavigator() {
 
   useEffect(() => {
     if (!isAuthenticated) return;
-    const lang = (i18n.language === 'ar' ? 'ar' : 'en') as AppLanguage;
+    const lang = resolveAppLanguage(i18n.language);
     saveLanguage(lang).catch(() => {});
   }, [isAuthenticated, saveLanguage]);
 

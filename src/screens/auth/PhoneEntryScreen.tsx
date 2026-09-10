@@ -20,7 +20,7 @@ import { useTypography } from '../../hooks/useTypography';
 import { isValidPhone, formatPhone } from '../../utils/validation';
 import { sendFirebaseSms } from '../../services/firebasePhoneAuth';
 import { useSendOtpMutation } from '../../store/api/authApi';
-import { changeLanguage, AppLanguage } from '../../i18n';
+import { changeLanguage, resolveAppLanguage } from '../../i18n';
 import { resolveErrorMessage } from '../../utils/errors';
 
 type Props = AuthScreenProps<'PhoneEntry'>;
@@ -36,7 +36,7 @@ function PhoneEntryScreen({ navigation }: Props) {
   const [sendOtp, { isLoading: isSendingBackend }] = useSendOtpMutation();
   const [isSendingFirebase, setIsSendingFirebase] = useState(false);
   const isLoading = isSendingBackend || isSendingFirebase;
-  const currentLanguage = (i18n.language === 'ar' ? 'ar' : 'en') as AppLanguage;
+  const currentLanguage = resolveAppLanguage(i18n.language);
 
   const toggleLanguage = useCallback(() => {
     changeLanguage(currentLanguage === 'en' ? 'ar' : 'en');

@@ -40,6 +40,8 @@ interface ReceiptItem {
 const getMemberId = (m: GroupMember) => m.userId ?? m.id;
 const getMemberName = (m: GroupMember) =>
   m.user?.displayName ?? m.pendingPhone ?? i18n.t('billing:receiptSplit.defaultMemberName');
+const isMemberClaimed = (claimedBy: string[], m: GroupMember) =>
+  claimedBy.includes(m.id) || (!!m.userId && claimedBy.includes(m.userId));
 
 function MemberChip({ member, selected, onToggle }: { member: GroupMember; selected: boolean; onToggle: () => void }) {
   const typography = useTypography();
@@ -89,7 +91,7 @@ function ItemRow({
               <MemberChip
                 key={m.id}
                 member={m}
-                selected={item.claimedBy.includes(getMemberId(m))}
+                selected={isMemberClaimed(item.claimedBy, m)}
                 onToggle={() => onToggle(item.id, getMemberId(m))}
               />
             ))}
@@ -213,16 +215,19 @@ function AssignItemsScreen({ route, navigation }: Props) {
   const assignedTotal = roundMoney(subtotal - unassignedTotal);
 
   const toggleClaim = useCallback((itemId: string, memberId: string) => {
+    const member = activeMembers.find((m) => getMemberId(m) === memberId || m.id === memberId);
+    const aliases = [memberId, member?.id, member?.userId].filter((id): id is string => !!id);
     setItems((prev) =>
       prev.map((item) => {
         if (item.id !== itemId) return item;
-        const claimedBy = item.claimedBy.includes(memberId)
-          ? item.claimedBy.filter((id) => id !== memberId)
-          : [...item.claimedBy, memberId];
+        const selected = aliases.some((id) => item.claimedBy.includes(id));
+        const claimedBy = selected
+          ? item.claimedBy.filter((id) => !aliases.includes(id))
+          : [...item.claimedBy, member ? getMemberId(member) : memberId];
         return { ...item, claimedBy };
       }),
     );
-  }, []);
+  }, [activeMembers]);
 
   const payerName =
     activeMembers.find((m) => getMemberId(m) === paidByUserId)?.user?.displayName ??
@@ -262,7 +267,12 @@ function AssignItemsScreen({ route, navigation }: Props) {
         captureMethod: receipt.captureMethod ?? 'manual',
         sourceRef: receipt.sourceRef,
         receiptPhotoUrl: receipt.receiptPhotoUrl,
-        lineItems: items.map((it) => ({ name: it.name, qty: it.qty, unitPrice: roundMoney(it.price) })),
+        lineItems: items.map((it) => ({
+          name: it.name,
+          qty: it.qty,
+          unitPrice: roundMoney(it.price),
+          claimedBy: it.claimedBy,
+        })),
         tax: receipt.tax,
         taxType: receipt.taxType,
         delivery: receipt.delivery,

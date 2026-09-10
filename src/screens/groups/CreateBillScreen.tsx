@@ -95,9 +95,7 @@ function CreateBillScreen({ route, navigation }: Props) {
   const [deliveryType, setDeliveryType] = useState<TaxServiceType>(prefilledData?.deliveryType ?? 'percent');
   const [vatValue, setVatValue] = useState(prefilledData?.vat != null ? formatMoneyDigits(prefilledData.vat) : '');
   const [vatType, setVatType] = useState<TaxServiceType>(prefilledData?.vatType ?? 'percent');
-  const [grandTotalOverride, setGrandTotalOverride] = useState(
-    prefilledData?.grandTotal != null ? formatMoneyDigits(prefilledData.grandTotal) : '',
-  );
+  const [grandTotalOverride, setGrandTotalOverride] = useState('');
   const [paidByUserId, setPaidByUserId] = useState('');
   const [payerPickerVisible, setPayerPickerVisible] = useState(false);
   const [isLumpSum, setIsLumpSum] = useState(false);
