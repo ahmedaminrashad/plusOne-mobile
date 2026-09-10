@@ -25,7 +25,7 @@ export type AppStackParamList = {
   QRScanner: { groupId?: string; groupName?: string };
   OCRCapture: { groupId?: string; groupName?: string };
   AssignItems: { groupId: string; groupName: string; receiptJson: string };
-  BillStatus: { groupId: string; groupName: string; billId: string };
+  BillStatus: { groupId: string; groupName: string; billId: string; highlightShareId?: string };
   PayShare: { groupId: string; groupName: string; billId: string };
   EditBillItems: { groupId: string; groupName: string; billId: string };
   AllGroups: undefined;

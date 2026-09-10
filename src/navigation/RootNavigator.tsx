@@ -79,9 +79,10 @@ export default function RootNavigator() {
     };
   }, [dispatch]);
 
-  // Session restore only — waiting on getMe remounts Auth after OTP and looks like a reload.
+  // Wait until profile is done. Firing getMe right after OTP can 401 and remount
+  // Auth on PhoneEntry before the user ever sees ProfileSetup.
   useGetMeQuery(undefined, {
-    skip: !tokensRestored || !isAuthenticated,
+    skip: !tokensRestored || !isAuthenticated || !isProfileComplete,
   });
   const loading = !tokensRestored;
   const showApp = isAuthenticated && isProfileComplete;
@@ -90,7 +91,7 @@ export default function RootNavigator() {
   // Register FCM token when authenticated. iOS often vends the token after
   // APNs arrives, so also persist refreshes.
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated || !isProfileComplete) return;
     let unsub: (() => void) | undefined;
     const stopWait = whenStableForeground(() => {
       (async () => {
@@ -107,7 +108,7 @@ export default function RootNavigator() {
       stopWait();
       unsub?.();
     };
-  }, [isAuthenticated, saveFcmToken]);
+  }, [isAuthenticated, isProfileComplete, saveFcmToken]);
 
   // Reset the Home stack onto the target screen so cold-start taps can't land
   // on the group list when nested navigate races the AppStack mount.
@@ -181,6 +182,7 @@ export default function RootNavigator() {
         });
       } else if (
         (data.type === 'share_initiated' ||
+          data.type === 'share_awaiting_confirmation' ||
           data.type === 'share_settled' ||
           data.type === 'share_stale_nudge') &&
         data.groupId &&
@@ -190,6 +192,7 @@ export default function RootNavigator() {
           groupId: data.groupId,
           groupName: data.groupName ?? '',
           billId: data.billId,
+          highlightShareId: data.shareId,
         });
       } else if (data.type === 'share_removed' && data.groupId) {
         openNestedHomeScreen('GroupDetail', {
@@ -251,6 +254,7 @@ export default function RootNavigator() {
       } else if (
         payload.type === 'share_assigned' ||
         payload.type === 'share_initiated' ||
+        payload.type === 'share_awaiting_confirmation' ||
         payload.type === 'share_settled' ||
         payload.type === 'share_reminder' ||
         payload.type === 'share_updated' ||
@@ -320,10 +324,10 @@ export default function RootNavigator() {
   }, [showApp, navReady]);
 
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated || !isProfileComplete) return;
     const lang = resolveAppLanguage(i18n.language);
     saveLanguage(lang).catch(() => {});
-  }, [isAuthenticated, saveLanguage]);
+  }, [isAuthenticated, isProfileComplete, saveLanguage]);
 
   useEffect(() => {
     if (!isAuthenticated) return;

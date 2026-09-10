@@ -8,17 +8,26 @@ import OTPVerificationScreen from '../screens/auth/OTPVerificationScreen';
 import ProfileSetupScreen from '../screens/profile/ProfileSetupScreen';
 import { Colors } from '../constants/colors';
 import { AppStorage } from '../utils/storage';
+import { useAppSelector } from '../hooks/useAppDispatch';
 
 const Stack = createNativeStackNavigator<AuthStackParamList>();
 
 export default function AuthStack() {
+  const { isAuthenticated, isProfileComplete } = useAppSelector((s) => s.auth);
   const [initialRouteName, setInitialRouteName] = useState<keyof AuthStackParamList | null>(null);
 
+  // initialRouteName is only applied on first mount. If Auth remounts after OTP
+  // (401 / tree swap), resume ProfileSetup instead of wiping back to PhoneEntry.
   useEffect(() => {
+    if (initialRouteName) return;
+    if (isAuthenticated && !isProfileComplete) {
+      setInitialRouteName('ProfileSetup');
+      return;
+    }
     AppStorage.hasSeenOnboarding().then((seen) => {
-      setInitialRouteName(seen ? 'PhoneEntry' : 'Onboarding');
+      setInitialRouteName((current) => current ?? (seen ? 'PhoneEntry' : 'Onboarding'));
     });
-  }, []);
+  }, [initialRouteName, isAuthenticated, isProfileComplete]);
 
   if (!initialRouteName) {
     return (
