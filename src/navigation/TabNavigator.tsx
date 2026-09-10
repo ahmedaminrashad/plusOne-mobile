@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { createBottomTabNavigator, BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { StackActions } from '@react-navigation/native';
 import { TabParamList } from '../types/navigation';
 import AppStack from './AppStack';
 import SettingsStack from './SettingsStack';
@@ -44,9 +45,29 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   }, [menuOpen, fabRotate]);
 
   const handleHomePress = useCallback(() => {
-    // Reset the Home stack so GroupDetail/Chat unmount instead of sitting
-    // under Home and re-decoding photos on the next open.
-    navigation.navigate('Home', { screen: 'Home', initial: true } as any);
+    // Pop the Home stack back to the root. `initial: true` rebuilds the native
+    // stack and crashes iOS if PayShare / GroupDetail just updated (e.g. after
+    // "I paid cash"). popToTop still unmounts Chat/PayShare for memory.
+    const tabState = navigation.getState();
+    const onHomeTab = tabState.routes[tabState.index]?.name === 'Home';
+    const homeRoute = tabState.routes.find((r) => r.name === 'Home');
+    const nested = homeRoute?.state;
+    const nestedKey = nested && 'key' in nested ? nested.key : undefined;
+    const nestedIndex = typeof nested?.index === 'number' ? nested.index : 0;
+
+    if (!onHomeTab) {
+      navigation.navigate('Home');
+    }
+
+    if (nestedKey && nestedIndex > 0) {
+      navigation.dispatch({
+        ...StackActions.popToTop(),
+        target: nestedKey,
+      });
+      return;
+    }
+
+    navigation.navigate('Home', { screen: 'Home', pop: true } as any);
   }, [navigation]);
 
   const handleProfilePress = useCallback(() => navigation.navigate('SettingsTab'), [navigation]);
