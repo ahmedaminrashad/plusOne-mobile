@@ -71,6 +71,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
   }
 
   func application(
+    _ application: UIApplication,
+    didReceiveRemoteNotification userInfo: [AnyHashable: Any],
+    fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void
+  ) {
+    if Auth.auth().canHandleNotification(userInfo) {
+      completionHandler(.noData)
+      return
+    }
+    #if canImport(FirebaseMessaging)
+    Messaging.messaging().appDidReceiveMessage(userInfo)
+    #endif
+    completionHandler(.newData)
+  }
+
+  func application(
     _ app: UIApplication,
     open url: URL,
     options: [UIApplication.OpenURLOptionsKey: Any] = [:]

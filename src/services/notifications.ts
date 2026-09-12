@@ -1,5 +1,5 @@
 import messaging, { FirebaseMessagingTypes } from '@react-native-firebase/messaging';
-import { AppState, Platform, PermissionsAndroid, NativeModules } from 'react-native';
+import { AppState, AppStateStatus, Platform, PermissionsAndroid, NativeModules } from 'react-native';
 
 function dataFromRemoteMessage(
   remoteMessage: FirebaseMessagingTypes.RemoteMessage | null | undefined,
@@ -15,11 +15,27 @@ function dataFromRemoteMessage(
   return Object.keys(out).length > 0 ? out : null;
 }
 
+function waitUntilActive(timeoutMs = 8000): Promise<boolean> {
+  if (AppState.currentState === 'active') return Promise.resolve(true);
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => {
+      sub.remove();
+      resolve(AppState.currentState === 'active');
+    }, timeoutMs);
+    const sub = AppState.addEventListener('change', (state: AppStateStatus) => {
+      if (state !== 'active') return;
+      clearTimeout(timer);
+      sub.remove();
+      resolve(true);
+    });
+  });
+}
+
 export async function requestNotificationPermission(): Promise<boolean> {
+  await waitUntilActive();
+
   if (Platform.OS === 'ios') {
-    if (AppState.currentState !== 'active') return false;
     const current = await messaging().hasPermission();
-    if (AppState.currentState !== 'active') return false;
     if (
       current === messaging.AuthorizationStatus.AUTHORIZED ||
       current === messaging.AuthorizationStatus.PROVISIONAL
@@ -27,8 +43,7 @@ export async function requestNotificationPermission(): Promise<boolean> {
       return true;
     }
     if (current === messaging.AuthorizationStatus.DENIED) return false;
-    // Prompting while the app switcher / Home is animating freezes SpringBoard.
-    if (AppState.currentState !== 'active') return false;
+    await waitUntilActive();
     const status = await messaging().requestPermission({
       alert: true,
       badge: true,
@@ -58,22 +73,20 @@ export async function requestNotificationPermission(): Promise<boolean> {
 
 export async function getFcmToken(): Promise<string | null> {
   try {
-    if (AppState.currentState !== 'active') return null;
+    // Recents / the permission sheet can make us `inactive`. Wait instead of
+    // aborting — aborting is why tokens never reached the server.
+    await waitUntilActive();
     if (!messaging().isDeviceRegisteredForRemoteMessages) {
       await messaging().registerDeviceForRemoteMessages();
     }
-    if (AppState.currentState !== 'active') return null;
-    // iOS: APNs token often arrives a beat after registration. getToken()
-    // throws until Messaging.APNSToken is set. 8×400ms was too short for
-    // TestFlight devices and left users.fcmToken empty.
-    const attempts = Platform.OS === 'ios' ? 20 : 8;
+    const attempts = Platform.OS === 'ios' ? 20 : 10;
     const delayMs = Platform.OS === 'ios' ? 500 : 400;
     for (let i = 0; i < attempts; i++) {
       try {
         const token = await messaging().getToken();
         if (token) return token;
       } catch {
-        // keep retrying
+        // APNs / Play Services not ready yet
       }
       await new Promise((r) => setTimeout(r, delayMs));
     }
@@ -94,8 +107,6 @@ export function onNotificationOpenedApp(handler: (data: Record<string, string>) 
   });
 }
 
-// FCM doesn't auto-show a tray notification while the app is in the foreground —
-// surface it ourselves via an alert with a "View" action that reuses the same navigation.
 export function onForegroundMessage(
   handler: (notification: { title?: string; body?: string }, data: Record<string, string>) => void,
 ) {
@@ -109,7 +120,6 @@ export async function getInitialNotification(): Promise<Record<string, string> |
   return dataFromRemoteMessage(msg);
 }
 
-/** Cold-start race: Firebase may not expose the open intent on the first tick. */
 export async function getInitialNotificationWithRetry(
   attempts = [0, 300, 800, 1600],
 ): Promise<Record<string, string> | null> {
@@ -129,7 +139,6 @@ export function clearAppBadge(): void {
   const badge = NativeModules.AppBadgeModule as { clear?: () => Promise<boolean> } | undefined;
   if (!badge?.clear) return;
   badge.clear().catch(() => {});
-  // Reset the server count so the next push starts at 1 again.
   try {
     const { store } = require('../store') as typeof import('../store');
     const { usersApi } = require('../store/api/usersApi') as typeof import('../store/api/usersApi');

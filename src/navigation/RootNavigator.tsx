@@ -88,26 +88,54 @@ export default function RootNavigator() {
   const showApp = isAuthenticated && isProfileComplete;
   showAppRef.current = showApp;
 
-  // Register FCM token when authenticated. iOS often vends the token after
-  // APNs arrives, so subscribe to refreshes before the first getToken wait.
+  // Register FCM token when the main app is up. Retry on each foreground until
+  // a token lands — the permission sheet used to abort getToken and leave
+  // users.fcmToken empty, so nothing was ever delivered.
   useEffect(() => {
     if (!isAuthenticated || !isProfileComplete) return;
     let unsub: (() => void) | undefined;
     let cancelled = false;
-    const stopWait = whenStableForeground(() => {
-      (async () => {
+    let savedToken: string | null = null;
+
+    const persist = async (token: string) => {
+      if (!token || token === savedToken) return;
+      try {
+        await saveFcmToken(token).unwrap();
+        savedToken = token;
+      } catch {
+        // Keep retrying on the next foreground if the PATCH fails.
+      }
+    };
+
+    const register = async () => {
+      if (cancelled || savedToken) return;
+      if (!unsub) {
         unsub = onFcmTokenRefresh((next) => {
-          saveFcmToken(next);
+          void persist(next);
         });
-        const granted = await requestNotificationPermission();
-        if (cancelled || !granted) return;
-        const token = await getFcmToken();
-        if (!cancelled && token) await saveFcmToken(token);
-      })();
-    }, 1800);
+      }
+      const granted = await requestNotificationPermission();
+      if (cancelled) return;
+      // iOS will not vend a usable token without authorization.
+      if (Platform.OS === 'ios' && !granted) return;
+      const token = await getFcmToken();
+      if (!cancelled && token) await persist(token);
+    };
+
+    const stopWait = whenStableForeground(() => {
+      void register();
+    }, 1200);
+    const sub = AppState.addEventListener('change', (state: AppStateStatus) => {
+      if (state === 'active' && !savedToken) {
+        setTimeout(() => {
+          if (!cancelled) void register();
+        }, 400);
+      }
+    });
     return () => {
       cancelled = true;
       stopWait();
+      sub.remove();
       unsub?.();
     };
   }, [isAuthenticated, isProfileComplete, saveFcmToken]);
