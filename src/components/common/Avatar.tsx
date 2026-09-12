@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React, { memo, useEffect, useState } from 'react';
 import { View, Image, Text, StyleSheet, StyleProp, ViewStyle, ImageStyle, Platform } from 'react-native';
 import { Colors, getAvatarColor } from '../../constants/colors';
 import { useTypography } from '../../hooks/useTypography';
@@ -27,6 +27,11 @@ function initialFromName(name?: string | null): string {
 
 function Avatar({ uri, name, seed, size = 44, style, imageStyle, ghost }: Props) {
   const initials = initialFromName(name);
+  const [imageFailed, setImageFailed] = useState(false);
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [uri]);
 
   const typography = useTypography();
   const fontSize = size * 0.38;
@@ -36,6 +41,7 @@ function Avatar({ uri, name, seed, size = 44, style, imageStyle, ghost }: Props)
       width: size,
       height: size,
       borderRadius: size / 2,
+      overflow: 'hidden' as const,
       backgroundColor: ghost ? Colors.surface : getAvatarColor(seed ?? name),
     },
     ghost && styles.ghost,
@@ -56,12 +62,15 @@ function Avatar({ uri, name, seed, size = 44, style, imageStyle, ghost }: Props)
     );
   }
 
+  const showPhoto = !!uri && !imageFailed;
+
   return (
     <View style={containerStyle}>
-      {uri ? (
+      {showPhoto ? (
         <Image
           source={downsampledSource(uri, size)}
           resizeMethod="resize"
+          onError={() => setImageFailed(true)}
           style={[styles.image, { width: size, height: size, borderRadius: size / 2 } as ImageStyle, imageStyle]}
         />
       ) : (

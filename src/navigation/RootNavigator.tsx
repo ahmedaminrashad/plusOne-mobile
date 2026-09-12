@@ -19,7 +19,7 @@ import {
   onForegroundMessage,
   clearAppBadge,
 } from '../services/notifications';
-import { consumePendingSharedText, consumePendingSharedImage } from '../services/shareIntent';
+import { consumePendingSharedText, consumePendingSharedImage, stashInstaPayAlias } from '../services/shareIntent';
 import { isChatGroupActive } from '../services/activeChat';
 import { extractInstaPayIdentifierFromSharedText } from '../utils/instapay';
 import { TabParamList } from '../types/navigation';
@@ -285,18 +285,23 @@ export default function RootNavigator() {
     return unsub;
   }, [dispatch, navigateFromNotification, t]);
 
-  // When the user shares InstaPay's "Click the link to send money to..." text into
-  // PlusOne (from the InstaPay app's own Share sheet), route straight to Edit Profile
-  // with the parsed identifier pre-filled instead of making them type it in by hand.
+  // InstaPay "Share to +one" can land while the user is still on profile setup.
+  // Consume whenever the navigator is ready — not only after the main app mounts.
   useEffect(() => {
-    if (!showApp || !navReady) return;
+    if (!navReady) return;
     const checkForSharedText = () => {
       consumePendingSharedText().then((text) => {
         if (!text) return;
         const identifier = extractInstaPayIdentifierFromSharedText(text);
         if (!identifier) return;
+        stashInstaPayAlias(identifier);
         const nav = navRef.current as any;
-        nav?.navigate('SettingsTab', { screen: 'EditProfile', params: { prefillInstaPayAlias: identifier } });
+        if (!nav) return;
+        if (showAppRef.current) {
+          nav.navigate('SettingsTab', { screen: 'EditProfile', params: { prefillInstaPayAlias: identifier } });
+        } else if (nav.getCurrentRoute?.()?.name === 'ProfileSetup') {
+          nav.navigate('ProfileSetup', { prefillInstaPayAlias: identifier });
+        }
       });
     };
     checkForSharedText();
@@ -304,7 +309,7 @@ export default function RootNavigator() {
       if (state === 'active') checkForSharedText();
     });
     return () => subscription.remove();
-  }, [showApp, navReady]);
+  }, [navReady]);
 
   // Same idea, for a photo shared into PlusOne from another app (e.g. the Photos
   // app's share sheet) — send the user straight to "pick a group" so the photo can

@@ -19,6 +19,19 @@ export async function consumePendingSharedText(): Promise<string | null> {
   }
 }
 
+/** Held when InstaPay is shared before the user reaches a profile screen. */
+let stashedInstaPayAlias: string | null = null;
+
+export function stashInstaPayAlias(alias: string): void {
+  stashedInstaPayAlias = alias;
+}
+
+export function takeStashedInstaPayAlias(): string | null {
+  const value = stashedInstaPayAlias;
+  stashedInstaPayAlias = null;
+  return value;
+}
+
 // Same one-shot contract, for images shared into PlusOne (e.g. an InstaPay payment
 // screenshot) — native side already copied the file somewhere stable, so the returned
 // URI stays valid after this call, unlike the ephemeral content:// URI it started as.

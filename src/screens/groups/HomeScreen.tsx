@@ -122,7 +122,13 @@ function HomeScreen({ navigation }: Props) {
         <View>
           <View style={styles.headerRow}>
             <View style={styles.headerLeft}>
-              <Avatar uri={resolveAssetUrl(me?.photoUrl)} name={me?.displayName} seed={me?.id} size={40} />
+              <Avatar
+                uri={resolveAssetUrl(me?.photoUrl)}
+                name={me?.displayName}
+                seed={me?.id}
+                size={40}
+                style={styles.headerAvatar}
+              />
               <Text style={[typography.labelLarge, styles.headerGreeting]} numberOfLines={2}>{greeting}</Text>
             </View>
             <TouchableOpacity
@@ -212,13 +218,15 @@ const styles = StyleSheet.create({
   // ── Header — plain canvas, no banner ──
   headerRow: {
     flexDirection: 'row',
+    direction: 'ltr',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingTop: 12,
     marginBottom: 12,
   },
-  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flexShrink: 1 },
+  headerLeft: { flexDirection: 'row', direction: 'ltr', alignItems: 'center', gap: 10, flexShrink: 1 },
+  headerAvatar: { flexShrink: 0 },
   headerGreeting: { color: Colors.textSecondary, flexShrink: 1 },
   headerIconBtn: {
     width: 38, height: 38, borderRadius: 14,
