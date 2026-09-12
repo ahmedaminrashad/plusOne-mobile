@@ -64,15 +64,18 @@ export async function getFcmToken(): Promise<string | null> {
     }
     if (AppState.currentState !== 'active') return null;
     // iOS: APNs token often arrives a beat after registration. getToken()
-    // throws until Messaging.APNSToken is set.
-    for (let i = 0; i < 8; i++) {
+    // throws until Messaging.APNSToken is set. 8×400ms was too short for
+    // TestFlight devices and left users.fcmToken empty.
+    const attempts = Platform.OS === 'ios' ? 20 : 8;
+    const delayMs = Platform.OS === 'ios' ? 500 : 400;
+    for (let i = 0; i < attempts; i++) {
       try {
         const token = await messaging().getToken();
         if (token) return token;
       } catch {
         // keep retrying
       }
-      await new Promise((r) => setTimeout(r, 400));
+      await new Promise((r) => setTimeout(r, delayMs));
     }
     return null;
   } catch {

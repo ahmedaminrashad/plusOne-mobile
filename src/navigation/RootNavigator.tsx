@@ -89,22 +89,24 @@ export default function RootNavigator() {
   showAppRef.current = showApp;
 
   // Register FCM token when authenticated. iOS often vends the token after
-  // APNs arrives, so also persist refreshes.
+  // APNs arrives, so subscribe to refreshes before the first getToken wait.
   useEffect(() => {
     if (!isAuthenticated || !isProfileComplete) return;
     let unsub: (() => void) | undefined;
+    let cancelled = false;
     const stopWait = whenStableForeground(() => {
       (async () => {
-        const granted = await requestNotificationPermission();
-        if (!granted) return;
-        const token = await getFcmToken();
-        if (token) await saveFcmToken(token);
         unsub = onFcmTokenRefresh((next) => {
           saveFcmToken(next);
         });
+        const granted = await requestNotificationPermission();
+        if (cancelled || !granted) return;
+        const token = await getFcmToken();
+        if (!cancelled && token) await saveFcmToken(token);
       })();
     }, 1800);
     return () => {
+      cancelled = true;
       stopWait();
       unsub?.();
     };
