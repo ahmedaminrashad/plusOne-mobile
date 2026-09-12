@@ -48,6 +48,7 @@ function GroupCard({ group, onPress }: Props) {
               {visibleMembers.map((m, i) => (
                 <Avatar
                   key={m.id}
+                  uri={resolveAssetUrl(m.user?.photoUrl)}
                   name={m.user?.displayName ?? m.pendingPhone ?? t('groupDetail.defaultUserName')}
                   seed={m.userId ?? m.id}
                   size={24}
