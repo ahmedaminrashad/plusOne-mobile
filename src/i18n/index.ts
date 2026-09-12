@@ -21,6 +21,11 @@ export type AppLanguage = 'ar' | 'en';
 
 export const DEFAULT_LANGUAGE: AppLanguage = 'en';
 
+/** Anything that isn't explicitly Arabic is English. */
+export function resolveAppLanguage(lng?: string | null): AppLanguage {
+  return lng?.toLowerCase().startsWith('ar') ? 'ar' : 'en';
+}
+
 i18n.use(initReactI18next).init({
   compatibilityJSON: 'v4',
   lng: DEFAULT_LANGUAGE,

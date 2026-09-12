@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect, memo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef, memo } from 'react';
 import {
   View,
   Text,
@@ -47,6 +47,8 @@ function parseNum(s: string): number {
 const getMemberId = (m: GroupMember) => m.userId ?? m.id;
 const getMemberName = (m: GroupMember) =>
   m.user?.displayName ?? m.pendingPhone ?? i18n.t('billing:receiptSplit.defaultMemberName');
+const isMemberClaimed = (claimedBy: string[], m: GroupMember) =>
+  claimedBy.includes(m.id) || (!!m.userId && claimedBy.includes(m.userId));
 
 function AmountTypeToggle({
   value,
@@ -138,7 +140,7 @@ function ItemRow({
           <MemberChip
             key={m.id}
             member={m}
-            selected={item.claimedBy.includes(getMemberId(m))}
+            selected={isMemberClaimed(item.claimedBy, m)}
             onToggle={() => onToggle(item.id, getMemberId(m))}
           />
         ))}
@@ -169,7 +171,7 @@ function EditBillItemsScreen({ route, navigation }: Props) {
   const [updateBillItems, { isLoading: isSaving }] = useUpdateBillItemsMutation();
 
   const [items, setItems] = useState<EditableItem[]>([]);
-  const [hydrated, setHydrated] = useState(false);
+  const hydratedStamp = useRef<string | null>(null);
   const [newItemName, setNewItemName] = useState('');
   const [newItemQty, setNewItemQty] = useState('1');
   const [newItemPrice, setNewItemPrice] = useState('');
@@ -187,24 +189,49 @@ function EditBillItemsScreen({ route, navigation }: Props) {
   );
 
   useEffect(() => {
-    if (!bill || hydrated) return;
-    setItems(
-      (bill.lineItems ?? []).map((it, idx) => ({
-        id: String(idx),
-        name: it.name,
-        price: formatMoneyDigits(it.unitPrice),
-        qty: Number(it.qty),
-        claimedBy: it.claimedBy ?? [],
-      })),
-    );
-    setTaxValue(bill.tax != null ? formatMoneyDigits(bill.tax) : '');
-    setTaxType(bill.taxType ?? 'percent');
-    setDeliveryValue(bill.delivery != null ? formatMoneyDigits(bill.delivery) : '');
-    setDeliveryType(bill.deliveryType ?? 'percent');
-    setVatValue(bill.vat != null ? formatMoneyDigits(bill.vat) : '');
-    setVatType(bill.vatType ?? 'percent');
-    setHydrated(true);
-  }, [bill, hydrated]);
+    if (!bill) return;
+    const stamp = `${bill.id}:${bill.updatedAt}`;
+    const mapClaim = (ids: string[]) => {
+      const memberById = new Map<string, string>();
+      for (const m of activeMembers) {
+        const canonical = getMemberId(m);
+        memberById.set(m.id, canonical);
+        if (m.userId) memberById.set(m.userId, canonical);
+      }
+      return ids.map((id) => memberById.get(id) ?? id);
+    };
+
+    if (hydratedStamp.current !== stamp) {
+      hydratedStamp.current = stamp;
+      setItems(
+        (bill.lineItems ?? []).map((it, idx) => ({
+          id: String(idx),
+          name: it.name,
+          price: formatMoneyDigits(it.unitPrice),
+          qty: Number(it.qty),
+          claimedBy: mapClaim(it.claimedBy ?? []),
+        })),
+      );
+      setTaxValue(bill.tax != null ? formatMoneyDigits(bill.tax) : '');
+      setTaxType(bill.taxType ?? 'percent');
+      setDeliveryValue(bill.delivery != null ? formatMoneyDigits(bill.delivery) : '');
+      setDeliveryType(bill.deliveryType ?? 'percent');
+      setVatValue(bill.vat != null ? formatMoneyDigits(bill.vat) : '');
+      setVatType(bill.vatType ?? 'percent');
+      return;
+    }
+
+    if (!activeMembers.length) return;
+    setItems((prev) => {
+      let changed = false;
+      const next = prev.map((item) => {
+        const claimedBy = mapClaim(item.claimedBy);
+        if (claimedBy.some((id, i) => id !== item.claimedBy[i])) changed = true;
+        return changed ? { ...item, claimedBy } : item;
+      });
+      return changed ? next : prev;
+    });
+  }, [bill, activeMembers]);
 
   const subtotal = useMemo(
     () => roundMoney(items.reduce((sum, it) => sum + parseNum(it.price) * it.qty, 0)),
@@ -282,16 +309,19 @@ function EditBillItemsScreen({ route, navigation }: Props) {
   }, []);
 
   const toggleClaim = useCallback((itemId: string, memberId: string) => {
+    const member = activeMembers.find((m) => getMemberId(m) === memberId || m.id === memberId);
+    const aliases = [memberId, member?.id, member?.userId].filter((id): id is string => !!id);
     setItems((prev) =>
       prev.map((item) => {
         if (item.id !== itemId) return item;
-        const claimedBy = item.claimedBy.includes(memberId)
-          ? item.claimedBy.filter((id) => id !== memberId)
-          : [...item.claimedBy, memberId];
+        const selected = aliases.some((id) => item.claimedBy.includes(id));
+        const claimedBy = selected
+          ? item.claimedBy.filter((id) => !aliases.includes(id))
+          : [...item.claimedBy, member ? getMemberId(member) : memberId];
         return { ...item, claimedBy };
       }),
     );
-  }, []);
+  }, [activeMembers]);
 
   const doSave = useCallback(async () => {
     if (!bill) return;

@@ -24,7 +24,7 @@ import { isChatGroupActive } from '../services/activeChat';
 import { extractInstaPayIdentifierFromSharedText } from '../utils/instapay';
 import { TabParamList } from '../types/navigation';
 import { baseApi } from '../store/api/baseApi';
-import i18n, { AppLanguage } from '../i18n';
+import i18n, { resolveAppLanguage } from '../i18n';
 import { whenStableForeground } from '../utils/whenForeground';
 
 function asDataRecord(data: Record<string, unknown> | undefined | null): Record<string, string> {
@@ -57,7 +57,7 @@ export default function RootNavigator() {
 
     const load = async () => {
       if (cancelled || loaded || AppState.currentState !== 'active') return;
-      const tokens = await SecureStorage.getTokens();
+      const tokens = await SecureStorage.restoreForThisInstall();
       if (cancelled) return;
       if (AppState.currentState !== 'active' && !tokens) return;
       loaded = true;
@@ -79,9 +79,10 @@ export default function RootNavigator() {
     };
   }, [dispatch]);
 
-  // Session restore only — waiting on getMe remounts Auth after OTP and looks like a reload.
+  // Wait until profile is done. Firing getMe right after OTP can 401 and remount
+  // Auth on PhoneEntry before the user ever sees ProfileSetup.
   useGetMeQuery(undefined, {
-    skip: !tokensRestored || !isAuthenticated,
+    skip: !tokensRestored || !isAuthenticated || !isProfileComplete,
   });
   const loading = !tokensRestored;
   const showApp = isAuthenticated && isProfileComplete;
@@ -90,7 +91,7 @@ export default function RootNavigator() {
   // Register FCM token when authenticated. iOS often vends the token after
   // APNs arrives, so also persist refreshes.
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated || !isProfileComplete) return;
     let unsub: (() => void) | undefined;
     const stopWait = whenStableForeground(() => {
       (async () => {
@@ -107,7 +108,7 @@ export default function RootNavigator() {
       stopWait();
       unsub?.();
     };
-  }, [isAuthenticated, saveFcmToken]);
+  }, [isAuthenticated, isProfileComplete, saveFcmToken]);
 
   // Reset the Home stack onto the target screen so cold-start taps can't land
   // on the group list when nested navigate races the AppStack mount.
@@ -181,6 +182,7 @@ export default function RootNavigator() {
         });
       } else if (
         (data.type === 'share_initiated' ||
+          data.type === 'share_awaiting_confirmation' ||
           data.type === 'share_settled' ||
           data.type === 'share_stale_nudge') &&
         data.groupId &&
@@ -190,6 +192,7 @@ export default function RootNavigator() {
           groupId: data.groupId,
           groupName: data.groupName ?? '',
           billId: data.billId,
+          highlightShareId: data.shareId,
         });
       } else if (data.type === 'share_removed' && data.groupId) {
         openNestedHomeScreen('GroupDetail', {
@@ -240,30 +243,25 @@ export default function RootNavigator() {
   useEffect(() => {
     const unsub = onForegroundMessage((notification, data) => {
       const payload = asDataRecord(data);
-      // Keep group/member caches fresh across devices without requiring an app restart.
-      if (
-        payload.type === 'member_joined' ||
-        payload.type === 'invitation' ||
-        payload.type === 'chat_message' ||
+      // Narrow invalidation — a full-tag wipe re-decoded every chat photo
+      // on the next Home → Chat open and jetsam-killed the phone.
+      if (payload.type === 'chat_message') {
+        if (!(payload.groupId && isChatGroupActive(payload.groupId))) {
+          dispatch(baseApi.util.invalidateTags(['Message']));
+        }
+      } else if (payload.type === 'invitation' || payload.type === 'member_joined') {
+        dispatch(baseApi.util.invalidateTags(['Invitation', 'GroupMember', 'Group']));
+      } else if (
         payload.type === 'share_assigned' ||
         payload.type === 'share_initiated' ||
+        payload.type === 'share_awaiting_confirmation' ||
         payload.type === 'share_settled' ||
         payload.type === 'share_reminder' ||
         payload.type === 'share_updated' ||
         payload.type === 'share_removed' ||
         payload.type === 'share_stale_nudge'
       ) {
-        dispatch(
-          baseApi.util.invalidateTags([
-            'Group',
-            'GroupMember',
-            'Invitation',
-            'Message',
-            'Bill',
-            'Share',
-            'Ledger',
-          ]),
-        );
+        dispatch(baseApi.util.invalidateTags(['Share', 'Ledger', 'Bill']));
       }
 
       // The chat itself already reflects new messages via polling — don't also
@@ -331,10 +329,10 @@ export default function RootNavigator() {
   }, [showApp, navReady]);
 
   useEffect(() => {
-    if (!isAuthenticated) return;
-    const lang = (i18n.language === 'ar' ? 'ar' : 'en') as AppLanguage;
+    if (!isAuthenticated || !isProfileComplete) return;
+    const lang = resolveAppLanguage(i18n.language);
     saveLanguage(lang).catch(() => {});
-  }, [isAuthenticated, saveLanguage]);
+  }, [isAuthenticated, isProfileComplete, saveLanguage]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -357,9 +355,9 @@ export default function RootNavigator() {
         const now = Date.now();
         if (now - lastInvalidate < 60_000) return;
         lastInvalidate = now;
-        // Only the home badges — a full-tag invalidate reloaded ~650MB and
-        // jetsam-killed backboardd when leaving the app (no App Store crash).
-        dispatch(baseApi.util.invalidateTags(['Group', 'Share', 'Invitation', 'Ledger']));
+        // Ledger + invite badge only. Reloading Group/Share here re-decoded
+        // every list photo and jetsam-killed backboardd on iPhone 11.
+        dispatch(baseApi.util.invalidateTags(['Invitation', 'Ledger']));
       }, 2500);
     });
     return () => {

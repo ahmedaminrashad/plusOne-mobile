@@ -68,7 +68,9 @@ function NotificationsScreen({ navigation }: Props) {
   const approvals = useMemo(
     () =>
       (shares ?? []).filter(
-        (s) => s.status === 'initiated' && s.initiatorUserId === me?.id,
+        (s) =>
+          (s.status === 'initiated' || s.status === 'pending_confirmation') &&
+          s.initiatorUserId === me?.id,
       ),
     [shares, me?.id],
   );
@@ -161,6 +163,7 @@ function NotificationsScreen({ navigation }: Props) {
                       groupId: share.groupId,
                       groupName: share.group?.name ?? '',
                       billId: share.billId,
+                      highlightShareId: share.id,
                     })
                   }
                   activeOpacity={0.7}>

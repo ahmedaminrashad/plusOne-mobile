@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import SafeScreen from '../../components/common/SafeScreen';
 import { useTranslation } from 'react-i18next';
+import { useFocusEffect } from '@react-navigation/native';
 import { AppScreenProps } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/radius';
@@ -55,8 +56,9 @@ function ShareRow({
   const name = share.owner?.displayName ?? share.ownerPendingPhone ?? t('viewReceipt.defaultUserName');
   const isNonApp = isGhostShare(share);
   const unsettled = share.status !== 'settled' && share.status !== 'cancelled';
-  const showPayLink = isPayer && isNonApp && unsettled;
-  const payLinkSent = share.status === 'link_sent' || share.status === 'link_opened' || share.status === 'pending_confirmation';
+  const needsConfirm = !!showMarkReceived;
+  const showPayLink = isPayer && isNonApp && unsettled && !needsConfirm;
+  const payLinkSent = share.status === 'link_sent' || share.status === 'link_opened';
 
   let subtitle = '';
   let badgeStyle: ViewStyle = styles.badgePending;
@@ -92,46 +94,43 @@ function ShareRow({
   }
 
   return (
-    <View style={styles.shareRow}>
-      <Avatar
-        uri={resolveAssetUrl(share.owner?.photoUrl)}
-        name={name}
-        size={28}
-        ghost={isNonApp}
-      />
-      <View style={styles.shareInfo}>
-        <View style={styles.shareNameRow}>
-          <Text style={[typography.labelLarge, styles.shareName]} numberOfLines={1}>{name}</Text>
+    <View style={[styles.shareRowWrap, needsConfirm && styles.shareRowAwaiting]}>
+      <View style={styles.shareRow}>
+        <Avatar
+          uri={resolveAssetUrl(share.owner?.photoUrl)}
+          name={name}
+          size={28}
+          ghost={isNonApp}
+        />
+        <View style={styles.shareInfo}>
+          <View style={styles.shareNameRow}>
+            <Text style={[typography.labelLarge, styles.shareName]} numberOfLines={1}>{name}</Text>
+          </View>
+          {!!subtitle && <Text style={[typography.bodySmall, styles.shareSubtitle]}>{subtitle}</Text>}
+          {showPayLink && (
+            <TouchableOpacity
+              style={styles.payLinkBtn}
+              onPress={onSendPayLink}
+              disabled={sendingPayLink}
+              activeOpacity={0.8}>
+              <Text style={[typography.labelSmall, styles.payLinkBtnText]}>
+                {sendingPayLink
+                  ? '…'
+                  : payLinkSent
+                    ? t('billStatus.resendPayLink')
+                    : t('billStatus.sendPayLink')}
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
-        {!!subtitle && <Text style={[typography.bodySmall, styles.shareSubtitle]}>{subtitle}</Text>}
-        {showPayLink && (
-          <TouchableOpacity
-            style={styles.payLinkBtn}
-            onPress={onSendPayLink}
-            disabled={sendingPayLink}
-            activeOpacity={0.8}>
-            <Text style={[typography.labelSmall, styles.payLinkBtnText]}>
-              {sendingPayLink
-                ? '…'
-                : payLinkSent
-                  ? t('billStatus.resendPayLink')
-                  : t('billStatus.sendPayLink')}
-            </Text>
-          </TouchableOpacity>
-        )}
+        <View style={[styles.badge, badgeStyle]}>
+          <Text style={[typography.labelSmall, badgeTextStyle]}>{badgeLabel}</Text>
+        </View>
       </View>
-      {showMarkReceived ? (
+      {needsConfirm && (
         <TouchableOpacity style={styles.rowMarkBtn} onPress={onMarkReceived} activeOpacity={0.8}>
           <Text style={[typography.labelSmall, styles.rowMarkBtnText]}>{t('billStatus.markReceivedButton')}</Text>
         </TouchableOpacity>
-      ) : !showPayLink ? (
-        <View style={[styles.badge, badgeStyle]}>
-          <Text style={[typography.labelSmall, badgeTextStyle]}>{badgeLabel}</Text>
-        </View>
-      ) : (
-        <View style={[styles.badge, badgeStyle]}>
-          <Text style={[typography.labelSmall, badgeTextStyle]}>{badgeLabel}</Text>
-        </View>
       )}
     </View>
   );
@@ -140,8 +139,14 @@ function ShareRow({
 function BillStatusScreen({ route, navigation }: Props) {
   const { t } = useTranslation('billing');
   const typography = useTypography();
-  const { groupId, groupName, billId } = route.params;
-  const { data: bill, isLoading } = useGetBillDetailQuery(billId);
+  const { groupId, groupName, billId, highlightShareId } = route.params;
+  const { data: bill, isLoading, refetch } = useGetBillDetailQuery(billId);
+
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [refetch]),
+  );
   const { data: me } = useGetMeQuery();
   const [confirmShare] = useConfirmShareMutation();
   const [remindAll, { isLoading: isReminding }] = useRemindAllPendingMutation();
@@ -193,6 +198,15 @@ function BillStatusScreen({ route, navigation }: Props) {
   const pendingShares = activeShares.filter(
     (s) => !!s.ownerUserId && (s.status === 'pending' || s.status === 'failed'),
   );
+  const awaitingConfirm = useMemo(
+    () =>
+      activeShares.filter(
+        (s) => s.status === 'initiated' || s.status === 'pending_confirmation',
+      ),
+    [activeShares],
+  );
+  const focusedAwaiting =
+    awaitingConfirm.find((s) => s.id === highlightShareId) ?? awaitingConfirm[0];
   const collected = activeShares.filter((s) => s.status === 'settled').reduce((sum, s) => sum + s.amountPiastres, 0);
   const owed = activeShares.reduce((sum, s) => sum + s.amountPiastres, 0);
   const progress = owed > 0 ? collected / owed : 0;
@@ -297,6 +311,30 @@ function BillStatusScreen({ route, navigation }: Props) {
         contentContainerStyle={styles.list}
         ListHeaderComponent={
           <View>
+            {isPayer && focusedAwaiting && (
+              <View style={styles.confirmBanner}>
+                <Text style={[typography.labelLarge, styles.confirmBannerTitle]}>
+                  {t('billStatus.confirmBannerTitle', {
+                    name:
+                      focusedAwaiting.owner?.displayName ??
+                      focusedAwaiting.ownerPendingPhone ??
+                      t('viewReceipt.defaultUserName'),
+                    amount: formatCurrency(focusedAwaiting.amountPiastres / 100, focusedAwaiting.currency),
+                  })}
+                </Text>
+                <Text style={[typography.bodySmall, styles.confirmBannerSub]}>
+                  {t('billStatus.confirmBannerSubtitle')}
+                </Text>
+                <TouchableOpacity
+                  style={styles.confirmBannerBtn}
+                  onPress={() => handleMarkReceivedOne(focusedAwaiting.id)}
+                  activeOpacity={0.8}>
+                  <Text style={[typography.labelLarge, styles.confirmBannerBtnText]}>
+                    {t('billStatus.markReceivedButton')}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
             <View style={styles.totalCard}>
               <Text style={[typography.labelMedium, styles.totalLabel]}>{t('billStatus.totalBillLabel')}</Text>
               <Text style={[typography.amountLarge, styles.totalAmount]}>{formatCurrency(Number(bill.amount), bill.currency)}</Text>
@@ -334,7 +372,27 @@ function BillStatusScreen({ route, navigation }: Props) {
         }
       />
 
-      {myShareOutstanding && (
+      {isPayer && focusedAwaiting && (
+        <View style={styles.bottomBar}>
+          <TouchableOpacity
+            style={styles.markReceivedBtn}
+            onPress={() => handleMarkReceivedOne(focusedAwaiting.id)}
+            activeOpacity={0.8}>
+            <Text style={[typography.labelLarge, styles.markReceivedText]}>
+              {awaitingConfirm.length > 1
+                ? t('billStatus.markReceivedCount', { count: awaitingConfirm.length })
+                : t('billStatus.markReceivedFrom', {
+                    name:
+                      focusedAwaiting.owner?.displayName ??
+                      focusedAwaiting.ownerPendingPhone ??
+                      t('viewReceipt.defaultUserName'),
+                  })}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {myShareOutstanding && !focusedAwaiting && (
         <View style={styles.bottomBar}>
           <TouchableOpacity style={styles.markReceivedBtn} onPress={handlePayMyShare}>
             <Text style={[typography.labelLarge, styles.markReceivedText]}>{t('viewReceipt.payButton')}</Text>
@@ -342,7 +400,7 @@ function BillStatusScreen({ route, navigation }: Props) {
         </View>
       )}
 
-      {isPayer && pendingShares.length > 0 && (
+      {isPayer && pendingShares.length > 0 && !focusedAwaiting && (
         <View style={styles.bottomBar}>
           <TouchableOpacity style={styles.remindBtn} onPress={handleRemind} disabled={isReminding}>
             <Text style={[typography.labelLarge, styles.remindBtnText]}>
@@ -409,14 +467,39 @@ const styles = StyleSheet.create({
   lineItemName: { color: Colors.text, flex: 1 },
   lineItemAmt: { color: Colors.textSecondary },
 
-  shareRow: {
-    flexDirection: 'row',
+  confirmBanner: {
+    backgroundColor: Colors.successTint,
+    borderRadius: Radius.xl,
+    padding: 16,
+    marginBottom: 16,
+    gap: 6,
+  },
+  confirmBannerTitle: { color: Colors.text },
+  confirmBannerSub: { color: Colors.textSecondary },
+  confirmBannerBtn: {
+    marginTop: 8,
+    backgroundColor: Colors.primary,
+    borderRadius: Radius.pill,
+    paddingVertical: 12,
     alignItems: 'center',
-    gap: 12,
+  },
+  confirmBannerBtnText: { color: Colors.textOnPrimary },
+
+  shareRowWrap: {
     backgroundColor: Colors.surface,
     borderRadius: Radius.xl,
     padding: 12,
     marginBottom: 8,
+    gap: 10,
+  },
+  shareRowAwaiting: {
+    borderWidth: 1.5,
+    borderColor: Colors.primary,
+  },
+  shareRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   shareInfo: { flex: 1 },
   shareNameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
@@ -434,9 +517,9 @@ const styles = StyleSheet.create({
   rowMarkBtn: {
     backgroundColor: Colors.primary,
     borderRadius: Radius.pill,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    maxWidth: 130,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    alignItems: 'center',
   },
   rowMarkBtnText: { color: Colors.textOnPrimary, textAlign: 'center' },
 

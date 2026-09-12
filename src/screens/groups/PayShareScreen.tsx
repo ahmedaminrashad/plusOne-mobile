@@ -178,7 +178,7 @@ function PayShareScreen({ route, navigation }: Props) {
     );
   }, [myShare, payerName, payShare, t]);
 
-  if (isLoading || loadingMe || !bill || !me) {
+  if ((isLoading && !bill) || (loadingMe && !me) || !bill || !me) {
     return (
       <SafeScreen style={styles.container}>
         <ActivityIndicator color={Colors.primary} style={styles.loader} />

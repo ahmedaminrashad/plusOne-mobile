@@ -33,6 +33,10 @@ export const usersApi = baseApi.injectEndpoints({
     saveLanguage: builder.mutation<void, 'ar' | 'en'>({
       query: (language) => ({ url: '/users/me/language', method: 'PATCH', body: { language } }),
     }),
+
+    clearUnreadBadge: builder.mutation<void, void>({
+      query: () => ({ url: '/users/me/badge/clear', method: 'PATCH' }),
+    }),
   }),
 });
 
@@ -42,4 +46,5 @@ export const {
   useUploadProfilePhotoMutation,
   useSaveFcmTokenMutation,
   useSaveLanguageMutation,
+  useClearUnreadBadgeMutation,
 } = usersApi;

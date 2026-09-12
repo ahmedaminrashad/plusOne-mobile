@@ -94,6 +94,7 @@ export const groupsApi = baseApi.injectEndpoints({
     getGroupMessages: builder.query<ChatMessage[], { groupId: string; limit: number }>({
       query: ({ groupId, limit }) => `/groups/${groupId}/messages?limit=${limit}`,
       providesTags: (_r, _e, { groupId }) => [{ type: 'Message', id: groupId }],
+      keepUnusedDataFor: 300,
     }),
 
     sendGroupMessage: builder.mutation<ChatMessage, { groupId: string; text?: string; imageUrl?: string }>({
@@ -102,7 +103,23 @@ export const groupsApi = baseApi.injectEndpoints({
         method: 'POST',
         body: { text, imageUrl },
       }),
-      invalidatesTags: (_r, _e, { groupId }) => [{ type: 'Message', id: groupId }],
+      async onQueryStarted({ groupId }, { dispatch, queryFulfilled, getState }) {
+        try {
+          const { data: sent } = await queryFulfilled;
+          const cachedArgs = groupsApi.util.selectCachedArgsForQuery(getState(), 'getGroupMessages');
+          for (const args of cachedArgs) {
+            if (args.groupId !== groupId) continue;
+            dispatch(
+              groupsApi.util.updateQueryData('getGroupMessages', args, (draft) => {
+                if (draft.some((m) => m.id === sent.id)) return;
+                draft.unshift(sent);
+              }),
+            );
+          }
+        } catch {
+          /* composer pending row already shows failure */
+        }
+      },
     }),
 
     uploadChatImage: builder.mutation<{ url: string }, { groupId: string; uri: string; fileName?: string; mimeType?: string }>({

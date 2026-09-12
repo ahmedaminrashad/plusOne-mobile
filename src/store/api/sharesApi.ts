@@ -24,12 +24,9 @@ export const sharesApi = baseApi.injectEndpoints({
               { type: 'Share', id: result.billId },
               'Share',
               { type: 'Bill', id: result.billId },
-              'Bill',
-              { type: 'Ledger', id: result.groupId },
               'Ledger',
-              { type: 'Message', id: result.groupId },
             ]
-          : ['Share', 'Bill', 'Ledger'],
+          : ['Share', 'Ledger'],
     }),
     cancelShareInitiation: builder.mutation<Share, string>({
       query: (shareId) => ({ url: `/shares/${shareId}/cancel-initiation`, method: 'POST' }),

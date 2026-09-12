@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { resolveAppLanguage } from '../i18n';
 
 // Layout stays right-aligned/RTL-shaped regardless of language (a deliberate scope
 // decision — see project notes), EXCEPT text input fields: typing English/numeric
@@ -6,5 +7,5 @@ import { useTranslation } from 'react-i18next';
 // inputs specifically flip to left-aligned in English.
 export function useInputTextAlign(): 'left' | 'right' {
   const { i18n } = useTranslation();
-  return i18n.language === 'en' ? 'left' : 'right';
+  return resolveAppLanguage(i18n.language) === 'en' ? 'left' : 'right';
 }

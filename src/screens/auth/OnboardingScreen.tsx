@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState, memo } from 'react';
+import React, { useCallback, useRef, useState, useMemo, useEffect, memo } from 'react';
 import {
   View,
   Text,
@@ -19,7 +19,7 @@ import { Radius } from '../../constants/radius';
 import { useTypography } from '../../hooks/useTypography';
 import { AppStorage } from '../../utils/storage';
 import { CheckIcon } from '../../components/icons';
-import { changeLanguage, AppLanguage } from '../../i18n';
+import { changeLanguage, resolveAppLanguage } from '../../i18n';
 
 type Props = AuthScreenProps<'Onboarding'>;
 
@@ -70,11 +70,13 @@ function AssignAvatar({ name, selected }: { name: string; selected: boolean }) {
         numberOfLines={1}>
         {name}
       </Text>
+      {selected ? <CheckIcon size={12} color={Colors.primary} strokeWidth={2.5} /> : null}
     </View>
   );
 }
 
 function AssignIllustration() {
+  const { t } = useTranslation('auth');
   const typography = useTypography();
   return (
     <View style={styles.illustrationCard}>
@@ -84,15 +86,15 @@ function AssignIllustration() {
         <Text style={[typography.amountMedium, styles.illustrationRowAmount]}>{DEMO_ITEMS[0][1]}</Text>
       </View>
       <Text style={[typography.labelSmall, styles.illustrationVenue, styles.illustrationSpacedTop]}>
-        Who took this one?
+        {t('onboarding.slide2Who')}
       </Text>
       <View style={styles.avatarRow}>
         <AssignAvatar name="Omar" selected />
-        <AssignAvatar name="You" selected />
+        <AssignAvatar name={t('onboarding.slide2You')} selected />
         <AssignAvatar name="Salma" selected={false} />
       </View>
       <Text style={[typography.labelSmall, styles.assignSharedCaption, styles.illustrationSpacedTop]}>
-        Shared by 2 · 70.00 each
+        {t('onboarding.slide2Shared')}
       </Text>
     </View>
   );
@@ -120,13 +122,24 @@ function OnboardingScreen({ navigation }: Props) {
   const { width } = useWindowDimensions();
   const [index, setIndex] = useState(0);
   const listRef = useRef<FlatList>(null);
-  const currentLanguage = (i18n.language === 'ar' ? 'ar' : 'en') as AppLanguage;
+  const currentLanguage = resolveAppLanguage(i18n.language);
 
-  const slides = [
-    { key: '1', Illustration: ReceiptIllustration, title: t('onboarding.slide1Title'), subtitle: t('onboarding.slide1Subtitle') },
-    { key: '2', Illustration: AssignIllustration, title: t('onboarding.slide2Title'), subtitle: t('onboarding.slide2Subtitle') },
-    { key: '3', Illustration: SettleIllustration, title: t('onboarding.slide3Title'), subtitle: t('onboarding.slide3Subtitle') },
-  ];
+  const slides = useMemo(
+    () => [
+      { key: '1', Illustration: ReceiptIllustration, title: t('onboarding.slide1Title'), subtitle: t('onboarding.slide1Subtitle') },
+      { key: '2', Illustration: AssignIllustration, title: t('onboarding.slide2Title'), subtitle: t('onboarding.slide2Subtitle') },
+      { key: '3', Illustration: SettleIllustration, title: t('onboarding.slide3Title'), subtitle: t('onboarding.slide3Subtitle') },
+    ],
+    [t, i18n.language],
+  );
+
+  const indexRef = useRef(index);
+  indexRef.current = index;
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      listRef.current?.scrollToIndex({ index: indexRef.current, animated: false });
+    });
+  }, [i18n.language]);
 
   const finishOnboarding = useCallback(async () => {
     await AppStorage.setHasSeenOnboarding();
@@ -168,6 +181,10 @@ function OnboardingScreen({ navigation }: Props) {
         pagingEnabled
         showsHorizontalScrollIndicator={false}
         keyExtractor={(item) => item.key}
+        extraData={`${index}:${i18n.language}`}
+        onScrollToIndexFailed={({ index: failedIndex }) => {
+          setTimeout(() => listRef.current?.scrollToIndex({ index: failedIndex, animated: false }), 80);
+        }}
         onMomentumScrollEnd={handleMomentumEnd}
         renderItem={({ item }) => (
           <View style={[styles.slide, { width }]}>
@@ -248,8 +265,17 @@ const styles = StyleSheet.create({
 
   // ── Slide 2 — assign avatars (selected vs unselected participant tint) ──
   avatarRow: { flexDirection: 'row', gap: 8, marginTop: 10 },
-  assignAvatarCard: { width: 54, paddingVertical: 8, paddingHorizontal: 4, borderRadius: Radius.lg, alignItems: 'center', gap: 4 },
-  assignAvatarCardSelected: { backgroundColor: Colors.tint },
+  assignAvatarCard: {
+    width: 54,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    borderRadius: Radius.lg,
+    alignItems: 'center',
+    gap: 4,
+    borderWidth: 1.5,
+    borderColor: 'transparent',
+  },
+  assignAvatarCardSelected: { backgroundColor: Colors.tint, borderColor: Colors.primary },
   assignAvatarCardMuted: { backgroundColor: Colors.surfaceElevated },
   assignAvatarName: {},
   assignAvatarNameSelected: { color: Colors.primary },

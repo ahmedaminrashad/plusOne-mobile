@@ -15,11 +15,14 @@ import {
 import SafeScreen from '../../components/common/SafeScreen';
 import { AppScreenProps } from '../../types/navigation';
 import {
+  useGetGroupQuery,
   useGetGroupMembersQuery,
   useRemoveMemberMutation,
   useUpdateGroupMutation,
   useDeleteGroupMutation,
+  useUploadGroupAvatarMutation,
 } from '../../store/api/groupsApi';
+import { launchImageLibrary } from 'react-native-image-picker';
 import { useGetGroupBillsQuery, useDeleteBillMutation } from '../../store/api/billsApi';
 import { useGetBillSharesQuery } from '../../store/api/sharesApi';
 import { GroupMember, Bill } from '../../types/models';
@@ -211,8 +214,10 @@ function GroupDetailScreen({ route, navigation }: Props) {
     if (initialTab) setActiveTab(initialTab);
   }, [initialTab, groupId]);
 
+  const { data: group } = useGetGroupQuery(groupId);
+  const [uploadGroupAvatar] = useUploadGroupAvatarMutation();
   const { data: members, isLoading, refetch } = useGetGroupMembersQuery(groupId, {
-    pollingInterval: focused ? 15_000 : 0,
+    pollingInterval: focused && activeTab === 'members' ? 15_000 : 0,
   });
   const { data: bills, isLoading: billsLoading } = useGetGroupBillsQuery(groupId, {
     skip: activeTab !== 'bills',
@@ -242,6 +247,15 @@ function GroupDetailScreen({ route, navigation }: Props) {
   const headerOverflow = joinedMembers.length - headerAvatars.length;
 
   // ── Bills actions ───────────────────────────────────────────
+
+  const handleChangeGroupPhoto = useCallback(() => {
+    if (!isAdmin) return;
+    launchImageLibrary({ mediaType: 'photo', quality: 0.8 }, (res) => {
+      const uri = res.assets?.[0]?.uri;
+      if (!uri) return;
+      uploadGroupAvatar({ groupId, uri }).catch(() => {});
+    });
+  }, [isAdmin, groupId, uploadGroupAvatar]);
 
   const handleAddBill = useCallback(() => {
     navigation.navigate('AddBillChooser', { groupId, groupName: displayName });
@@ -401,6 +415,17 @@ function GroupDetailScreen({ route, navigation }: Props) {
             <ChevronLeftIcon size={20} color={Colors.text} />
           </TouchableOpacity>
           <TouchableOpacity
+            onPress={handleChangeGroupPhoto}
+            disabled={!isAdmin}
+            activeOpacity={isAdmin ? 0.7 : 1}>
+            <Avatar
+              uri={resolveAssetUrl(group?.avatarUrl)}
+              name={displayName}
+              seed={groupId}
+              size={40}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
             style={styles.headerTitleBlock}
             onPress={handleRenamePress}
             disabled={!isAdmin}
@@ -420,7 +445,6 @@ function GroupDetailScreen({ route, navigation }: Props) {
             {headerAvatars.map((m, i) => (
               <Avatar
                 key={m.id}
-                uri={resolveAssetUrl(m.user?.photoUrl)}
                 name={m.user?.displayName ?? m.pendingPhone ?? t('groupDetail.defaultUserName')}
                 seed={m.userId ?? m.id}
                 size={28}

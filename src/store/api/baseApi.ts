@@ -28,7 +28,7 @@ let refreshPromise: Promise<RefreshOutcome> | null = null;
 let authGraceUntil = 0;
 
 /** After a successful login, ignore a brief 401 storm instead of bouncing to phone entry. */
-export function markAuthGrace(ms = 12_000): void {
+export function markAuthGrace(ms = 20_000): void {
   authGraceUntil = Date.now() + ms;
 }
 
@@ -71,6 +71,11 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
     } else if (outcome === 'transient' || Date.now() < authGraceUntil) {
       // Network blip after Home / lock — do not bounce to phone entry.
     } else {
+      const auth = (api.getState() as RootState).auth;
+      // Mid first-login (OTP → profile) — clearing here remounts Auth on PhoneEntry.
+      if (auth.isAuthenticated && !auth.isProfileComplete) {
+        return result;
+      }
       api.dispatch(clearAuth());
       await SecureStorage.clearTokens();
     }

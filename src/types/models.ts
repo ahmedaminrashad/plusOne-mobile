@@ -40,6 +40,7 @@ export interface Group {
   category: GroupCategory | null;
   avatarUrl: string | null;
   members: GroupMember[];
+  memberCount?: number;
   createdAt: string;
   updatedAt: string;
 }

@@ -1,13 +1,10 @@
 import { AppState, AppStateStatus, NativeModules, Platform } from 'react-native';
-import { store } from '../store';
-import { baseApi } from '../store/api/baseApi';
 
 const ShareIntent = NativeModules.ShareIntentModule as { trimMemory?: () => Promise<boolean> } | undefined;
 
 function trimCaches(): void {
-  // Do not resetApiState() — Home stays mounted, so an empty cache shows
-  // owed/owe as 0 and never refetches. Chat images are the heavy part.
-  store.dispatch(baseApi.util.invalidateTags(['Message']));
+  // Do not resetApiState() or invalidate Message — that refetches and
+  // re-decodes every chat photo the next time Home → Chat is opened.
   if (Platform.OS === 'ios') {
     ShareIntent?.trimMemory?.().catch(() => {});
   }

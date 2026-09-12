@@ -104,6 +104,14 @@ export const billsApi = baseApi.injectEndpoints({
         method: 'PATCH',
         body,
       }),
+      async onQueryStarted({ billId }, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          dispatch(billsApi.util.updateQueryData('getBillDetail', billId, () => data));
+        } catch {
+          /* invalidateTags below will refetch */
+        }
+      },
       invalidatesTags: (result, _error, { billId }) => [
         { type: 'Bill', id: billId },
         'Bill',

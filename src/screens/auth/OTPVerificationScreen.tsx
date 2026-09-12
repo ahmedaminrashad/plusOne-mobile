@@ -43,6 +43,8 @@ function OTPVerificationScreen({ route, navigation }: Props) {
   const [cooldown, setCooldown] = useState(RESEND_COOLDOWN);
   const inputRef = useRef<TextInput>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const inFlightRef = useRef(false);
+  const succeededRef = useRef(false);
 
   const [loginWithFirebase, { isLoading: isFirebaseLogin }] = useLoginWithFirebaseMutation();
   const [verifyOtp, { isLoading: isBackendLogin }] = useVerifyOtpMutation();
@@ -60,27 +62,34 @@ function OTPVerificationScreen({ route, navigation }: Props) {
     return () => clearInterval(timerRef.current!);
   }, []);
 
-  const handleVerify = useCallback(async () => {
+  const handleVerify = useCallback(async (code = otp) => {
+    if (inFlightRef.current || succeededRef.current || code.length !== OTP_LENGTH) return;
+    inFlightRef.current = true;
     setError('');
     try {
       const result =
-        otp === MAGIC_OTP
-          ? await verifyOtp({ phone, code: otp }).unwrap()
-          : await loginWithFirebase({ idToken: await confirmFirebaseSms(otp) }).unwrap();
-      await SecureStorage.saveTokens(result.accessToken, result.refreshToken, result.isProfileComplete);
-      markAuthGrace();
+        code === MAGIC_OTP
+          ? await verifyOtp({ phone, code }).unwrap()
+          : await loginWithFirebase({ idToken: await confirmFirebaseSms(code) }).unwrap();
+      succeededRef.current = true;
+      const profileComplete = !!result.isProfileComplete;
+      markAuthGrace(20_000);
+      await SecureStorage.saveTokens(result.accessToken, result.refreshToken, profileComplete);
       dispatch(setTokens({ accessToken: result.accessToken, refreshToken: result.refreshToken }));
-      dispatch(setProfileComplete(result.isProfileComplete));
+      dispatch(setProfileComplete(profileComplete));
 
-      if (!result.isProfileComplete) {
-        navigation.navigate('ProfileSetup');
+      if (!profileComplete) {
+        navigation.reset({ index: 0, routes: [{ name: 'ProfileSetup' }] });
       }
     } catch (err: unknown) {
+      if (succeededRef.current) return;
       const mapped = mapFirebaseAuthError(err);
       setError(
         mapped === 'GENERIC' ? resolveErrorMessage(err) : resolveErrorMessage({ data: { message: mapped } }),
       );
       setOtp('');
+    } finally {
+      inFlightRef.current = false;
     }
   }, [otp, phone, verifyOtp, loginWithFirebase, dispatch, navigation]);
 
@@ -125,14 +134,10 @@ function OTPVerificationScreen({ route, navigation }: Props) {
     setOtp(digits);
     setError('');
     if (digits.length === OTP_LENGTH) {
-      // auto-submit
       setTimeout(() => inputRef.current?.blur(), 50);
+      handleVerify(digits);
     }
   };
-
-  useEffect(() => {
-    if (otp.length === OTP_LENGTH) handleVerify();
-  }, [otp]);
 
   return (
     <SafeScreen style={styles.container}>
@@ -187,7 +192,7 @@ function OTPVerificationScreen({ route, navigation }: Props) {
 
         <Button
           title={t('otpVerification.verifyButton')}
-          onPress={handleVerify}
+          onPress={() => { handleVerify(); }}
           loading={isLoading}
           disabled={otp.length < OTP_LENGTH}
           style={styles.verifyBtn}
